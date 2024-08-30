@@ -33,13 +33,51 @@ class HiveDatabase {
      */
 //prob dont need this
     if(exerciseCompleted(workouts)){
-      _myBox.put("COMPLETION_STATUS"+ todaysDateYYYYMMDD(), 1)
+      _myBox.put("COMPLETION_STATUS"+ todaysDateYYYYMMDD(), 1);
+    }else{
+      _myBox.put("COMPLETION_STATUS"+ todaysDateYYYYMMDD(), 0);
     }
+    //save into hive
+    _myBox.put("WORKOUTS", workoutList);
+    _myBox.put("EXERCISES", exerciseList);
   }
 
+
+
   //read data, and return a list of workouts
+  List<Workout> readFromDatabase(){
+    List<Workout> mySavedWorkouts = [];
+
+    List<String> workoutNames = _myBox.get("WORKOUTS");
+    final exerciseDetails = _myBox.get("EXERCISES");
+    // create wrokout object
+    for(int i = 0; i< workoutNames.length;i++){
+      //each workout can have multiple exercises
+      List<Exercise> exercisesInEachWorkout = [];
+      for(int j=0; j<exerciseDetails[i].length;j++){
+        //add each exercise into list
+        exercisesInEachWorkout.add(
+          Exercise(
+          name: exerciseDetails[i][j][0],
+          weight: exerciseDetails[i][j][1],
+          reps: exerciseDetails[i][j][2],
+          sets: exerciseDetails[i][j][3],
+          musclegroup: exerciseDetails[i][j][4],
+          ),
+        );
+      }
+    // create individual workout
+      Workout workout =
+          Workout(name: workoutNames[i], exercises: exercisesInEachWorkout);
+      //add individual workout to overall list
+      mySavedWorkouts.add(workout);
+    }
+    return mySavedWorkouts;
+  }
+
+
+
   // check if any exercises have been done
-  // return completion status of a given date yyyymmdd
   // prob dont need this
   bool exerciseCompleted(List<Workout>workouts) {
     // go through each workout
@@ -53,6 +91,13 @@ class HiveDatabase {
     }
       return false;
   }
+
+// return completion status of a given date yyyymmdd
+int getCompletionStatus(String yyyymmdd){
+    //returns 0 or 1, if null then return 0
+    int completionStatus = _myBox.get("COMPLETION_STATUS$yyyymmdd") ?? 0;
+    return completionStatus;
+}
 }
   //converts workout objects into a list -> eg [Back bi, Arms]
 List<String> convertObjectToWorkoutList(List<Workout> workouts) {

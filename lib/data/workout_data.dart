@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
+import 'package:gymapp/data/hive_database.dart';
 
 import '../models/exercise.dart';
 import '../models/workout.dart';
 
 class WorkoutData extends ChangeNotifier{
+  final db = HiveDatabase();
+
   List<Workout> workoutList = [
     Workout(
       name: "Chest",
@@ -40,6 +43,16 @@ class WorkoutData extends ChangeNotifier{
     )
   ];
 
+  //if there are wrokouts alreadyt in database, then get that workout list, otherwise use defaul workouts
+  //otherwise use defaults workouts
+  void initalizeWorkoutList(){
+    if(db.previousDataExists()){
+      workoutList = db.readFromDatabase();
+    }else{
+      db.saveToDatebase(workoutList);
+    }
+  }
+
   // get the list of workouts
   List<Workout> getworkoutList (){
     return workoutList;
@@ -53,6 +66,9 @@ class WorkoutData extends ChangeNotifier{
   void addWorkout(String name){
     workoutList.add(Workout(name: name, exercises: []));
     notifyListeners();
+
+    //save to database
+    db.saveToDatebase(workoutList);
   }
   // add exercise to a workout
   void addExercise(String workoutName, String exerciseName, String weight, String reps, String sets, String musclegroup){
@@ -68,6 +84,8 @@ class WorkoutData extends ChangeNotifier{
       ),
     );
     notifyListeners();
+    //save to database
+    db.saveToDatebase(workoutList);
   }
   // check off exercise
   void checkOffExercise(String workoutName, String exerciseName){
@@ -76,7 +94,10 @@ class WorkoutData extends ChangeNotifier{
 
     // check off boolean to show user completed the workout
     relevantExercise.isCompleted =!relevantExercise.isCompleted;
+    print('tapped');
     notifyListeners();
+    //save to database
+    db.saveToDatebase(workoutList);
   }
 
   // return relevant workout object, given a workout name
