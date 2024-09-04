@@ -44,7 +44,9 @@ class WorkoutPage extends StatefulWidget{
                 //weight
                 TextField(
                   controller: weightController,
-                )
+                ),
+
+
               ],
             ),
             actions: [
@@ -78,7 +80,7 @@ class WorkoutPage extends StatefulWidget{
           weight,
           reps,
           sets,
-          musclegroup);
+          musclegroup,);
 
       //pop dialog box
       Navigator.pop(context);
@@ -128,6 +130,7 @@ class WorkoutPage extends StatefulWidget{
                       .getRelevantWorkout(widget.workoutName)
                       .exercises[index]
                       .sets,
+
                   isCompleted: value
                       .getRelevantWorkout(widget.workoutName)
                       .exercises[index]

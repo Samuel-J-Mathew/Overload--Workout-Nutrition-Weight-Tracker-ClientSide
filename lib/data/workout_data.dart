@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:gymapp/data/hive_database.dart';
+import 'package:intl/intl.dart';
 
 import '../models/exercise.dart';
 import '../models/workout.dart';
@@ -10,6 +11,7 @@ class WorkoutData extends ChangeNotifier{
   List<Workout> workoutList = [
     Workout(
       name: "Chest",
+      date:  DateTime(2024, 9, 1),
       exercises: [
         Exercise(
           name: "BB Bench",
@@ -31,13 +33,14 @@ class WorkoutData extends ChangeNotifier{
     ),
     Workout(
       name: "Arms",
+      date:  DateTime(2024, 9, 3),
       exercises: [
         Exercise(
             name: "Bicep Curls",
             weight: "10",
             reps: "10",
             sets: "3",
-            musclegroup: "Biceps"
+            musclegroup: "Biceps",
         ),
       ],
     )
@@ -53,9 +56,25 @@ class WorkoutData extends ChangeNotifier{
     }
   }
 
+
   // get the list of workouts
   List<Workout> getworkoutList (){
     return workoutList;
+  }
+  // This method will return a map of dates and workout counts
+  Map<DateTime, int> getWorkoutDatesForHeatMap() {
+    Map<DateTime, int> heatMapData = {};
+
+    for (var workout in workoutList) {
+      DateTime workoutDate = DateTime(workout.date.year, workout.date.month, workout.date.day); // normalize to remove time
+      if (heatMapData.containsKey(workoutDate)) {
+        heatMapData[workoutDate] = heatMapData[workoutDate]! + 1;
+      } else {
+        heatMapData[workoutDate] = 1;
+      }
+    }
+
+    return heatMapData;
   }
   //get length of a given workout
   int numberofExercisesInWorkout(String workoutName){
@@ -63,15 +82,23 @@ class WorkoutData extends ChangeNotifier{
     return relevantWorkout.exercises.length;
   }
   // add a workout
-  void addWorkout(String name){
-    workoutList.add(Workout(name: name, exercises: []));
+  void addWorkout(String name, DateTime date){
+    workoutList.add(Workout(name: name,  exercises: [],date: date ));
     notifyListeners();
 
     //save to database
     db.saveToDatebase(workoutList);
   }
+
+  // New method to print all workout dates
+  void printAllWorkoutDates() {
+    for (var workout in workoutList) {
+      print(DateFormat('yyyy-MM-dd').format(workout.date));
+    }
+  }
+
   // add exercise to a workout
-  void addExercise(String workoutName, String exerciseName, String weight, String reps, String sets, String musclegroup){
+  void addExercise(String workoutName, String exerciseName, String weight, String reps, String sets,String musclegroup){
     //find the relevant workout
     Workout relevantWorkout = getRelevantWorkout(workoutName);
     relevantWorkout.exercises.add(

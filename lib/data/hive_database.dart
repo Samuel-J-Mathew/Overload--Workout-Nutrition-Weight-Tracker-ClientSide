@@ -21,12 +21,22 @@ class HiveDatabase {
   String getStartDate(){
     return _myBox.get("START_DATE");
   }
-
+  Future<Map<DateTime, int>> getWorkoutDataForHeatMap() async {
+    Map<DateTime, int> result = {};
+    // Assuming `_myBox` is a Hive box that already has all necessary data loaded
+    List<Workout> workouts = _myBox.get('workouts', defaultValue: []);
+    for (Workout workout in workouts) {
+      DateTime workoutDate = workout.date;
+      result[workoutDate] = (result[workoutDate] ?? 0) + 1;
+    }
+    return Future.value(result); // Convert the result to a Future
+  }
   //write data
   void saveToDatebase(List<Workout>workouts){
     //convert workout objects into lists of strings so that we can save into hive
     final workoutList = convertObjectToWorkoutList(workouts);
     final exerciseList = convertObjectToExerciseList(workouts);
+    final dateList = convertObjectToDateList(workouts);
     /*
     check if any exercises have been done
     we will put a 0 or 1 foe each yyymmdd date
@@ -40,36 +50,50 @@ class HiveDatabase {
     //save into hive
     _myBox.put("WORKOUTS", workoutList);
     _myBox.put("EXERCISES", exerciseList);
+    _myBox.put("DATE", dateList);
   }
 
 
 
   //read data, and return a list of workouts
-  List<Workout> readFromDatabase(){
+  List<Workout> readFromDatabase() {
     List<Workout> mySavedWorkouts = [];
 
-    List<String> workoutNames = _myBox.get("WORKOUTS");
-    final exerciseDetails = _myBox.get("EXERCISES");
-    // create wrokout object
-    for(int i = 0; i< workoutNames.length;i++){
-      //each workout can have multiple exercises
+    // Here we fetch the data safely, ensuring it's not null and is properly cast
+    List<dynamic> workoutNames = _myBox.get("WORKOUTS", defaultValue: []);
+    List<dynamic> dateNames = _myBox.get("DATE", defaultValue: []);
+    final exerciseDetails = _myBox.get("EXERCISES", defaultValue: []);
+
+    // Check and convert dateNames to List<DateTime>
+    List<DateTime> dates = dateNames.map((date) =>
+    DateTime.tryParse(date.toString()) ?? DateTime.now() // Using DateTime.now() as fallback
+    ).toList();
+
+    for (int i = 0; i < workoutNames.length; i++) {
       List<Exercise> exercisesInEachWorkout = [];
-      for(int j=0; j<exerciseDetails[i].length;j++){
-        //add each exercise into list
+      for (int j = 0; j < exerciseDetails[i].length; j++) {
         exercisesInEachWorkout.add(
           Exercise(
-          name: exerciseDetails[i][j][0],
-          weight: exerciseDetails[i][j][1],
-          reps: exerciseDetails[i][j][2],
-          sets: exerciseDetails[i][j][3],
-          musclegroup: exerciseDetails[i][j][4],
+            name: exerciseDetails[i][j][0],
+            weight: exerciseDetails[i][j][1],
+            reps: exerciseDetails[i][j][2],
+            sets: exerciseDetails[i][j][3],
+            musclegroup: exerciseDetails[i][j][4],
           ),
         );
       }
-    // create individual workout
-      Workout workout =
-          Workout(name: workoutNames[i], exercises: exercisesInEachWorkout);
-      //add individual workout to overall list
+
+      // Safely assign dates ensuring we do not exceed the list's range
+      DateTime workoutDate = i < dates.length ? dates[i] : DateTime.now();  // Use DateTime.now() as fallback
+
+      // Create individual workout
+      Workout workout = Workout(
+        name: workoutNames[i],
+        exercises: exercisesInEachWorkout,
+        date: workoutDate,
+      );
+
+      // Add individual workout to overall list
       mySavedWorkouts.add(workout);
     }
     return mySavedWorkouts;
@@ -99,6 +123,7 @@ int getCompletionStatus(String yyyymmdd){
     return completionStatus;
 }
 }
+
   //converts workout objects into a list -> eg [Back bi, Arms]
 List<String> convertObjectToWorkoutList(List<Workout> workouts) {
   List<String> workoutList = [
@@ -112,6 +137,19 @@ List<String> convertObjectToWorkoutList(List<Workout> workouts) {
   }
     return workoutList;
   }
+
+List<DateTime> convertObjectToDateList(List<Workout> workouts) {
+  List<DateTime> DateList = [
+
+  ];
+  for (int i = 0; i < workouts. length; i++) {
+    // in each workout, add the name, followed by lists of exercises
+    DateList.add(
+      workouts[i].date,
+    );
+  }
+  return DateList;
+}
   // converts the exercises in a workout object into a list of strings
 List<List<List<String>>> convertObjectToExerciseList (List<Workout> workouts) {
   List<List<List<String>>> exerciseList = [
