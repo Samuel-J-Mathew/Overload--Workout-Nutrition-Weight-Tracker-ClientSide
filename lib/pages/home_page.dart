@@ -117,9 +117,10 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+
+  // Show dialog to add a new workout for the selected day
   // Show dialog to add a new workout for the selected day
   void createNewWorkout(DateTime selectedDay) {
-    final newWorkoutNameController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -131,29 +132,38 @@ class _HomePageState extends State<HomePage> {
         actions: [
           MaterialButton(
             onPressed: () {
-              if (newWorkoutNameController.text.isNotEmpty) {
-                // Add the workout for the selected day
-                Provider.of<WorkoutData>(context, listen: false).addWorkout(
-                  newWorkoutNameController.text,
-                  selectedDay,
-                );
-                Provider.of<WorkoutData>(context, listen: false).notifyListeners(); // Notify listeners
-                Navigator.pop(context); // Close the dialog after adding the workout
+              final workoutName = newWorkoutNameController.text;
+              if (workoutName.isNotEmpty) {
+                // Add the workout for the selected day and save it
+                Provider.of<WorkoutData>(context, listen: false).addWorkout(workoutName, selectedDay);
 
-                // Update events for the selected day
-                _selectedEvents.value = _getEventsForDay(selectedDay);
+                // Clear input field after saving
+                newWorkoutNameController.clear();
+
+                // Close the dialog after adding the workout
+                Navigator.pop(context);
+
+                // Navigate to the workout page for the newly created workout
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => WorkoutPage(workoutName: workoutName),
+                ));
               }
             },
-            child: Text("Save"),
+            child: Text("Next"), // Changed from "Save" to "Next"
           ),
           MaterialButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              // Clear input field if cancelled
+              newWorkoutNameController.clear();
+              Navigator.pop(context);
+            },
             child: Text("Cancel"),
           ),
         ],
       ),
     );
   }
+
 
   // Navigate to the WorkoutPage with a specific workout name
   void _goToWorkoutPage(String workoutName) {
