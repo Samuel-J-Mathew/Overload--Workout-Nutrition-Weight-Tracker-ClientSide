@@ -61,6 +61,15 @@ class WorkoutData extends ChangeNotifier{
   List<Workout> getworkoutList (){
     return workoutList;
   }
+  // Method to get workouts for a specific date
+  List<Workout> getWorkoutsForDate(DateTime date) {
+    return workoutList.where((workout) {
+      return workout.date.year == date.year &&
+          workout.date.month == date.month &&
+          workout.date.day == date.day;
+    }).toList();
+  }
+
   // This method will return a map of dates and workout counts
   Map<DateTime, int> getWorkoutDatesForHeatMap() {
     Map<DateTime, int> heatMapData = {};

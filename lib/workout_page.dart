@@ -29,21 +29,25 @@ class WorkoutPage extends StatefulWidget{
                 //exercise name
                 TextField(
                   controller: exerciseNameController,
+                  decoration: InputDecoration(labelText: 'Exercise Name'),
                 ),
 
                 //sets
                 TextField(
                   controller: setsController,
+                  decoration: InputDecoration(labelText: 'Sets'),
                 ),
 
                 //reps
                 TextField(
                   controller: repsController,
+                  decoration: InputDecoration(labelText: 'Reps'),
                 ),
 
                 //weight
                 TextField(
                   controller: weightController,
+                  decoration: InputDecoration(labelText: 'Weight'),
                 ),
 
 

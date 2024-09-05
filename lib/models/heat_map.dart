@@ -20,8 +20,8 @@ class _MyHeatMapState extends State<MyHeatMap> {
     return HeatMap(
       datasets: heatMapData,
       size: 12,
-      startDate: DateTime.now().subtract(Duration(days: 90)), // Start date: 1 year ago
-      endDate: DateTime.now().add(Duration(days:90)),       // End date: today
+      startDate: DateTime.now().subtract(Duration(days: 200)), // Start date: 1 year ago
+          // End date: today
       colorMode: ColorMode.opacity,
       showText: false,
       scrollable: true,
