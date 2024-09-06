@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import '../data/workout_data.dart';
 import '../models/heat_map.dart';
 import '../models/calender.dart';
-import '../workout_page.dart'; // Import the heatmap
+import 'workout_page.dart'; // Import the heatmap
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

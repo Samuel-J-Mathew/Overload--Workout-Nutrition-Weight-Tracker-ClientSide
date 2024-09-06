@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:gymapp/components/exercise_tile.dart';
 import 'package:gymapp/data/workout_data.dart';
+import 'package:gymapp/data/exercise_list.dart';
 import 'package:provider/provider.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 class WorkoutPage extends StatefulWidget{
   final String workoutName;
   const WorkoutPage({super.key, required this.workoutName});
@@ -17,6 +19,7 @@ class WorkoutPage extends StatefulWidget{
     final repsController = TextEditingController();
     final setsController = TextEditingController();
     final musclegroupController = TextEditingController();
+
   //create a new exercise
     void createNewExercise(){
       showDialog(
@@ -26,12 +29,26 @@ class WorkoutPage extends StatefulWidget{
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                //exercise name
-                TextField(
-                  controller: exerciseNameController,
-                  decoration: InputDecoration(labelText: 'Exercise Name'),
-                ),
+                //drop down exercise name
+                DropdownSearch<String>(
+                  popupProps: PopupProps.menu(
+                    showSelectedItems: true,
+                    showSearchBox: true,
 
+                  ),
+                  items: exerciseList,
+                  dropdownDecoratorProps: DropDownDecoratorProps(
+                    dropdownSearchDecoration: InputDecoration(
+                      labelText: "Exercise Name",
+                      hintText: "Exercise completed",
+                    ),
+                  ),
+                  onChanged: (String? selectedItem) {
+                    // Update the TextEditingController with the selected item
+                    exerciseNameController.text = selectedItem ?? '';
+                  },
+                  selectedItem: "blank",
+                ),
                 //sets
                 TextField(
                   controller: setsController,
