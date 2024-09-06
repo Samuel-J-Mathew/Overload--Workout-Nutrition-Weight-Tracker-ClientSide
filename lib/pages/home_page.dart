@@ -6,8 +6,9 @@ import 'package:intl/intl.dart';
 import '../data/workout_data.dart';
 import '../models/heat_map.dart';
 import '../models/calender.dart';
+import 'DataAnalysisPage.dart';
 import 'workout_page.dart'; // Import the heatmap
-
+import '../pages/DataAnalysisPage.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -209,11 +210,24 @@ class _HomePageState extends State<HomePage> {
       builder: (context, value, child) => Scaffold(
         appBar: AppBar(
           title: const Text('Workout Tracker'),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.analytics),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => DataAnalysisPage()),
+                );
+              },
+              tooltip: 'Analyze Data',
+            ),
+          ],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => createNewWorkout(DateTime.now()),
           child: const Icon(Icons.add),
         ),
+
         backgroundColor: Colors.grey[300],
         body: Column(
           children: [
@@ -222,6 +236,7 @@ class _HomePageState extends State<HomePage> {
               flex: 1,
               child: MyHeatMap(), // Ensure this shows your heatmap
             ),
+
            // Expanded(
              // flex: 1,
               //child: , // Ensure this shows your heatmap
@@ -280,6 +295,7 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ),
+
           ],
         ),
       ),

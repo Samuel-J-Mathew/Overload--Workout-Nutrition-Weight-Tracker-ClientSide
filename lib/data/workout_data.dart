@@ -3,6 +3,7 @@ import 'package:gymapp/data/hive_database.dart';
 import 'package:intl/intl.dart';
 
 import '../models/exercise.dart';
+import '../models/exercisedetail.dart';
 import '../models/workout.dart';
 
 class WorkoutData extends ChangeNotifier{
@@ -69,7 +70,31 @@ class WorkoutData extends ChangeNotifier{
           workout.date.day == date.day;
     }).toList();
   }
-
+  List<String> getAllExerciseNames() {
+    Set<String> exerciseNames = {};
+    for (var workout in workoutList) {
+      for (var exercise in workout.exercises) {
+        exerciseNames.add(exercise.name);
+      }
+    }
+    return exerciseNames.toList();
+  }
+  List<ExerciseDetail> getExercisesByName(String exerciseName) {
+    List<ExerciseDetail> filteredExercises = [];
+    for (var workout in workoutList) {
+      for (var exercise in workout.exercises) {
+        if (exercise.name == exerciseName) {
+          filteredExercises.add(ExerciseDetail(exercise, workout.date));
+        }
+      }
+    }
+    return filteredExercises;
+  }
+  List<Workout> getWorkoutsByMonth(int year, int month) {
+    return workoutList.where((workout) =>
+    workout.date.year == year && workout.date.month == month
+    ).toList();
+  }
   // This method will return a map of dates and workout counts
   Map<DateTime, int> getWorkoutDatesForHeatMap() {
     Map<DateTime, int> heatMapData = {};
