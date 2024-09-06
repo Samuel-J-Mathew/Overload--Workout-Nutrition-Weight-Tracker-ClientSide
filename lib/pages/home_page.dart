@@ -42,7 +42,22 @@ class _HomePageState extends State<HomePage> {
     final Map<DateTime, List<String>> workoutsByDay = _getWorkoutsByDay(workoutData);
     return workoutsByDay[day] ?? [];
   }
+  String getDaySuffix(int day) {
+    if ((day % 10 == 1) && (day != 11)) {
+      return 'st';
+    } else if ((day % 10 == 2) && (day != 12)) {
+      return 'nd';
+    } else if ((day % 10 == 3) && (day != 13)) {
+      return 'rd';
+    }
+    return 'th';
+  }
 
+  String formatDateTimeWithSuffix(DateTime dateTime) {
+    var day = dateTime.day;
+    var suffix = getDaySuffix(day);
+    return DateFormat('MMMM').format(dateTime) + ' ' + day.toString() + suffix;
+  }
   // Map workout dates to a format usable by the calendar
   Map<DateTime, List<String>> _getWorkoutsByDay(WorkoutData workoutData) {
     Map<DateTime, List<String>> workoutMap = {};
@@ -87,7 +102,17 @@ class _HomePageState extends State<HomePage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text("Workouts for ${DateFormat('yyyy-MM-dd').format(selectedDay)}"),
+          title: Align( // Align the text widget within the AlertDialog title
+            alignment: Alignment.center,
+            child: Text(
+              "Log Workout for ${formatDateTimeWithSuffix(selectedDay)}",
+              style: TextStyle(
+                fontStyle: FontStyle.italic, // Apply italic style to the text
+                fontWeight: FontWeight.bold, // Make the text bold
+              ),
+              textAlign: TextAlign.center, // Center the text horizontally
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -124,7 +149,7 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Create a New Workout for ${DateFormat('yyyy-MM-dd').format(selectedDay)}"),
+        title: Text("Log New Workout for ${DateFormat('dd-MM-yyyy').format(selectedDay)}"),
         content: TextField(
           controller: newWorkoutNameController,
           decoration: InputDecoration(labelText: 'Workout Name'),
