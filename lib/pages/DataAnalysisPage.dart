@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -17,20 +18,32 @@ class _DataAnalysisPageState extends State<DataAnalysisPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      loadExerciseNames();
+    });
+  }
+
+  void loadExerciseNames() {
     exerciseNames = Provider.of<WorkoutData>(context, listen: false).getAllExerciseNames();
-    selectedExercise = exerciseNames.isNotEmpty ? exerciseNames.first : null;
+    if (exerciseNames.isNotEmpty) {
+      selectedExercise = exerciseNames.first;
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     var workoutData = Provider.of<WorkoutData>(context);
+    List<Map<String, dynamic>> weightData = selectedExercise != null ? workoutData.getWeightDataForExercise(selectedExercise!) : [];
+    List<FlSpot> spots = weightData.asMap().entries.map((entry) => FlSpot(entry.key.toDouble(), entry.value['weight'])).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Exercise Data Analysis"),
       ),
       body: Column(
         children: [
-          DropdownButton<String>(
+          if (exerciseNames.isNotEmpty) DropdownButton<String>(
             value: selectedExercise,
             onChanged: (value) {
               setState(() {
@@ -43,6 +56,31 @@ class _DataAnalysisPageState extends State<DataAnalysisPage> {
                 child: Text(value),
               );
             }).toList(),
+          ),
+          Expanded(
+            child: spots.isNotEmpty ? LineChart(
+              LineChartData(
+                gridData: FlGridData(show: true),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) => Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(value.toInt().toString()), // Display index on x-axis
+                      ),
+                      interval: 1,
+                    ),
+                  ),
+
+                ),
+
+                lineBarsData: [LineChartBarData(spots: spots)],
+
+
+
+              ),
+            ) : Center(child: Text("No data available for this exercise")),
           ),
           Expanded(
             child: ListView(

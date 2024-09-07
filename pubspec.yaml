@@ -44,6 +44,7 @@ dependencies:
   flutter_heatmap_calendar: ^1.0.5
   table_calendar: ^3.0.5
   dropdown_search: ^5.0.6
+  fl_chart: ^0.69.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

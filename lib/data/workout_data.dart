@@ -1,3 +1,5 @@
+//import 'package:fl_chart/fl_chart.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:gymapp/data/hive_database.dart';
 import 'package:intl/intl.dart';
@@ -90,6 +92,7 @@ class WorkoutData extends ChangeNotifier{
     }
     return filteredExercises;
   }
+
   List<Workout> getWorkoutsByMonth(int year, int month) {
     return workoutList.where((workout) =>
     workout.date.year == year && workout.date.month == month
@@ -159,6 +162,25 @@ class WorkoutData extends ChangeNotifier{
     notifyListeners();
     //save to database
     db.saveToDatebase(workoutList);
+  }
+// Get weight data and respective dates for plotting
+  List<Map<String, dynamic>> getWeightDataForExercise(String exerciseName) {
+    List<Map<String, dynamic>> dataPoints = [];
+    DateTime startDate = workoutList.isNotEmpty ? workoutList.first.date : DateTime.now();
+    for (var workout in workoutList) {
+      for (var exercise in workout.exercises) {
+        if (exercise.name == exerciseName) {
+          double days = workout.date.difference(startDate).inDays.toDouble();
+          int weight = int.tryParse(exercise.weight) ?? 0;
+          dataPoints.add({
+            "days": days,
+            "weight": weight.toDouble(),
+            "date": workout.date
+          });
+        }
+      }
+    }
+    return dataPoints;
   }
 
   // return relevant workout object, given a workout name
