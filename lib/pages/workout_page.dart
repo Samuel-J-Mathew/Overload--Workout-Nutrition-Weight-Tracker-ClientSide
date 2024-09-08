@@ -124,41 +124,33 @@ class WorkoutPage extends StatefulWidget{
       musclegroupController.clear();
     }
     @override
-    Widget build (BuildContext context){
-    return Consumer<WorkoutData>(
-        builder: (context,value, child) => Scaffold(
-          appBar: AppBar(title: Text(widget.workoutName),),
+    Widget build(BuildContext context) {
+      return Consumer<WorkoutData>(
+        builder: (context, value, child) => Scaffold(
+          appBar: AppBar(title: Text(widget.workoutName)),
           floatingActionButton: FloatingActionButton(
-              onPressed:createNewExercise,
+            onPressed: createNewExercise,
             child: const Icon(Icons.add),
           ),
           body: ListView.builder(
             itemCount: value.numberofExercisesInWorkout(widget.workoutName),
-              itemBuilder: (context,index)=> ExerciseTile(
-                  exerciseName: value
-                      .getRelevantWorkout(widget.workoutName)
-                      .exercises[index]
-                      .name,
-                  weight: value
-                      .getRelevantWorkout(widget.workoutName)
-                      .exercises[index]
-                      .weight,
-                  reps: value
-                      .getRelevantWorkout(widget.workoutName)
-                      .exercises[index]
-                      .reps,
-                  sets: value
-                      .getRelevantWorkout(widget.workoutName)
-                      .exercises[index]
-                      .sets,
-
-                  isCompleted: value
-                      .getRelevantWorkout(widget.workoutName)
-                      .exercises[index]
-                      .isCompleted
-              ),
+            itemBuilder: (context, index) {
+              var exercises = value.getRelevantWorkout(widget.workoutName).exercises;
+              return ExerciseTile(
+                exerciseName: exercises[index].name,
+                weight: exercises[index].weight,
+                reps: exercises[index].reps,
+                sets: exercises[index].sets,
+                isCompleted: exercises[index].isCompleted,
+                onDelete: () => _deleteExercise(index, value), // Pass the callback for deletion
+              );
+            },
           ),
         ),
-    );
+      );
+    }
+
+    void _deleteExercise(int index, WorkoutData workoutData) {
+      workoutData.deleteExercise(widget.workoutName, index); // Assuming deleteExercise method exists
     }
   }

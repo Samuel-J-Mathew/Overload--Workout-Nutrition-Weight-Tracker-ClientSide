@@ -60,25 +60,51 @@ class _DataAnalysisPageState extends State<DataAnalysisPage> {
           Expanded(
             child: spots.isNotEmpty ? LineChart(
               LineChartData(
-                gridData: FlGridData(show: true),
-                titlesData: FlTitlesData(
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) => Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(value.toInt().toString()), // Display index on x-axis
-                      ),
-                      interval: 1,
+                gridData: FlGridData(
+                  show: true,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: const Color(0xff37434d),
+                      strokeWidth: 1,
+                    );
+                  },
+                  drawVerticalLine: true,
+                  getDrawingVerticalLine: (value) {
+                    return FlLine(
+                      color: const Color(0xff37434d),
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(color: const Color(0xff37434d), width: 1),
+                ),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    barWidth: 5,
+                    belowBarData: BarAreaData(
+                      show: false,
+
                     ),
                   ),
+                ],
+                titlesData: const FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                   sideTitles: SideTitles(
+                     showTitles: false,
+                   )
+                  ),
 
-                ),
-
-                lineBarsData: [LineChartBarData(spots: spots)],
-
-
-
+                  topTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: false,
+                      )
+                  ),
+                )
               ),
             ) : Center(child: Text("No data available for this exercise")),
           ),

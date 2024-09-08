@@ -182,7 +182,12 @@ class WorkoutData extends ChangeNotifier{
     }
     return dataPoints;
   }
-
+  void deleteExercise(String workoutName, int index) {
+    // Find the workout and remove the exercise by index
+    var workout = workoutList.firstWhere((w) => w.name == workoutName);
+    workout.exercises.removeAt(index);
+    notifyListeners(); // Notify listeners to update the UI
+  }
   // return relevant workout object, given a workout name
   Workout getRelevantWorkout(String workoutName){
     Workout relevantWorkout =
