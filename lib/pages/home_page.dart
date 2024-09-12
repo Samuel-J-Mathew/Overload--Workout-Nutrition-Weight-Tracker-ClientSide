@@ -22,7 +22,7 @@ class _HomePageState extends State<HomePage> {
   DateTime selectedDate = DateTime.now(); // Default to today
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-
+  int _selectedIndex = 0;
   @override
   void initState() {
     super.initState();
@@ -196,7 +196,93 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
+  Widget _buildBody() {
+    switch (_selectedIndex) {
+      case 0:
+        return buildHomePageBody();
+      case 1:
+        return DataAnalysisPage();  // Assume this is another widget for "My Split"
+      case 2:
+        return DataAnalysisPage();      // Assume this is another widget for "Log"
+      default:
+        return buildHomePageBody();
+    }
+  }
+  Widget buildHomePageBody() {
+   return Column(
+     children: [
+       // Display HeatMap first
+       Expanded(
+         flex: 1,
+         child: MyHeatMap(), // Ensure this shows your heatmap
+       ),
+       // Calendar to display the week and allow adding workouts
+       Expanded(
+         flex: 1,
+         child: TableCalendar<Workout>(
+           firstDay: DateTime.utc(2000, 1, 1),
+           lastDay: DateTime.utc(2100, 12, 31),
+           focusedDay: _focusedDay,
+           selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+           eventLoader: (day) => _getEventsForDay(day),
+           onDaySelected: _onDaySelected,
+           calendarFormat: CalendarFormat.week,
+           calendarStyle: const CalendarStyle(
+             todayDecoration: BoxDecoration(
+               color: Colors.blue,
+               shape: BoxShape.circle,
+             ),
+             selectedDecoration: BoxDecoration(
+               color: Colors.green,
+               shape: BoxShape.circle,
+             ),
+             markerDecoration: BoxDecoration(
+               color: Colors.blue,
+               shape: BoxShape.circle,
+             ),
+           ),
+         ),
+       ),
+       // List of selected events (workouts) for the selected day
+       Expanded(
+         flex: 2,
+         child: ValueListenableBuilder<List<Workout>>(
+           valueListenable: _selectedEvents,
+           builder: (context, workouts, _) {
+             return ListView.builder(
+               itemCount: workouts.length,
+               itemBuilder: (context, index) {
+                 final workout = workouts[index];
+                 return Container(
+                   margin: const EdgeInsets.symmetric(
+                     horizontal: 12.0,
+                     vertical: 4.0,
+                   ),
+                   decoration: BoxDecoration(
+                     border: Border.all(),
+                     borderRadius: BorderRadius.circular(12.0),
+                   ),
+                   child: ListTile(
+                     title: Text(workout.name),
+                     subtitle: Text(DateFormat('yyyy-MM-dd').format(workout.date)),
+                     onTap: () => _goToWorkoutPage(workout.id, workout.name),
+                   ),
+                 );
+               },
+             );
+           },
+         ),
+       ),
+     ],
+   );
+
+  }
   @override
   Widget build(BuildContext context) {
     final workoutData = Provider.of<WorkoutData>(context);
@@ -224,73 +310,21 @@ class _HomePageState extends State<HomePage> {
           child: const Icon(Icons.add),
         ),
         backgroundColor: Colors.grey[300],
-        body: Column(
-          children: [
-            // Display HeatMap first
-            Expanded(
-              flex: 1,
-              child: MyHeatMap(), // Ensure this shows your heatmap
-            ),
-            // Calendar to display the week and allow adding workouts
-            Expanded(
-              flex: 1,
-              child: TableCalendar<Workout>(
-                firstDay: DateTime.utc(2000, 1, 1),
-                lastDay: DateTime.utc(2100, 12, 31),
-                focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                eventLoader: (day) => _getEventsForDay(day),
-                onDaySelected: _onDaySelected,
-                calendarFormat: CalendarFormat.week,
-                calendarStyle: const CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                  markerDecoration: BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ),
-            // List of selected events (workouts) for the selected day
-            Expanded(
-              flex: 2,
-              child: ValueListenableBuilder<List<Workout>>(
-                valueListenable: _selectedEvents,
-                builder: (context, workouts, _) {
-                  return ListView.builder(
-                    itemCount: workouts.length,
-                    itemBuilder: (context, index) {
-                      final workout = workouts[index];
-                      return Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 4.0,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        child: ListTile(
-                          title: Text(workout.name),
-                          subtitle: Text(DateFormat('yyyy-MM-dd').format(workout.date)),
-                          onTap: () => _goToWorkoutPage(workout.id, workout.name),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+        body: _buildBody(),
+
+
+        bottomNavigationBar: BottomNavigationBar(items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'home'),
+          BottomNavigationBarItem(icon: Icon(Icons.edit_note ), label: 'My Split'),
+          BottomNavigationBarItem(icon: Icon(Icons.analytics), label: 'Log'),
+        ],
+          currentIndex: _selectedIndex, // Highlight the selected item
+          onTap: _onItemTapped, // Call _onItemTapped when an item is tapped
+        )
       ),
+
+
+
     );
   }
 }
