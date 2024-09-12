@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-
 import '../data/workout_data.dart';
 import '../models/heat_map.dart';
 import '../models/calender.dart';
+import '../models/workout.dart';
 import 'DataAnalysisPage.dart';
-import 'workout_page.dart'; // Import the heatmap
-import '../pages/DataAnalysisPage.dart';
+import 'workout_page.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -17,7 +17,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final ValueNotifier<List<String>> _selectedEvents;
+  late final ValueNotifier<List<Workout>> _selectedEvents; // Now holds list of workouts
   final newWorkoutNameController = TextEditingController();
   DateTime selectedDate = DateTime.now(); // Default to today
   DateTime _focusedDay = DateTime.now();
@@ -38,38 +38,23 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Get events (workouts) for a specific day
-  List<String> _getEventsForDay(DateTime day) {
+  List<Workout> _getEventsForDay(DateTime day) {
     final workoutData = Provider.of<WorkoutData>(context, listen: false);
-    final Map<DateTime, List<String>> workoutsByDay = _getWorkoutsByDay(workoutData);
+    final Map<DateTime, List<Workout>> workoutsByDay = _getWorkoutsByDay(workoutData);
     return workoutsByDay[day] ?? [];
   }
-  String getDaySuffix(int day) {
-    if ((day % 10 == 1) && (day != 11)) {
-      return 'st';
-    } else if ((day % 10 == 2) && (day != 12)) {
-      return 'nd';
-    } else if ((day % 10 == 3) && (day != 13)) {
-      return 'rd';
-    }
-    return 'th';
-  }
 
-  String formatDateTimeWithSuffix(DateTime dateTime) {
-    var day = dateTime.day;
-    var suffix = getDaySuffix(day);
-    return DateFormat('MMMM').format(dateTime) + ' ' + day.toString() + suffix;
-  }
   // Map workout dates to a format usable by the calendar
-  Map<DateTime, List<String>> _getWorkoutsByDay(WorkoutData workoutData) {
-    Map<DateTime, List<String>> workoutMap = {};
+  Map<DateTime, List<Workout>> _getWorkoutsByDay(WorkoutData workoutData) {
+    Map<DateTime, List<Workout>> workoutMap = {};
 
     for (var workout in workoutData.getworkoutList()) {
       final workoutDate = DateTime(workout.date.year, workout.date.month, workout.date.day);
 
       if (workoutMap.containsKey(workoutDate)) {
-        workoutMap[workoutDate]!.add(workout.name);
+        workoutMap[workoutDate]!.add(workout);
       } else {
-        workoutMap[workoutDate] = [workout.name];
+        workoutMap[workoutDate] = [workout];
       }
     }
 
@@ -89,7 +74,21 @@ class _HomePageState extends State<HomePage> {
     // Show dialog to view or add workouts for the selected day
     _showWorkoutsForDay(selectedDay);
   }
-
+  String formatDateTimeWithSuffix(DateTime dateTime) {
+    var day = dateTime.day;
+    var suffix = getDaySuffix(day);
+    return DateFormat('MMMM').format(dateTime) + ' ' + day.toString() + suffix;
+  }
+  String getDaySuffix(int day) {
+    if ((day % 10 == 1) && (day != 11)) {
+      return 'st';
+    } else if ((day % 10 == 2) && (day != 12)) {
+      return 'nd';
+    } else if ((day % 10 == 3) && (day != 13)) {
+      return 'rd';
+    }
+    return 'th';
+  }
   // Show dialog with workouts or add a new workout for the selected day
   void _showWorkoutsForDay(DateTime selectedDay) {
     final workoutData = Provider.of<WorkoutData>(context, listen: false);
@@ -107,7 +106,7 @@ class _HomePageState extends State<HomePage> {
             alignment: Alignment.center,
             child: Text(
               "Log Workout for ${formatDateTimeWithSuffix(selectedDay)}",
-              style: TextStyle(
+              style: const TextStyle(
                 fontStyle: FontStyle.italic, // Apply italic style to the text
                 fontWeight: FontWeight.bold, // Make the text bold
               ),
@@ -119,7 +118,8 @@ class _HomePageState extends State<HomePage> {
             children: [
               ...workouts.map((workout) => ListTile(
                 title: Text(workout.name),
-                onTap: () => _goToWorkoutPage(workout.name),
+                subtitle: Text(DateFormat('yyyy-MM-dd').format(workout.date)),
+                onTap: () => _goToWorkoutPage(workout.id, workout.name),
               )),
             ],
           ),
@@ -128,14 +128,14 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text("Close"),
+              child: const Text("Close"),
             ),
             MaterialButton(
               onPressed: () {
                 Navigator.pop(context);
                 createNewWorkout(selectedDay);
               },
-              child: Text("Add Workout"),
+              child: const Text("Add Workout"),
             ),
           ],
         ),
@@ -143,8 +143,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-
-  // Show dialog to add a new workout for the selected day
   // Show dialog to add a new workout for the selected day
   void createNewWorkout(DateTime selectedDay) {
     showDialog(
@@ -153,7 +151,7 @@ class _HomePageState extends State<HomePage> {
         title: Text("Log New Workout for ${DateFormat('dd-MM-yyyy').format(selectedDay)}"),
         content: TextField(
           controller: newWorkoutNameController,
-          decoration: InputDecoration(labelText: 'Workout Name'),
+          decoration: const InputDecoration(labelText: 'Workout Name'),
         ),
         actions: [
           MaterialButton(
@@ -161,7 +159,8 @@ class _HomePageState extends State<HomePage> {
               final workoutName = newWorkoutNameController.text;
               if (workoutName.isNotEmpty) {
                 // Add the workout for the selected day and save it
-                Provider.of<WorkoutData>(context, listen: false).addWorkout(workoutName, selectedDay);
+                final workoutId = Provider.of<WorkoutData>(context, listen: false)
+                    .addWorkout(workoutName, selectedDay);
 
                 // Clear input field after saving
                 newWorkoutNameController.clear();
@@ -170,12 +169,10 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(context);
 
                 // Navigate to the workout page for the newly created workout
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => WorkoutPage(workoutName: workoutName),
-                ));
+                _goToWorkoutPage(workoutId, workoutName);
               }
             },
-            child: Text("Next"), // Changed from "Save" to "Next"
+            child: const Text("Next"),
           ),
           MaterialButton(
             onPressed: () {
@@ -183,20 +180,19 @@ class _HomePageState extends State<HomePage> {
               newWorkoutNameController.clear();
               Navigator.pop(context);
             },
-            child: Text("Cancel"),
+            child: const Text("Cancel"),
           ),
         ],
       ),
     );
   }
 
-
-  // Navigate to the WorkoutPage with a specific workout name
-  void _goToWorkoutPage(String workoutName) {
+  // Navigate to the WorkoutPage with a specific workout ID
+  void _goToWorkoutPage(String workoutId, String workoutName) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => WorkoutPage(workoutName: workoutName),
+        builder: (context) => WorkoutPage(workoutId: workoutId, workoutName: workoutName),
       ),
     );
   }
@@ -204,7 +200,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final workoutData = Provider.of<WorkoutData>(context);
-    final Map<DateTime, List<String>> workoutsByDay = _getWorkoutsByDay(workoutData);
+    final Map<DateTime, List<Workout>> workoutsByDay = _getWorkoutsByDay(workoutData);
 
     return Consumer<WorkoutData>(
       builder: (context, value, child) => Scaffold(
@@ -212,7 +208,7 @@ class _HomePageState extends State<HomePage> {
           title: const Text('Workout Tracker'),
           actions: <Widget>[
             IconButton(
-              icon: Icon(Icons.analytics),
+              icon: const Icon(Icons.analytics),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -227,7 +223,6 @@ class _HomePageState extends State<HomePage> {
           onPressed: () => createNewWorkout(DateTime.now()),
           child: const Icon(Icons.add),
         ),
-
         backgroundColor: Colors.grey[300],
         body: Column(
           children: [
@@ -236,15 +231,10 @@ class _HomePageState extends State<HomePage> {
               flex: 1,
               child: MyHeatMap(), // Ensure this shows your heatmap
             ),
-
-           // Expanded(
-             // flex: 1,
-              //child: , // Ensure this shows your heatmap
-           //),
             // Calendar to display the week and allow adding workouts
             Expanded(
               flex: 1,
-              child: TableCalendar<String>(
+              child: TableCalendar<Workout>(
                 firstDay: DateTime.utc(2000, 1, 1),
                 lastDay: DateTime.utc(2100, 12, 31),
                 focusedDay: _focusedDay,
@@ -252,7 +242,7 @@ class _HomePageState extends State<HomePage> {
                 eventLoader: (day) => _getEventsForDay(day),
                 onDaySelected: _onDaySelected,
                 calendarFormat: CalendarFormat.week,
-                calendarStyle: CalendarStyle(
+                calendarStyle: const CalendarStyle(
                   todayDecoration: BoxDecoration(
                     color: Colors.blue,
                     shape: BoxShape.circle,
@@ -262,7 +252,7 @@ class _HomePageState extends State<HomePage> {
                     shape: BoxShape.circle,
                   ),
                   markerDecoration: BoxDecoration(
-                    color: Colors.blue, // Blue dot for workout days
+                    color: Colors.blue,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -271,12 +261,13 @@ class _HomePageState extends State<HomePage> {
             // List of selected events (workouts) for the selected day
             Expanded(
               flex: 2,
-              child: ValueListenableBuilder<List<String>>(
+              child: ValueListenableBuilder<List<Workout>>(
                 valueListenable: _selectedEvents,
-                builder: (context, value, _) {
+                builder: (context, workouts, _) {
                   return ListView.builder(
-                    itemCount: value.length,
+                    itemCount: workouts.length,
                     itemBuilder: (context, index) {
+                      final workout = workouts[index];
                       return Container(
                         margin: const EdgeInsets.symmetric(
                           horizontal: 12.0,
@@ -287,7 +278,9 @@ class _HomePageState extends State<HomePage> {
                           borderRadius: BorderRadius.circular(12.0),
                         ),
                         child: ListTile(
-                          title: Text(value[index]),
+                          title: Text(workout.name),
+                          subtitle: Text(DateFormat('yyyy-MM-dd').format(workout.date)),
+                          onTap: () => _goToWorkoutPage(workout.id, workout.name),
                         ),
                       );
                     },
@@ -295,7 +288,6 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ),
-
           ],
         ),
       ),

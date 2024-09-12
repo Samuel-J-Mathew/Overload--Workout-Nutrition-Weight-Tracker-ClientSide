@@ -72,6 +72,10 @@ class WorkoutData extends ChangeNotifier{
           workout.date.day == date.day;
     }).toList();
   }
+  // Get workout by ID
+  Workout getWorkoutById(String workoutId) {
+    return workoutList.firstWhere((workout) => workout.id == workoutId);
+  }
   List<String> getAllExerciseNames() {
     Set<String> exerciseNames = {};
     for (var workout in workoutList) {
@@ -119,12 +123,16 @@ class WorkoutData extends ChangeNotifier{
     return relevantWorkout.exercises.length;
   }
   // add a workout
-  void addWorkout(String name, DateTime date){
-    workoutList.add(Workout(name: name,  exercises: [],date: date ));
+  // Method to add a new workout, and return the workout's unique ID
+  String addWorkout(String workoutName, DateTime date) {
+    final newWorkout = Workout(
+      name: workoutName,
+      exercises: [],  // Start with an empty list of exercises
+      date: date,
+    );
+    workoutList.add(newWorkout);
     notifyListeners();
-
-    //save to database
-    db.saveToDatebase(workoutList);
+    return newWorkout.id;  // Return the unique ID of the newly added workout
   }
 
   // New method to print all workout dates
@@ -134,22 +142,21 @@ class WorkoutData extends ChangeNotifier{
     }
   }
 
+
   // add exercise to a workout
-  void addExercise(String workoutName, String exerciseName, String weight, String reps, String sets,String musclegroup){
-    //find the relevant workout
-    Workout relevantWorkout = getRelevantWorkout(workoutName);
-    relevantWorkout.exercises.add(
-      Exercise(
-        name: exerciseName,
-        weight: weight,
-        reps: reps,
-        sets: sets,
-        musclegroup: musclegroup,
-      ),
-    );
+  void addExercise(String workoutId, String name, String weight, String reps, String sets, String muscleGroup) {
+    Workout workout = getWorkoutById(workoutId);
+
+    // Ensure that the required muscleGroup argument is passed when creating a new Exercise
+    workout.exercises.add(Exercise(
+      name: name,
+      weight: weight,
+      reps: reps,
+      sets: sets,
+      musclegroup: muscleGroup,  // Add the missing musclegroup argument
+    ));
+
     notifyListeners();
-    //save to database
-    db.saveToDatebase(workoutList);
   }
   // check off exercise
   void checkOffExercise(String workoutName, String exerciseName){

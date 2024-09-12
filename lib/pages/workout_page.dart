@@ -6,7 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 class WorkoutPage extends StatefulWidget{
   final String workoutName;
-  const WorkoutPage({super.key, required this.workoutName});
+  final String workoutId;  // Add workoutId
+  const WorkoutPage({super.key,required this.workoutId, required this.workoutName});
   @override
   State<WorkoutPage> createState() => _MyWidgetState();
 }
@@ -96,7 +97,7 @@ class WorkoutPage extends StatefulWidget{
       String musclegroup = musclegroupController.text;
       // add exercise to workout
       Provider.of<WorkoutData>(context,listen: false).addExercise(
-          widget.workoutName,
+          widget.workoutId,
           newExerciseName,
           weight,
           reps,
@@ -126,31 +127,37 @@ class WorkoutPage extends StatefulWidget{
     @override
     Widget build(BuildContext context) {
       return Consumer<WorkoutData>(
-        builder: (context, value, child) => Scaffold(
-          appBar: AppBar(title: Text(widget.workoutName)),
-          floatingActionButton: FloatingActionButton(
-            onPressed: createNewExercise,
-            child: const Icon(Icons.add),
-          ),
-          body: ListView.builder(
-            itemCount: value.numberofExercisesInWorkout(widget.workoutName),
-            itemBuilder: (context, index) {
-              var exercises = value.getRelevantWorkout(widget.workoutName).exercises;
-              return ExerciseTile(
-                exerciseName: exercises[index].name,
-                weight: exercises[index].weight,
-                reps: exercises[index].reps,
-                sets: exercises[index].sets,
-                isCompleted: exercises[index].isCompleted,
-                onDelete: () => _deleteExercise(index, value), // Pass the callback for deletion
-              );
-            },
-          ),
-        ),
+        builder: (context, value, child) {
+          var workout = value.getWorkoutById(widget.workoutId);  // Fetch workout using workoutId
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(widget.workoutName),
+            ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: createNewExercise,
+              child: const Icon(Icons.add),
+            ),
+            body: ListView.builder(
+              itemCount: workout.exercises.length,  // Use workout fetched by ID
+              itemBuilder: (context, index) {
+                var exercises = workout.exercises;
+                return ExerciseTile(
+                  exerciseName: exercises[index].name,
+                  weight: exercises[index].weight,
+                  reps: exercises[index].reps,
+                  sets: exercises[index].sets,
+                  isCompleted: exercises[index].isCompleted,
+                  onDelete: () => _deleteExercise(index, value),  // Pass the callback for deletion
+                );
+              },
+            ),
+          );
+        },
       );
     }
 
+    // Delete exercise
     void _deleteExercise(int index, WorkoutData workoutData) {
-      workoutData.deleteExercise(widget.workoutName, index); // Assuming deleteExercise method exists
+      workoutData.deleteExercise(widget.workoutId, index);  // Delete using workoutId
     }
   }
