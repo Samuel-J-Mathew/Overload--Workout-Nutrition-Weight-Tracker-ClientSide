@@ -4,6 +4,8 @@ import 'package:gymapp/data/workout_data.dart';
 import 'package:gymapp/data/exercise_list.dart';
 import 'package:provider/provider.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+
+import '../models/SingleExercise.dart';
 class WorkoutPage extends StatefulWidget{
   final String workoutName;
   final String workoutId;  // Add workoutId
@@ -31,24 +33,25 @@ class WorkoutPage extends StatefulWidget{
               mainAxisSize: MainAxisSize.min,
               children: [
                 //drop down exercise name
-                DropdownSearch<String>(
+                DropdownSearch<SingleExercise>(
                   popupProps: PopupProps.menu(
                     showSelectedItems: true,
                     showSearchBox: true,
-
-                  ),
-                  items: exerciseList,
-                  dropdownDecoratorProps: DropDownDecoratorProps(
-                    dropdownSearchDecoration: InputDecoration(
-                      labelText: "Exercise Name",
-                      hintText: "Exercise completed",
+                    itemBuilder: (context, item, isSelected) => ListTile(
+                      title: Text(item.name),
+                      subtitle: Text(item.muscleGroup),
                     ),
                   ),
-                  onChanged: (String? selectedItem) {
-                    // Update the TextEditingController with the selected item
-                    exerciseNameController.text = selectedItem ?? '';
+                  items: exerciseList,
+                  onChanged: (SingleExercise? selectedItem) {
+                    if (selectedItem != null) {
+                      exerciseNameController.text = selectedItem.name;
+                      musclegroupController.text = selectedItem.muscleGroup; // Store muscle group
+                    }
                   },
-                  selectedItem: "blank",
+                  itemAsString: (SingleExercise? item) => item?.name ?? '',
+                  compareFn: (item1, item2) => item1?.name == item2?.name && item1?.muscleGroup == item2?.muscleGroup, // Comparison function
+                  selectedItem: SingleExercise(name: "Select an Exercise", muscleGroup: ""),
                 ),
                 //sets
                 TextField(
