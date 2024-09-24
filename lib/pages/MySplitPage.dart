@@ -30,6 +30,14 @@ class _MySplitPageState extends State<MySplitPage> {
       body: ListView.builder(
         itemCount: weeklySplits.length,
         itemBuilder: (context, index) {
+          var muscleGroups = weeklySplits[index].muscleGroups;
+          var uniqueMuscleGroupNames = muscleGroups.map((mg) => mg.muscleGroupName).toSet();
+
+          // Remove duplicates by only keeping unique muscle groups based on name
+          weeklySplits[index].muscleGroups = muscleGroups
+              .where((mg) => uniqueMuscleGroupNames.remove(mg.muscleGroupName))
+              .toList();
+
           return ExpansionTile(
             title: Text(weeklySplits[index].day),
             trailing: IconButton(
@@ -55,6 +63,7 @@ class _MySplitPageState extends State<MySplitPage> {
       ),
     );
   }
+
   void _confirmDelete(int index) {
     showDialog(
       context: context,
