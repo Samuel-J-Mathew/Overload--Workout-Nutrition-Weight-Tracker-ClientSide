@@ -6,6 +6,8 @@ List<SingleExercise> exerciseList = [
   SingleExercise(name: "Pull-Ups", muscleGroup: "Back"),
   SingleExercise(name: "Sit-Ups", muscleGroup: "Abs"),
   SingleExercise(name: "Bicycle Crunches", muscleGroup: "Abs"),
+  SingleExercise(name: "Leg Raises", muscleGroup: "Abs"),
+  SingleExercise(name: "Cable Crunches", muscleGroup: "Abs"),
   SingleExercise(name: "Deadlifts", muscleGroup: "Back"),
   SingleExercise(name: "DB Rows", muscleGroup: "Back"),
   SingleExercise(name: "Lat Pulldowns", muscleGroup: "Back"),

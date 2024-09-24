@@ -2,6 +2,7 @@ import 'package:gymapp/datetime/date_time.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/exercise.dart';
 import '../models/workout.dart';
+import 'WorkoutSplit.dart';
 
 class HiveDatabase {
   //reference our hive box
@@ -115,7 +116,40 @@ class HiveDatabase {
     }
       return false;
   }
+  // Save Workout Splits
+  void saveWorkoutSplits(List<WorkoutSplit> splits) {
+    List<Map> storedSplits = splits.map((split) => {
+      'day': split.day,
+      'muscleGroups': split.muscleGroups.map((mg) => {
+        'muscleGroupName': mg.muscleGroupName,
+        'exercises': mg.exercises.map((exercise) => {
+          'name': exercise.name,
+          'reps': exercise.reps,
+          'sets': exercise.sets,
+          'weight': exercise.weight,
+        }).toList()
+      }).toList(),
+    }).toList();
 
+    _myBox.put('workout_splits', storedSplits);
+  }
+
+  // Load Workout Splits
+  List<WorkoutSplit> loadWorkoutSplits() {
+    var storedSplits = _myBox.get('workout_splits', defaultValue: []);
+    return storedSplits.map<WorkoutSplit>((split) => WorkoutSplit(
+      day: split['day'],
+      muscleGroups: (split['muscleGroups'] as List).map<MuscleGroupSplit>((mg) => MuscleGroupSplit(
+        muscleGroupName: mg['muscleGroupName'],
+        exercises: (mg['exercises'] as List).map<ExerciseDetail>((ex) => ExerciseDetail(
+          name: ex['name'],
+          reps: ex['reps'],
+          sets: ex['sets'],
+          weight: ex['weight'],
+        )).toList(),
+      )).toList(),
+    )).toList();
+  }
 // return completion status of a given date yyyymmdd
 int getCompletionStatus(String yyyymmdd){
     //returns 0 or 1, if null then return 0
