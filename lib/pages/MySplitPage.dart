@@ -18,7 +18,7 @@ class _MySplitPageState extends State<MySplitPage> {
     weeklySplits = db.loadWorkoutSplits(); // Load splits on initialization
   }
   List<String> muscleGroups = [
-    'Chest', 'Back', 'Legs', 'Arms', 'Shoulders', 'Triceps'
+    'Chest', 'Back', 'Legs', 'Biceps', 'Shoulders', 'Triceps'
   ];
   List<String> selectedMuscleGroups = [];
   @override
@@ -103,59 +103,65 @@ class _MySplitPageState extends State<MySplitPage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Add New Workout Split'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                DropdownButton<String>(
-                  value: selectedDay,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedDay = newValue!;
-                    });
-                  },
-                  items: <String>['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
+        return StatefulBuilder( // Ensure this StatefulBuilder is used to update the dialog's state
+          builder: (BuildContext context, StateSetter setDialogState) { // This setDialogState is used for updating the dialog
+            return AlertDialog(
+              title: Text('Add New Workout Split'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    DropdownButton<String>(
+                      value: selectedDay,
+                      onChanged: (String? newValue) {
+                        setDialogState(() { // This updates the dialog's state
+                          selectedDay = newValue!;
+                        });
+                      },
+                      items: <String>['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                    ...muscleGroups.map((mg) => ListTile(
+                      title: Text(mg.muscleGroupName),
+                      subtitle: Text(mg.exercises.map((e) => e.name).join(', ')),
+                    )),
+                    TextButton(
+                      onPressed: () => _addMuscleGroup(muscleGroups),
+                      child: Text('Add Muscle Group'),
+                    ),
+                  ],
                 ),
-                ...muscleGroups.map((mg) => ListTile(
-                  title: Text(mg.muscleGroupName),
-                  subtitle: Text(mg.exercises.map((e) => e.name).join(', ')),
-                )),
+              ),
+              actions: <Widget>[
                 TextButton(
-                  onPressed: () => _addMuscleGroup(muscleGroups),
-                  child: Text('Add Muscle Group'),
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (selectedDay.isNotEmpty) {
+                      weeklySplits.add(WorkoutSplit(day: selectedDay, muscleGroups: muscleGroups));
+                      db.saveWorkoutSplits(weeklySplits); // Persist data
+                      Navigator.pop(context);
+                      setState(() {}); // This triggers a rebuild of the widget, refreshing the display
+                    }
+                  },
+                  child: Text('Save'),
                 ),
               ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (selectedDay.isNotEmpty) {
-                  setState(() {
-                    weeklySplits.add(WorkoutSplit(day: selectedDay, muscleGroups: muscleGroups));
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              child: Text('Save'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
   }
+
+
   @override
   void dispose() {
     db.saveWorkoutSplits(weeklySplits); // Save splits when the page is disposed
