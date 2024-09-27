@@ -1,7 +1,10 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import '../data/WorkoutSplit.dart';
+import '../data/exercise_list.dart';
 import '../data/hive_database.dart';
+import '../models/SingleExercise.dart';
 
 class MySplitPage extends StatefulWidget {
   @override
@@ -168,7 +171,7 @@ class _MySplitPageState extends State<MySplitPage> {
     super.dispose();
   }
   void _addMuscleGroup(List<MuscleGroupSplit> muscleGroups) {
-    List<String> allMuscleGroups = ['Chest', 'Back', 'Legs', 'Arms', 'Shoulders']; // Example muscle groups
+    List<String> allMuscleGroups = ['Chest', 'Back', 'Legs', 'Biceps','Triceps', 'Shoulders','Abs']; // Example muscle groups
     List<String> selectedMuscleGroupNames = [];
 
     showDialog(
@@ -297,18 +300,35 @@ class _MySplitPageState extends State<MySplitPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                DropdownSearch<SingleExercise>(
+                  popupProps: PopupProps.menu(
+                    showSelectedItems: true,
+                    showSearchBox: true,
+                    itemBuilder: (context, item, isSelected) => ListTile(
+                      title: Text(item.name),
+                      subtitle: Text(item.muscleGroup),
+                    ),
+                  ),
+                  items: exerciseList,
+                  onChanged: (SingleExercise? selectedItem) {
+                    if (selectedItem != null) {
+                      exerciseName = selectedItem.name;
+                     // musclegroupController.text = selectedItem.muscleGroup; // Store muscle group
+                    }
+                  },
+                  itemAsString: (SingleExercise? item) => item?.name ?? '',
+                  compareFn: (item1, item2) => item1?.name == item2?.name && item1?.muscleGroup == item2?.muscleGroup, // Comparison function
+                  selectedItem: SingleExercise(name: "Select an Exercise", muscleGroup: ""),
+                ),
+
+
                 TextField(
-                  autofocus: true,
-                  decoration: InputDecoration(labelText: 'Exercise Name'),
-                  onChanged: (value) => exerciseName = value,
+                  decoration: InputDecoration(labelText: 'Sets'),
+                  onChanged: (value) => sets = int.parse(value),
                 ),
                 TextField(
                   decoration: InputDecoration(labelText: 'Reps'),
                   onChanged: (value) => reps = int.parse(value),
-                ),
-                TextField(
-                  decoration: InputDecoration(labelText: 'Sets'),
-                  onChanged: (value) => sets = int.parse(value),
                 ),
                 TextField(
                   decoration: InputDecoration(labelText: 'Weight (lbs)'),
