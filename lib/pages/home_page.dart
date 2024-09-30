@@ -149,7 +149,14 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Log New Workout for ${DateFormat('dd-MM-yyyy').format(selectedDay)}"),
+        title: Text(
+          "Log Workout for\n${formatDateTimeWithSuffix(selectedDay)}",
+          style: const TextStyle(
+            fontStyle: FontStyle.italic, // Apply italic style to the text
+            fontWeight: FontWeight.bold, // Make the text bold
+          ),
+          textAlign: TextAlign.center, // Center the text horizontally
+        ),
         content: TextField(
           controller: newWorkoutNameController,
           decoration: const InputDecoration(labelText: 'Workout Name'),
