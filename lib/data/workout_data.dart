@@ -132,6 +132,7 @@ class WorkoutData extends ChangeNotifier{
     );
     workoutList.add(newWorkout);
     notifyListeners();
+    db.saveToDatebase(workoutList);
     return newWorkout.id;  // Return the unique ID of the newly added workout
   }
 
@@ -157,6 +158,7 @@ class WorkoutData extends ChangeNotifier{
     ));
 
     notifyListeners();
+    db.saveToDatebase(workoutList);
   }
   // check off exercise
   void checkOffExercise(String workoutName, String exerciseName){
