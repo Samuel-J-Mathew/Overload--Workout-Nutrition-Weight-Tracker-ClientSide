@@ -5,9 +5,10 @@ import 'package:gymapp/data/hive_database.dart';
 import 'package:intl/intl.dart';
 
 import '../models/exercise.dart';
-import '../models/exercisedetail.dart';
+import '../models/exercisedetail.dart' as model;
 import '../models/workout.dart';
-
+import 'WorkoutSplit.dart';
+import 'package:gymapp/data/WorkoutSplit.dart' as split;
 class WorkoutData extends ChangeNotifier{
   final db = HiveDatabase();
 
@@ -48,7 +49,17 @@ class WorkoutData extends ChangeNotifier{
       ],
     )
   ];
-
+  // Method to get today's workout split based on the day of the week
+  WorkoutSplit getTodaysSplit() {
+    DateTime today = DateTime.now();
+    String weekday = DateFormat('EEEE').format(today); // Gets weekday as 'Monday', 'Tuesday', etc.
+    // Assuming db.loadWorkoutSplits() returns a list of WorkoutSplit
+    List<WorkoutSplit> splits = db.loadWorkoutSplits();
+    return splits.firstWhere(
+          (split) => split.day.toLowerCase() == weekday.toLowerCase(),
+      orElse: () => WorkoutSplit(day: weekday, muscleGroups: []), // Provide a default empty split if none found
+    );
+  }
   //if there are wrokouts alreadyt in database, then get that workout list, otherwise use defaul workouts
   //otherwise use defaults workouts
   void initalizeWorkoutList(){
@@ -59,6 +70,39 @@ class WorkoutData extends ChangeNotifier{
     }
   }
 
+  void logExercise(split.ExerciseDetail exerciseDetail) {
+    DateTime now = DateTime.now();
+    DateTime today = DateTime(now.year, now.month, now.day);
+
+    // Try to find today's workout or create a new one if it doesn't exist
+    Workout todaysWorkout = workoutList.firstWhere(
+            (workout) => workout.date.year == today.year && workout.date.month == today.month && workout.date.day == today.day,
+        orElse: () {
+          // Create a new workout if none exists for today
+          var newWorkout = Workout(
+            name: "Workout for ${DateFormat('yyyy-MM-dd').format(today)}",
+            date: today,
+            exercises: [],
+          );
+          workoutList.add(newWorkout);
+          return newWorkout;
+        }
+    );
+
+    // Create a new exercise from the ExerciseDetail and add to today's workout
+    Exercise newExercise = Exercise(
+      name: exerciseDetail.name,
+      weight: exerciseDetail.weight.toString(), // Ensure weight is a string in your Exercise class
+      reps: exerciseDetail.reps.toString(),
+      sets: exerciseDetail.sets.toString(),
+      musclegroup: "General", // Update this as needed; assuming there is no muscle group field in ExerciseDetail
+    );
+    todaysWorkout.exercises.add(newExercise);
+
+    // Notify listeners and save the updated list to the database
+    notifyListeners();
+    db.saveToDatebase(workoutList);
+  }
 
   // get the list of workouts
   List<Workout> getworkoutList (){
@@ -85,12 +129,12 @@ class WorkoutData extends ChangeNotifier{
     }
     return exerciseNames.toList();
   }
-  List<ExerciseDetail> getExercisesByName(String exerciseName) {
-    List<ExerciseDetail> filteredExercises = [];
+  List<model.ExerciseDetail> getExercisesByName(String exerciseName) {
+    List<model.ExerciseDetail> filteredExercises = [];
     for (var workout in workoutList) {
       for (var exercise in workout.exercises) {
         if (exercise.name == exerciseName) {
-          filteredExercises.add(ExerciseDetail(exercise, workout.date));
+          filteredExercises.add(model.ExerciseDetail(exercise, workout.date));
         }
       }
     }
@@ -111,7 +155,7 @@ class WorkoutData extends ChangeNotifier{
       if (heatMapData.containsKey(workoutDate)) {
         heatMapData[workoutDate] = heatMapData[workoutDate]! + 1;
       } else {
-        heatMapData[workoutDate] = 1;
+        heatMapData[workoutDate] = 10;
       }
     }
 
@@ -197,6 +241,7 @@ class WorkoutData extends ChangeNotifier{
     workout.exercises.removeAt(index);
     notifyListeners();  // Make sure to notify listeners to update the UI
   }
+
   // return relevant workout object, given a workout name
   Workout getRelevantWorkout(String workoutName){
     Workout relevantWorkout =

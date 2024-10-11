@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gymapp/data/WorkoutSplit.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
@@ -9,7 +10,8 @@ import '../models/workout.dart';
 import 'DataAnalysisPage.dart';
 import 'MySplitPage.dart';
 import 'workout_page.dart';
-
+import 'package:gymapp/models/exercisedetail.dart' as model;  // Alias this import
+import 'package:gymapp/data/WorkoutSplit.dart' as split;
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -24,12 +26,23 @@ class _HomePageState extends State<HomePage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   int _selectedIndex = 0;
+  late String today;
+  late WorkoutSplit todaysWorkout;
   @override
   void initState() {
     super.initState();
-    Provider.of<WorkoutData>(context, listen: false).initalizeWorkoutList();
-    _selectedDay = _focusedDay;
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // No need to pass 'today' as an argument
+      WorkoutSplit todaysSplit = Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
+      setState(() {
+        // Assume you have a state variable to hold today's split for displaying in the widget
+        todaysWorkout = todaysSplit;
+      });
+
+      Provider.of<WorkoutData>(context, listen: false).initalizeWorkoutList();
+      _selectedDay = _focusedDay;
+      _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
+    });
   }
 
   @override
@@ -61,6 +74,45 @@ class _HomePageState extends State<HomePage> {
 
     return workoutMap;
   }
+
+  // Assuming you have a method in WorkoutData that correctly fetches today's split based on day of the week
+  Widget buildTodaysWorkout() {
+    // Access your provider
+    var workoutData = Provider.of<WorkoutData>(context, listen: false);
+    split.WorkoutSplit todaysSplit = workoutData.getTodaysSplit(); // Using the aliased import
+    // Check if the split has any muscle groups; if not, show a message
+    if (todaysSplit.muscleGroups.isEmpty) {
+      return Center(
+        child: Text("No workout planned for today."),
+      );
+    }
+
+    // Generate a string of muscle group names separated by commas
+    String muscleGroupsNames = todaysSplit.muscleGroups.map((mg) => mg.muscleGroupName).join(', ');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text("Today's Workout: $muscleGroupsNames", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        ),
+        ...todaysSplit.muscleGroups.expand((mg) => mg.exercises.map((exercise) => ListTile(
+          title: Text(exercise.name),
+          subtitle: Text('Sets: ${exercise.sets}, Reps: ${exercise.reps}, Weight: ${exercise.weight} lb'),
+          trailing: IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () {
+              // Here we use the ExerciseDetail from WorkoutSplit.dart directly
+              workoutData.logExercise(exercise);
+            },
+          ),
+        ))).toList(),
+      ],
+    );
+  }
+
+
+
 
   // Handle day selection and allow adding a new workout
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
@@ -149,7 +201,7 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
+        title:Text(
           "Log Workout for\n${formatDateTimeWithSuffix(selectedDay)}",
           style: const TextStyle(
             fontStyle: FontStyle.italic, // Apply italic style to the text
@@ -228,67 +280,65 @@ class _HomePageState extends State<HomePage> {
         Column(
           children: [
             // Display HeatMap first
-            Expanded(
-              flex: 1,
-              child: MyHeatMap(), // Ensure this shows your heatmap
-            ),
+            MyHeatMap(), // Removed Expanded to prevent it from taking extra space
+
             // Calendar to display the week and allow adding workouts
-            Expanded(
-              flex: 1,
-              child: TableCalendar<Workout>(
-                firstDay: DateTime.utc(2000, 1, 1),
-                lastDay: DateTime.utc(2100, 12, 31),
-                focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                eventLoader: (day) => _getEventsForDay(day),
-                onDaySelected: _onDaySelected,
-                calendarFormat: CalendarFormat.week,
-                calendarStyle: const CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                  markerDecoration: BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
+            TableCalendar<Workout>(
+              firstDay: DateTime.utc(2000, 1, 1),
+              lastDay: DateTime.utc(2100, 12, 31),
+              focusedDay: _focusedDay,
+              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+              eventLoader: (day) => _getEventsForDay(day),
+              onDaySelected: _onDaySelected,
+              calendarFormat: CalendarFormat.week,
+              calendarStyle: const CalendarStyle(
+                todayDecoration: BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
+                ),
+                selectedDecoration: BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),
+                markerDecoration: BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
                 ),
               ),
             ),
+
             // List of selected events (workouts) for the selected day
-            Expanded(
-              flex: 2,
-              child: ValueListenableBuilder<List<Workout>>(
-                valueListenable: _selectedEvents,
-                builder: (context, workouts, _) {
-                  return ListView.builder(
-                    itemCount: workouts.length,
-                    itemBuilder: (context, index) {
-                      final workout = workouts[index];
-                      return Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 4.0,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        child: ListTile(
-                          title: Text(workout.name),
-                          subtitle: Text(DateFormat('yyyy-MM-dd').format(workout.date)),
-                          onTap: () => _goToWorkoutPage(workout.id, workout.name),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
+            if (_selectedEvents.value.isNotEmpty) // Only show if there are selected events
+              ...[
+                const SizedBox(height: 10), // Small gap for separation
+                ListView.builder(
+                  shrinkWrap: true, // Allows it to take only necessary space
+                  physics: NeverScrollableScrollPhysics(), // Prevent scrolling within this list
+                  itemCount: _selectedEvents.value.length,
+                  itemBuilder: (context, index) {
+                    final workout = _selectedEvents.value[index];
+                    return Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: 4.0,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(),
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: ListTile(
+                        title: Text(workout.name),
+                        subtitle: Text(DateFormat('yyyy-MM-dd').format(workout.date)),
+                        onTap: () => _goToWorkoutPage(workout.id, workout.name),
+                      ),
+                    );
+                  },
+                ),
+              ],
+
+            // Display Today's Workout at the bottom
+            const SizedBox(height: 10), // Add some space before Today's Workout
+            buildTodaysWorkout(),
           ],
         ),
         Positioned(
@@ -336,4 +386,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-// workout not getting saved to heatmap and db database
