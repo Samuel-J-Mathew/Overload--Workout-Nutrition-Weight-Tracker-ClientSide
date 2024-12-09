@@ -5,12 +5,11 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../data/workout_data.dart';
 import '../models/heat_map.dart';
-import '../models/calender.dart';
 import '../models/workout.dart';
 import 'DataAnalysisPage.dart';
 import 'MySplitPage.dart';
 import 'workout_page.dart';
-import 'package:gymapp/models/exercisedetail.dart' as model;  // Alias this import
+// Alias this import
 import 'package:gymapp/data/WorkoutSplit.dart' as split;
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -82,7 +81,7 @@ class _HomePageState extends State<HomePage> {
     split.WorkoutSplit todaysSplit = workoutData.getTodaysSplit(); // Using the aliased import
     // Check if the split has any muscle groups; if not, show a message
     if (todaysSplit.muscleGroups.isEmpty) {
-      return Center(
+      return const Center(
         child: Text("No workout planned for today."),
       );
     }
@@ -94,19 +93,19 @@ class _HomePageState extends State<HomePage> {
       children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Text("Today's Workout: $muscleGroupsNames", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          child: Text("Today's Workout: $muscleGroupsNames", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ),
         ...todaysSplit.muscleGroups.expand((mg) => mg.exercises.map((exercise) => ListTile(
           title: Text(exercise.name),
           subtitle: Text('Sets: ${exercise.sets}, Reps: ${exercise.reps}, Weight: ${exercise.weight} lb'),
           trailing: IconButton(
-            icon: Icon(Icons.add),
+            icon: const Icon(Icons.add),
             onPressed: () {
               // Here we use the ExerciseDetail from WorkoutSplit.dart directly
               workoutData.logExercise(exercise);
             },
           ),
-        ))).toList(),
+        ))),
       ],
     );
   }
@@ -130,7 +129,7 @@ class _HomePageState extends State<HomePage> {
   String formatDateTimeWithSuffix(DateTime dateTime) {
     var day = dateTime.day;
     var suffix = getDaySuffix(day);
-    return DateFormat('MMMM').format(dateTime) + ' ' + day.toString() + suffix;
+    return '${DateFormat('MMMM').format(dateTime)} $day$suffix';
   }
   String getDaySuffix(int day) {
     if ((day % 10 == 1) && (day != 11)) {
@@ -267,9 +266,9 @@ class _HomePageState extends State<HomePage> {
       case 0:
         return buildHomePageBody();
       case 1:
-        return MySplitPage();  // Assume this is another widget for "My Split"
+        return const MySplitPage();  // Assume this is another widget for "My Split"
       case 2:
-        return DataAnalysisPage();      // Assume this is another widget for "Log"
+        return const DataAnalysisPage();      // Assume this is another widget for "Log"
       default:
         return buildHomePageBody();
     }
@@ -280,7 +279,7 @@ class _HomePageState extends State<HomePage> {
         Column(
           children: [
             // Display HeatMap first
-            MyHeatMap(), // Removed Expanded to prevent it from taking extra space
+            const MyHeatMap(), // Removed Expanded to prevent it from taking extra space
 
             // Calendar to display the week and allow adding workouts
             TableCalendar<Workout>(
@@ -313,7 +312,7 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 10), // Small gap for separation
                 ListView.builder(
                   shrinkWrap: true, // Allows it to take only necessary space
-                  physics: NeverScrollableScrollPhysics(), // Prevent scrolling within this list
+                  physics: const NeverScrollableScrollPhysics(), // Prevent scrolling within this list
                   itemCount: _selectedEvents.value.length,
                   itemBuilder: (context, index) {
                     final workout = _selectedEvents.value[index];
@@ -362,7 +361,7 @@ class _HomePageState extends State<HomePage> {
       builder: (context, value, child) => Scaffold(
         appBar: AppBar(
           title: const Text('Workout Tracker'),
-          actions: <Widget>[
+          actions: const <Widget>[
 
           ],
         ),
@@ -371,7 +370,7 @@ class _HomePageState extends State<HomePage> {
         body: _buildBody(),
 
 
-        bottomNavigationBar: BottomNavigationBar(items: [
+        bottomNavigationBar: BottomNavigationBar(items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'home'),
           BottomNavigationBarItem(icon: Icon(Icons.edit_note ), label: 'My Split'),
           BottomNavigationBarItem(icon: Icon(Icons.analytics), label: 'Log'),

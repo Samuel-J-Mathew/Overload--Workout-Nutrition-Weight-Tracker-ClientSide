@@ -1,5 +1,4 @@
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../data/workout_data.dart';
 
 class DataAnalysisPage extends StatefulWidget {
+  const DataAnalysisPage({super.key});
+
   @override
   _DataAnalysisPageState createState() => _DataAnalysisPageState();
 }
@@ -39,7 +40,7 @@ class _DataAnalysisPageState extends State<DataAnalysisPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Exercise Data Analysis"),
+        title: const Text("Exercise Data Analysis"),
       ),
       body: Column(
         children: [
@@ -63,15 +64,15 @@ class _DataAnalysisPageState extends State<DataAnalysisPage> {
                 gridData: FlGridData(
                   show: true,
                   getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: const Color(0xff37434d),
+                    return const FlLine(
+                      color: Color(0xff37434d),
                       strokeWidth: 1,
                     );
                   },
                   drawVerticalLine: true,
                   getDrawingVerticalLine: (value) {
-                    return FlLine(
-                      color: const Color(0xff37434d),
+                    return const FlLine(
+                      color: Color(0xff37434d),
                       strokeWidth: 1,
                     );
                   },
@@ -106,7 +107,7 @@ class _DataAnalysisPageState extends State<DataAnalysisPage> {
                   ),
                 )
               ),
-            ) : Center(child: Text("No data available for this exercise")),
+            ) : const Center(child: Text("No data available for this exercise")),
           ),
           Expanded(
             child: ListView(

@@ -6,6 +6,8 @@ import '../data/workout_data.dart'; // Import your workout data
 import '../models/utils.dart';// Import the updated utils.dart with workout events
 
 class TableEventsExample extends StatefulWidget {
+  const TableEventsExample({super.key});
+
   @override
   _TableEventsExampleState createState() => _TableEventsExampleState();
 }
@@ -82,7 +84,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         title: Text("Add Workout for ${selectedDay.toLocal()}"),
         content: TextField(
           controller: newWorkoutNameController,
-          decoration: InputDecoration(labelText: 'Workout Name'),
+          decoration: const InputDecoration(labelText: 'Workout Name'),
         ),
         actions: [
           TextButton(
@@ -112,13 +114,13 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                 Navigator.pop(context); // Close the dialog
               }
             },
-            child: Text('Save'),
+            child: const Text('Save'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close the dialog without saving
             },
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
         ],
       ),
@@ -155,7 +157,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Workout Calendar'),
+        title: const Text('Workout Calendar'),
       ),
       body: Column(
         children: [
@@ -170,7 +172,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
             rangeSelectionMode: _rangeSelectionMode,
             eventLoader: _getWorkoutsForDay, // Load workouts for each day
             startingDayOfWeek: StartingDayOfWeek.monday,
-            calendarStyle: CalendarStyle(
+            calendarStyle: const CalendarStyle(
               outsideDaysVisible: false,
               markersMaxCount: 1, // Show one dot per day with workouts
               markerDecoration: BoxDecoration(

@@ -44,9 +44,9 @@ class HiveDatabase {
      */
 //prob dont need this
     if(exerciseCompleted(workouts)){
-      _myBox.put("COMPLETION_STATUS"+ todaysDateYYYYMMDD(), 1);
+      _myBox.put("COMPLETION_STATUS${todaysDateYYYYMMDD()}", 1);
     }else{
-      _myBox.put("COMPLETION_STATUS"+ todaysDateYYYYMMDD(), 0);
+      _myBox.put("COMPLETION_STATUS${todaysDateYYYYMMDD()}", 0);
     }
     //save into hive
     _myBox.put("WORKOUTS", workoutList);

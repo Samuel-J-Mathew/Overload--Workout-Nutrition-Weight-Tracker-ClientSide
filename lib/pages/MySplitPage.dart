@@ -7,6 +7,8 @@ import '../data/hive_database.dart';
 import '../models/SingleExercise.dart';
 
 class MySplitPage extends StatefulWidget {
+  const MySplitPage({super.key});
+
   @override
   _MySplitPageState createState() => _MySplitPageState();
 }
@@ -28,41 +30,67 @@ class _MySplitPageState extends State<MySplitPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Workout Split'),
+        title: const Text('My Workout Split',
+        style: TextStyle(
+          color: Colors.white,
+        ),),
+
+        backgroundColor: Colors.grey[900],
       ),
-      body: ListView.builder(
-        itemCount: weeklySplits.length,
-        itemBuilder: (context, index) {
-          var muscleGroups = weeklySplits[index].muscleGroups;
-          var uniqueMuscleGroupNames = muscleGroups.map((mg) => mg.muscleGroupName).toSet();
+      body: Container(
+        color: Colors.grey[900],
+        child: ListView.builder(
+          itemCount: weeklySplits.length,
+          itemBuilder: (context, index) {
+            var muscleGroups = weeklySplits[index].muscleGroups;
+            var uniqueMuscleGroupNames = muscleGroups.map((mg) => mg.muscleGroupName).toSet();
 
-          // Remove duplicates by only keeping unique muscle groups based on name
-          weeklySplits[index].muscleGroups = muscleGroups
-              .where((mg) => uniqueMuscleGroupNames.remove(mg.muscleGroupName))
-              .toList();
+            // Remove duplicates by only keeping unique muscle groups based on name
+            weeklySplits[index].muscleGroups = muscleGroups
+                .where((mg) => uniqueMuscleGroupNames.remove(mg.muscleGroupName))
+                .toList();
 
-          return ExpansionTile(
-            title: Text(weeklySplits[index].day),
-            trailing: IconButton(
-              icon: Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _confirmDelete(index),
-            ),
-            children: weeklySplits[index].muscleGroups.map((mg) => ListTile(
-              title: Text(mg.muscleGroupName),
-              subtitle: Column(
-                children: mg.exercises.map((exercise) => ListTile(
-                  title: Text(exercise.name),
-                  subtitle: Text('${exercise.sets} sets x ${exercise.reps} reps at ${exercise.weight} lbs'),
-                )).toList(),
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[850],
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ExpansionTile(
+                  title: Text(weeklySplits[index].day, style: TextStyle(
+                    color: Colors.white,
+                  ),),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.white),
+                    onPressed: () => _confirmDelete(index),
+                  ),
+                  children: weeklySplits[index].muscleGroups.map((mg) => ListTile(
+                    title: Text(mg.muscleGroupName, style: TextStyle(
+                      color: Colors.white,
+                    ),),
+                    subtitle: Column(
+                      children: mg.exercises.map((exercise) => ListTile(
+                        title: Text(exercise.name, style: TextStyle(
+                          color: Colors.white,
+                        ),),
+                        subtitle: Text('${exercise.sets} sets x ${exercise.reps} reps at ${exercise.weight} lbs', style: TextStyle(
+                          color: Colors.white,
+                        ),),
+                      )).toList(),
+                    ),
+                  )).toList(),
+                ),
+
               ),
-            )).toList(),
-          );
-        },
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addNewSplit,
         tooltip: 'Add New Split',
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -72,21 +100,21 @@ class _MySplitPageState extends State<MySplitPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete this workout day?'),
+          title: const Text('Confirm Deletion'),
+          content: const Text('Are you sure you want to delete this workout day?'),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Dismiss the dialog but don't delete
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
                 _deleteWorkoutDay(index); // Proceed with deletion
                 Navigator.pop(context);
               },
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -109,7 +137,7 @@ class _MySplitPageState extends State<MySplitPage> {
         return StatefulBuilder( // Ensure this StatefulBuilder is used to update the dialog's state
           builder: (BuildContext context, StateSetter setDialogState) { // This setDialogState is used for updating the dialog
             return AlertDialog(
-              title: Text('Add New Workout Split'),
+              title: const Text('Add New Workout Split'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -135,7 +163,7 @@ class _MySplitPageState extends State<MySplitPage> {
                     )),
                     TextButton(
                       onPressed: () => _addMuscleGroup(muscleGroups),
-                      child: Text('Add Muscle Group'),
+                      child: const Text('Add Muscle Group'),
                     ),
                   ],
                 ),
@@ -143,7 +171,7 @@ class _MySplitPageState extends State<MySplitPage> {
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () {
@@ -154,7 +182,7 @@ class _MySplitPageState extends State<MySplitPage> {
                       setState(() {}); // This triggers a rebuild of the widget, refreshing the display
                     }
                   },
-                  child: Text('Save'),
+                  child: const Text('Save'),
                 ),
               ],
             );
@@ -180,7 +208,7 @@ class _MySplitPageState extends State<MySplitPage> {
         return StatefulBuilder( // This will allow us to update the state inside the dialog
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Add Muscle Group'),
+              title: const Text('Add Muscle Group'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -250,7 +278,7 @@ class _MySplitPageState extends State<MySplitPage> {
                           return ListTile(
                             title: Text(mg),
                             trailing: IconButton(
-                              icon: Icon(Icons.add),
+                              icon: const Icon(Icons.add),
                               onPressed: () {
                                 // This could open another dialog to add exercises for this specific muscle group
                                 _addExercise(muscleGroups, mg);
@@ -265,14 +293,14 @@ class _MySplitPageState extends State<MySplitPage> {
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () {
                     muscleGroups.addAll(selectedMuscleGroupNames.map((name) => MuscleGroupSplit(muscleGroupName: name, exercises: [])));
                     Navigator.pop(context);
                   },
-                  child: Text('Save Muscle Group'),
+                  child: const Text('Save Muscle Group'),
                 ),
               ],
             );
@@ -317,21 +345,21 @@ class _MySplitPageState extends State<MySplitPage> {
                     }
                   },
                   itemAsString: (SingleExercise? item) => item?.name ?? '',
-                  compareFn: (item1, item2) => item1?.name == item2?.name && item1?.muscleGroup == item2?.muscleGroup, // Comparison function
+                  compareFn: (item1, item2) => item1.name == item2.name && item1.muscleGroup == item2.muscleGroup, // Comparison function
                   selectedItem: SingleExercise(name: "Select an Exercise", muscleGroup: ""),
                 ),
 
 
                 TextField(
-                  decoration: InputDecoration(labelText: 'Sets'),
+                  decoration: const InputDecoration(labelText: 'Sets'),
                   onChanged: (value) => sets = int.parse(value),
                 ),
                 TextField(
-                  decoration: InputDecoration(labelText: 'Reps'),
+                  decoration: const InputDecoration(labelText: 'Reps'),
                   onChanged: (value) => reps = int.parse(value),
                 ),
                 TextField(
-                  decoration: InputDecoration(labelText: 'Weight (lbs)'),
+                  decoration: const InputDecoration(labelText: 'Weight (lbs)'),
                   onChanged: (value) => weight = double.parse(value),
                 ),
               ],
@@ -340,7 +368,7 @@ class _MySplitPageState extends State<MySplitPage> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
@@ -360,7 +388,7 @@ class _MySplitPageState extends State<MySplitPage> {
                   Navigator.pop(context);
                 }
               },
-              child: Text('Add Exercise'),
+              child: const Text('Add Exercise'),
             ),
           ],
         );

@@ -1,5 +1,4 @@
 import 'package:gymapp/models/SingleExercise.dart';
-import 'package:gymapp/models/exercise.dart';
 
 List<SingleExercise> exerciseList = [
   SingleExercise(name: "Belt Squat", muscleGroup: "Legs"),

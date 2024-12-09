@@ -20,22 +20,53 @@ class ExerciseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.grey[300],
-      child: ListTile(
-        title: Text(exerciseName),
-        subtitle: Row(
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Container(
+        padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[850],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Chip(label: Text("$sets sets")),
-            Chip(label: Text("$reps reps")),
-            Chip(label: Text("$weight lbs")),
-          ],
+        Row(children: [
+          Icon(Icons.favorite),
+          SizedBox(
+            width:30 ,
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              //title
+              Text(exerciseName,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.white
+                ),),
+              SizedBox(
+                height: 1,
+              ),
+              Text('$sets x $reps x $weight lbs',
+                  style: TextStyle(
+                      fontWeight: FontWeight.normal,
+                      fontSize: 15,
+                      color: Colors.white
+                  )
+              )
+            ],
+          ),
+        ],
         ),
-        trailing: IconButton(
-          icon: Icon(Icons.delete),
-          onPressed: onDelete, // Use the onDelete callback when pressed
-          color: Colors.red,
-        ),
+      IconButton(
+      icon: const Icon(Icons.delete),
+      onPressed: onDelete, // Use the onDelete callback when pressed
+      color: Colors.white,
+      ),
+      ]),
       ),
     );
   }

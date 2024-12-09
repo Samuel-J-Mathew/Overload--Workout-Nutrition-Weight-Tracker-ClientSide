@@ -1,5 +1,4 @@
 //import 'package:fl_chart/fl_chart.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:gymapp/data/hive_database.dart';
 import 'package:intl/intl.dart';
@@ -68,17 +67,35 @@ class WorkoutData extends ChangeNotifier{
     }else{
       db.saveToDatebase(workoutList);
     }
+    notifyListeners();
+  }
+  //get how many times you worked out in a week
+  int getThisWeekWorkoutCount() {
+    int count = 0;
+    DateTime now = DateTime.now();
+    DateTime firstDayOfWeek = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1)); // Normalize and adjust to start from Monday
+    DateTime lastDayOfWeek = firstDayOfWeek.add(Duration(days: 6));
+    Map<DateTime, int> workoutMap = getWorkoutDatesForHeatMap();
+
+    for (DateTime day = firstDayOfWeek; day.isBefore(lastDayOfWeek.add(Duration(days: 1))); day = day.add(Duration(days: 1))) {
+      if (workoutMap.containsKey(day) && workoutMap[day]! > 0) {
+        count++;
+      }
+    }
+
+    return count;
   }
 
   void logExercise(split.ExerciseDetail exerciseDetail) {
     DateTime now = DateTime.now();
     DateTime today = DateTime(now.year, now.month, now.day);
 
-    // Try to find today's workout or create a new one if it doesn't exist
+    print('Logging Exercise: ${exerciseDetail.name} on $today');  // Debugging the input
+
     Workout todaysWorkout = workoutList.firstWhere(
             (workout) => workout.date.year == today.year && workout.date.month == today.month && workout.date.day == today.day,
         orElse: () {
-          // Create a new workout if none exists for today
+          print('No existing workout found for today. Creating a new one.');  // When creating a new workout
           var newWorkout = Workout(
             name: "Workout for ${DateFormat('yyyy-MM-dd').format(today)}",
             date: today,
@@ -89,19 +106,42 @@ class WorkoutData extends ChangeNotifier{
         }
     );
 
-    // Create a new exercise from the ExerciseDetail and add to today's workout
     Exercise newExercise = Exercise(
       name: exerciseDetail.name,
-      weight: exerciseDetail.weight.toString(), // Ensure weight is a string in your Exercise class
+      weight: exerciseDetail.weight.toString(),
       reps: exerciseDetail.reps.toString(),
       sets: exerciseDetail.sets.toString(),
-      musclegroup: "General", // Update this as needed; assuming there is no muscle group field in ExerciseDetail
+      musclegroup: "General",  // Update this as needed
     );
+
+    print('Adding new exercise: ${newExercise.name}, Weight: ${newExercise.weight}, Sets: ${newExercise.sets}, Reps: ${newExercise.reps}');  // Details about the exercise
+
     todaysWorkout.exercises.add(newExercise);
 
-    // Notify listeners and save the updated list to the database
+    // Output the current state of today's workout
+    print('Today\'s Workout now has ${todaysWorkout.exercises.length} exercises.');
+
     notifyListeners();
-    db.saveToDatebase(workoutList);
+    db.saveToDatebase(workoutList);  // Ensure this saves to Hive
+
+    print('Workout saved to database. Total workouts: ${workoutList.length}');  // Confirmation of save
+    printStoredWorkouts();
+  }
+
+  void printStoredWorkouts() {
+    var storedWorkouts = db.readFromDatabase();  // Assuming this returns a List<Workout>
+
+    if (storedWorkouts.isEmpty) {
+      print('No workouts stored in the database.');
+    } else {
+      print('Stored workouts:');
+      for (var workout in storedWorkouts) {
+        print('Workout Name: ${workout.name}, Date: ${workout.date}');
+        for (var exercise in workout.exercises) {
+          print('  Exercise Name: ${exercise.name}, Sets: ${exercise.sets}, Reps: ${exercise.reps}, Weight: ${exercise.weight}, Muscle Group: ${exercise.musclegroup}');
+        }
+      }
+    }
   }
 
   // get the list of workouts
@@ -148,6 +188,7 @@ class WorkoutData extends ChangeNotifier{
   }
   // This method will return a map of dates and workout counts
   Map<DateTime, int> getWorkoutDatesForHeatMap() {
+
     Map<DateTime, int> heatMapData = {};
 
     for (var workout in workoutList) {
@@ -156,6 +197,23 @@ class WorkoutData extends ChangeNotifier{
         heatMapData[workoutDate] = heatMapData[workoutDate]! + 1;
       } else {
         heatMapData[workoutDate] = 10;
+      }
+    }
+
+    return heatMapData;
+  }
+
+  Map<DateTime, int> getWorkoutDatesForHeatMap2() {
+    Map<DateTime, int> heatMapData = {};
+
+    for (var workout in workoutList) {
+      DateTime workoutDate = DateTime(workout.date.year, workout.date.month, workout.date.day); // Normalize the date
+
+      // Increment the count for each workout found on this date, initializing if not already present
+      if (heatMapData.containsKey(workoutDate)) {
+        heatMapData[workoutDate] = heatMapData[workoutDate]! + 1; // Using '!' because we know it exists
+      } else {
+        heatMapData[workoutDate] = 1;  // Initialize with 1 for a new date
       }
     }
 

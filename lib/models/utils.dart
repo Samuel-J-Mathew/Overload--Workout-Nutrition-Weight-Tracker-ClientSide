@@ -1,6 +1,6 @@
 import 'dart:collection';
 import 'package:table_calendar/table_calendar.dart';
-import '../data/workout_data.dart'; // Import your workout data
+// Import your workout data
 
 /// Workout event class.
 class WorkoutEvent {
