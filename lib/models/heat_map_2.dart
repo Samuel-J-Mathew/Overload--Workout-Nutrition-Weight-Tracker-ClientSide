@@ -54,7 +54,7 @@ class MyHeatMap2 extends StatelessWidget {
                     height: MediaQuery.of(context).size.width / 45,
                     margin: const EdgeInsets.all(1.5),
                     decoration: BoxDecoration(
-                      color: activityLevel > 0 ? Colors.green : Colors.grey[700], // Change to green for visibility
+                      color: activityLevel > 0 ? Colors.blue : Colors.grey[700], // Change to green for visibility
                       borderRadius: BorderRadius.circular(2),
                     ),
                   );

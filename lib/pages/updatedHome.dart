@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // For WorkoutData
+import '../data/hive_database.dart';
 import '../data/workout_data.dart'; // Import your WorkoutData class
 import '../models/heat_map.dart';
 import '../models/heat_map_2.dart';
+import 'WeightLogPage.dart';
+import 'bigHeatMap.dart';
 
 class UpdatedHome extends StatefulWidget {
   @override
@@ -15,12 +18,21 @@ class _UpdatedHomeState extends State<UpdatedHome> {
 IconData testicon = Icons.add;
 bool iconBool = true;
 bool click = true;
+  double? mostRecentWeight;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final workoutData = Provider.of<WorkoutData>(context, listen: false);
+      final db = Provider.of<HiveDatabase>(context, listen: false); // Get the Hive database instance
       workoutData.initalizeWorkoutList(); // Initialize workout list from database
+      // Fetch the most recent weight and update the state
+      final latestLog = db.getMostRecentWeightLog();
+      if (latestLog != null) {
+        setState(() {
+          mostRecentWeight = latestLog.weight;
+        });
+      }
     });
   }
   Widget build(BuildContext context) {
@@ -197,31 +209,55 @@ bool click = true;
                                   ),
                                 ),
                                 MyHeatMap2(),
-                                SizedBox(height: 5),
-                                Divider(color: Colors.grey[600]),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 2),
-                                  child: RichText(
-                                    text: TextSpan(
-                                      children: [
-                                        TextSpan(
-                                          text: '$workoutsThisWeek/7 ',
-                                          style: TextStyle(
-                                            fontSize: 17,
-                                            color: Colors.grey[300], // Color for the numbers
-                                          ),
-                                        ),
-                                        TextSpan(
-                                          text: 'this week',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[500], // Different color for the text
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                SizedBox(height: 8),
+                                Divider(
+                                  color: Colors.grey[600],
+                                  height: 1,  // Set minimal height to reduce space
+                                  thickness: 0.5,  // Minimal visual thickness
                                 ),
+                                Container(
+                                  padding: EdgeInsets.zero,  // Ensures no extra padding
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensures spacing between the text and the icon
+                                    children: [
+                                      Flexible(  // Allows the text to resize dynamically
+                                        child: RichText(
+                                          overflow: TextOverflow.ellipsis,  // Prevents text overflow by using ellipsis
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: '$workoutsThisWeek/7 ',
+                                                style: TextStyle(
+                                                  fontSize: 17,
+                                                  color: Colors.grey[300],  // Color for the numbers
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: 'this week',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey[500],  // Different color for the text
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                  //SizedBox(width: 10,),
+                                      IconButton(
+                                        icon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.white),  // Reduced icon size
+                                        onPressed: () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => const BigHeatMap()),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                )
+
+
                               ],
                             ),
                           ),
@@ -256,6 +292,59 @@ bool click = true;
                                       fontSize: 12,
                                       color: Colors.grey[400]),
                                 ),
+                                SizedBox(height: 10,),
+                                SizedBox(
+                                  height: 30,
+                                  width: 185,
+                                  child: WeightLogPage.buildWeightChart(context),
+                                ),
+                                SizedBox(height: 12,),
+                                Divider(
+                                  color: Colors.grey[700],
+                                  height: 1,  // Set minimal height to reduce space
+                                  thickness: 1,  // Minimal visual thickness
+                                ),
+                                Container(
+                                  padding: EdgeInsets.zero,  // Ensures no extra padding
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensures spacing between the text and the icon
+                                    children: [
+                                      Flexible(  // Allows the text to resize dynamically
+                                        child: RichText(
+                                          overflow: TextOverflow.ellipsis,  // Prevents text overflow by using ellipsis
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: '$mostRecentWeight ',
+                                                style: TextStyle(
+                                                  fontSize: 17,
+                                                  color: Colors.grey[300],  // Color for the numbers
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: 'lbs',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey[500],  // Different color for the text
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      //SizedBox(width: 10,),
+                                      IconButton(
+                                        icon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.white),  // Reduced icon size
+                                        onPressed: () {
+                                          // Use Navigator to push WeightLogPage onto the navigation stack
+                                          Navigator.of(context).push(
+                                              MaterialPageRoute(builder: (context) => WeightLogPage()),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                )
                               ],
                             ),
                           ),

@@ -226,16 +226,26 @@ class WorkoutData extends ChangeNotifier{
   }
   // add a workout
   // Method to add a new workout, and return the workout's unique ID
+  // Method to add a new workout, and return the workout's unique ID
   String addWorkout(String workoutName, DateTime date) {
-    final newWorkout = Workout(
-      name: workoutName,
-      exercises: [],  // Start with an empty list of exercises
-      date: date,
-    );
-    workoutList.add(newWorkout);
-    notifyListeners();
-    db.saveToDatebase(workoutList);
-    return newWorkout.id;  // Return the unique ID of the newly added workout
+    String workoutId = DateFormat('yyyy-MM-dd').format(date);
+    // Check if a workout with this ID already exists
+    if (workoutList.any((workout) => workout.id == workoutId)) {
+      // Handle the case where a workout for this date already exists
+      print("Workout for $workoutId already exists.");
+      return workoutId;
+    } else {
+      // Create a new workout if one doesn't exist for this date
+      final newWorkout = Workout(
+        name: workoutName,
+        date: date,
+        exercises: [],
+      );
+      workoutList.add(newWorkout);
+      notifyListeners();
+      db.saveToDatebase(workoutList);
+      return workoutId;
+    }
   }
 
   // New method to print all workout dates
@@ -294,10 +304,14 @@ class WorkoutData extends ChangeNotifier{
     return dataPoints;
   }
 // Delete exercise from workout by ID and index
+  // Delete exercise from workout by ID and index
   void deleteExercise(String workoutId, int index) {
     Workout workout = getWorkoutById(workoutId);
-    workout.exercises.removeAt(index);
-    notifyListeners();  // Make sure to notify listeners to update the UI
+    if (workout.exercises.isNotEmpty && index < workout.exercises.length) {
+      workout.exercises.removeAt(index);
+      db.saveToDatebase(workoutList);  // Make sure changes are saved to Hive
+      notifyListeners();  // Notify listeners to update the UI
+    }
   }
 
   // return relevant workout object, given a workout name

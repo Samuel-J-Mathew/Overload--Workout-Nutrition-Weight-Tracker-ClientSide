@@ -215,8 +215,9 @@ class _HomePageState extends State<HomePage> {
         actions: [
           MaterialButton(
             onPressed: () {
-              final workoutName = newWorkoutNameController.text;
-              if (workoutName.isNotEmpty) {
+              final String  datestring = selectedDay.toString();
+              String workoutName = datestring.split(' ')[0]; // Splits the string by space and takes the first part
+              print("workout name: " + workoutName);
                 // Add the workout for the selected day and save it
                 final workoutId = Provider.of<WorkoutData>(context, listen: false)
                     .addWorkout(workoutName, selectedDay);
@@ -229,7 +230,7 @@ class _HomePageState extends State<HomePage> {
 
                 // Navigate to the workout page for the newly created workout
                 _goToWorkoutPage(workoutId, workoutName);
-              }
+
             },
             child: const Text("Next"),
           ),

@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 import 'exercise.dart';
 import 'package:uuid/uuid.dart';
 class Workout {
@@ -10,5 +12,5 @@ class Workout {
     required this.name,
     required this.exercises,
     required this.date
-  }) : id = const Uuid().v4(); // Generate a unique ID for each workout
+  }) : id = DateFormat('yyyy-MM-dd').format(date); // ID generated based on the date
 }

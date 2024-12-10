@@ -7,6 +7,7 @@ import '../data/workout_data.dart';
 import '../models/workout.dart';
 import 'DataAnalysisPage.dart';
 import 'MySplitPage.dart';
+import 'WeightLogPage.dart';
 import 'workout_page.dart';  // Assuming this has the required UI components for displaying workouts
 
 class ExerciseLogPage extends StatefulWidget {
@@ -21,10 +22,51 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
   DateTime? _selectedDay;
   Workout? _selectedWorkout;  // Store selected workout for display
   int _selectedIndex = 0;
+
   @override
   void initState() {
     super.initState();
-    _selectedDay = _focusedDay;
+    _focusedDay = DateTime.now();
+    _selectedDay = DateTime.now();  // Set today's date
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+
+      goToWorkout();
+
+    });
+  }
+  WorkoutPage createNewWorkout(DateTime selectedDay){
+    final String  datestring = selectedDay.toString();
+    String workoutName = datestring.split(' ')[0];
+    final workoutId = Provider.of<WorkoutData>(context, listen: false)
+        .addWorkout(workoutName, selectedDay);
+    return WorkoutPage(workoutId: workoutId, workoutName: workoutName);
+  }
+  WorkoutPage goToNewWorkout(DateTime selectedDay){
+    final String  datestring = selectedDay.toString();
+    String workoutName = datestring.split(' ')[0];
+    return WorkoutPage(workoutId: workoutName, workoutName: workoutName);
+  }
+
+
+  WorkoutPage goToWorkout(){
+    DateTime now = DateTime.now();
+    String selectedDay = DateFormat('yyyy-MM-dd').format(now);
+    final String  datestring = selectedDay.toString();
+    String workoutName = datestring.split(' ')[0];
+    print('workout name popop : ' + workoutName);
+    return WorkoutPage(workoutId: workoutName, workoutName: workoutName);
+
+  }
+
+  void _selectTodayWorkout() {
+    final todayWorkouts = _getEventsForDay(_selectedDay!);  // Ensure this method normalizes the date properly
+    print("Workouts for today: ${todayWorkouts.length}");
+    if (todayWorkouts.isNotEmpty) {
+      setState(() {
+        _selectedWorkout = todayWorkouts.first;  // Set the first workout of today as the selected workout
+        print("Selected workout ID: ${_selectedWorkout!.id}"); // This will now reflect the correct workout
+      });
+    }
   }
   void _onItemTapped(int index) {
     setState(() {
@@ -33,7 +75,8 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
   }
   List<Workout> _getEventsForDay(DateTime day) {
     final workoutData = Provider.of<WorkoutData>(context, listen: false);
-    return workoutData.getWorkoutsForDate(day);
+    DateTime normalizedDay = DateTime(day.year, day.month, day.day);  // This normalizes the date to the beginning of the day
+    return workoutData.getWorkoutsForDate(normalizedDay);
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
@@ -50,7 +93,8 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
       case 1:
         return buildBodyHome();  // Assume this is another widget for "My Split"
       case 2:
-        return const MySplitPage();      // Assume this is another widget for "Log"
+       // return const MySplitPage();// Assume this is another widget for "Log"
+     return  MySplitPage();
       default:
         return UpdatedHome();
     }
@@ -59,6 +103,7 @@ Widget buildBodyHome(){
     return Column(
 
       children: [
+
         SizedBox(height: 50,),
 
         TableCalendar<Workout>(
@@ -75,16 +120,16 @@ Widget buildBodyHome(){
             todayTextStyle: TextStyle(color: Colors.white),
             selectedTextStyle: TextStyle(color: Colors.white),
             todayDecoration: BoxDecoration(
-              color: Colors.blue,
+              color: Colors.black,
               shape: BoxShape.circle,
 
             ),
             selectedDecoration: BoxDecoration(
-              color: Colors.green,
+              color: Colors.blue[900],
               shape: BoxShape.circle,
             ),
             markerDecoration: BoxDecoration(
-              color: Colors.blue,
+              color: Colors.white,
               shape: BoxShape.circle,
             ),
           ),
@@ -97,6 +142,7 @@ Widget buildBodyHome(){
           daysOfWeekStyle: DaysOfWeekStyle(
             weekdayStyle: TextStyle(color: Colors.white),
             weekendStyle: TextStyle(color: Colors.white),
+
           ),
         ),
 
@@ -106,10 +152,21 @@ Widget buildBodyHome(){
           child: Container(
             color: Colors.grey[900],
             child: _selectedWorkout != null
-                ? WorkoutPage(workoutId: _selectedWorkout!.id, workoutName: _selectedWorkout!.name)  // Pass selected workout details to WorkoutPage
-                : Center(child: Text('No workouts were logged yet.', style: TextStyle(color: Colors.white))),
+                ? (() {
+              print('workoutID dumbdumb: ${_selectedWorkout!.id}');
+              print('workoutName dumbdumb: ${_selectedWorkout!.name}');
+              return WorkoutPage(workoutId: _selectedWorkout!.id, workoutName: _selectedWorkout!.name);  // Pass selected workout details to WorkoutPage
+
+            })()
+                : (() {
+              print('No workouts were logged for today.');  // Print this when no workout is selected
+              //return Center(child: Text('No workouts were logged yet.', style: TextStyle(color: Colors.white)));
+              createNewWorkout(_selectedDay!);
+
+            })(),
           ),
         ),
+
         //SizedBox(height: 10),
 
 

@@ -24,7 +24,9 @@ class ExerciseTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Container(
-        padding: EdgeInsets.all(16),
+        height: 65,
+        //padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.grey[850],
         borderRadius: BorderRadius.circular(16),
@@ -48,13 +50,13 @@ class ExerciseTile extends StatelessWidget {
                     color: Colors.white
                 ),),
               SizedBox(
-                height: 1,
+                height: 0,
               ),
               Text('$sets x $reps x $weight lbs',
                   style: TextStyle(
                       fontWeight: FontWeight.normal,
                       fontSize: 15,
-                      color: Colors.white
+                      color: Colors.grey[400],
                   )
               )
             ],

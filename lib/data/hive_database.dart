@@ -1,12 +1,14 @@
 import 'package:gymapp/datetime/date_time.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/exercise.dart';
+import '../models/weight_log.dart';
 import '../models/workout.dart';
 import 'WorkoutSplit.dart';
 
 class HiveDatabase {
   //reference our hive box
   final _myBox = Hive.box("workout_database");
+  final Box<WeightLog> box = Hive.box<WeightLog>('weight_logs');
   //check if there is already data stored, if not , record the start date
   bool previousDataExists(){
     if(_myBox.isEmpty){
@@ -17,6 +19,7 @@ class HiveDatabase {
       print("previous data does exists");
       return true;
     }
+
   }
   // return start date as yyymmdd
   String getStartDate(){
@@ -54,8 +57,19 @@ class HiveDatabase {
     _myBox.put("DATE", dateList);
   }
 
+  void saveWeightLog(WeightLog log) {
+    box.add(log);
+  }
 
-
+  List<WeightLog> getWeightLogs() {
+    return box.values.toList();
+  }
+  // Function to get the most recent weight log
+  WeightLog? getMostRecentWeightLog() {
+    if (box.isEmpty) return null;
+    // Assuming WeightLog entries are stored in a box and each log has a 'date' field
+    return box.values.reduce((a, b) => a.date.isAfter(b.date) ? a : b);
+  }
   //read data, and return a list of workouts
   List<Workout> readFromDatabase() {
     List<Workout> mySavedWorkouts = [];
@@ -225,4 +239,3 @@ List<List<List<String>>> convertObjectToExerciseList (List<Workout> workouts) {
   }
   return exerciseList;
 }
-// last time 32:50

@@ -140,11 +140,27 @@ class _MyWidgetState extends State<WorkoutPage>{
           //),
           body: Column(
             children: [
+              Container(
+                color: Colors.grey[900],
 
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                SizedBox(
+                  //width: 120,
+                ),
+                  Text("S    W   R",
+                    style: TextStyle(color: Colors.grey[100],
+                      fontSize: 14,
+                    ),),
+                ],
+                ),
+              ),
               Expanded(
                 child: Container(
+                  margin: EdgeInsets.zero,
                   color: Colors.grey[900],
-                  padding: EdgeInsets.only(left: 40, right: 14, top: 25),
+                  padding: EdgeInsets.only(left: 40, right: 14, top: 0),
 
                   child: ListView.builder(
                     itemCount: workout.exercises.length,  // Use workout fetched by ID

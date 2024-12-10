@@ -27,6 +27,7 @@ class _MyHeatMapState extends State<MyHeatMap> {
         colorMode: ColorMode.opacity,
         showText: false,
         scrollable: false,
+        textColor: Colors.white,
         colorsets: const {
           1: Color.fromARGB(20, 2, 179, 8),
           2: Color.fromARGB(40, 2, 179, 8),
@@ -41,6 +42,7 @@ class _MyHeatMapState extends State<MyHeatMap> {
         },
         //textColor: Colors.transparent,  // Hide day labels by setting them to transparent
         showColorTip: false,
+
       ),
     );
   }
