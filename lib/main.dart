@@ -4,6 +4,7 @@ import 'package:gymapp/data/workout_data.dart';
 import 'package:gymapp/pages/ExerciseLogPage.dart';
 import 'package:gymapp/pages/WeightLogPage.dart';
 import 'package:gymapp/pages/home_page.dart';
+import 'package:gymapp/pages/workout_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'models/weight_log.dart';
@@ -32,7 +33,8 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         home: ExerciseLogPage(),
-        //home: HomePage(),// old home page
+        //home: HomePage(),// old home
+        //home: WorkoutPage(),
       ),
     );
   }

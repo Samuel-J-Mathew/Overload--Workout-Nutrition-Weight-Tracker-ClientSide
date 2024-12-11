@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gymapp/pages/workout_page.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart'; // For WorkoutData
 import '../data/hive_database.dart';
 import '../data/workout_data.dart'; // Import your WorkoutData class
@@ -15,6 +17,7 @@ class UpdatedHome extends StatefulWidget {
 class _UpdatedHomeState extends State<UpdatedHome> {
   // Track expanded muscle groups
   final Set<String> expandedMuscleGroups = {};
+  String todayDateString = DateFormat('yyyy-MM-dd').format(DateTime.now());
 IconData testicon = Icons.add;
 bool iconBool = true;
 bool click = true;
@@ -368,10 +371,24 @@ bool click = true;
                       color: Colors.grey[850],
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: EdgeInsets.all(8),
                     child: Row(
                       children: [
-                        Icon(Icons.search, color: Colors.white),
+                        IconButton(
+                          icon: Icon(Icons.search, color: Colors.white),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => WorkoutPage(
+
+                                  workoutId: todayDateString,  // Pass the appropriate ID
+                                  workoutName: todayDateString,  // Pass the appropriate name
+                                  //openDialog: true,  // This will open the createNewExercise dialog automatically
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                         SizedBox(width: 9),
                         Text(
                           'Search for an exercise',

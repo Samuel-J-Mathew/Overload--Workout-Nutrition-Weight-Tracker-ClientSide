@@ -93,13 +93,13 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
       case 1:
         return buildBodyHome();  // Assume this is another widget for "My Split"
       case 2:
-       // return const MySplitPage();// Assume this is another widget for "Log"
-     return  MySplitPage();
+      // return const MySplitPage();// Assume this is another widget for "Log"
+        return  MySplitPage();
       default:
         return UpdatedHome();
     }
   }
-Widget buildBodyHome(){
+  Widget buildBodyHome(){
     return Column(
 
       children: [
@@ -174,13 +174,13 @@ Widget buildBodyHome(){
       ],
 
     );
-}
+  }
   @override
   Widget build(BuildContext context) {
     final workoutData = Provider.of<WorkoutData>(context);
 
     return Scaffold(
-backgroundColor: Colors.grey[850],
+      backgroundColor: Colors.grey[850],
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Dashboard'),
