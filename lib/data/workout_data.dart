@@ -48,6 +48,41 @@ class WorkoutData extends ChangeNotifier{
       ],
     )
   ];
+  Exercise? getMostRecentExerciseDetails(String exerciseName) {
+    Exercise? mostRecentExercise;
+    DateTime? mostRecentDate;
+
+    for (var workout in workoutList) {
+      for (var exercise in workout.exercises) {
+        if (exercise.name == exerciseName) {
+          if (mostRecentDate == null || workout.date.isAfter(mostRecentDate)) {
+            mostRecentDate = workout.date;
+            mostRecentExercise = exercise;
+          }
+        }
+      }
+    }
+
+    // Check if most recent exercise exists and if the number of reps is 8 or more
+    //progressive overload
+    if (mostRecentExercise != null && (int.tryParse(mostRecentExercise.reps) ?? 0) >= 8) {
+      int newWeight = (int.tryParse(mostRecentExercise.weight) ?? 0) + 5;
+      // Return a new instance of Exercise with the increased weight
+      return Exercise(
+          name: mostRecentExercise.name,
+          weight: newWeight.toString(),
+          reps: '5',
+          sets: mostRecentExercise.sets,
+          musclegroup: mostRecentExercise.musclegroup
+      );
+    }
+
+    // Return the most recent exercise details unchanged if reps are less than 8
+    return mostRecentExercise;
+  }
+
+
+
   // Method to get today's workout split based on the day of the week
   WorkoutSplit getTodaysSplit() {
     DateTime today = DateTime.now();

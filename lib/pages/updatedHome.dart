@@ -107,7 +107,6 @@ bool click = true;
                               style: TextStyle(color: Colors.white),
                             ),
                           ),
-
                           onTap: () {
                             setState(() {
                               if (expandedMuscleGroups.contains(muscleGroup.muscleGroupName)) {
@@ -121,34 +120,45 @@ bool click = true;
                         Divider(color: Colors.grey[600]),
                         if (expandedMuscleGroups.contains(muscleGroup.muscleGroupName)) ...[
                           for (var exercise in muscleGroup.exercises) ...[
-                            Padding(
-                              padding: const EdgeInsets.only(left: 16.0),
-                              child: ListTile(
-                                leading: Icon(Icons.check_circle_outline, color: Colors.white),
-                                title: Text(
-                                  exercise.name,
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                subtitle: Text(
-                                  '${exercise.sets} sets x ${exercise.reps} reps at ${exercise.weight} lbs',
-                                  style: TextStyle(color: Colors.grey[400]),
-                                ),
-                                trailing: IconButton(
-                                  icon: Icon(click ? Icons.add : Icons.check, color: Colors.white),
-                                  onPressed: click ? () {
-                                    setState(() {
-                                      click = false;  // Update state to reflect icon change
-                                    });
-                                    workoutData.logExercise(exercise);
-                                    setState(() {});// Pass the correct ExerciseDetail object
-                                  } : null,  // Disable button after one click
-                                ),
-                              ),
+                            Builder(
+                              builder: (context) {
+                                // Attempt to fetch most recent exercise details
+                                var recentExercise = Provider.of<WorkoutData>(context, listen: false).getMostRecentExerciseDetails(exercise.name);
+                                var displaySets = recentExercise?.sets ?? exercise.sets;
+                                var displayReps = recentExercise?.reps ?? exercise.reps;
+                                var displayWeight = recentExercise?.weight ?? exercise.weight;
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 16.0),
+                                  child: ListTile(
+                                    leading: Icon(Icons.check_circle_outline, color: Colors.white),
+                                    title: Text(
+                                      exercise.name,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    subtitle: Text(
+                                      '$displaySets sets x $displayReps reps at $displayWeight lbs',
+                                      style: TextStyle(color: Colors.grey[400]),
+                                    ),
+                                    trailing: IconButton(
+                                      icon: Icon(click ? Icons.add : Icons.check, color: Colors.white),
+                                      onPressed: click ? () {
+                                        setState(() {
+                                          click = false;
+                                        });
+                                        workoutData.logExercise(exercise);
+                                        setState(() {});
+                                      } : null,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                             Divider(color: Colors.grey[500]),
                           ],
                         ],
                       ],
+
                   ],
                 ),
               ),
@@ -298,9 +308,9 @@ bool click = true;
                                   width: 185,
                                   child: WeightLogPage.buildWeightChart(context),
                                 ),
-                                SizedBox(height: 12,),
+                                SizedBox(height: 13,),
                                 Divider(
-                                  color: Colors.grey[700],
+                                  color: Colors.grey[600],
                                   height: 1,  // Set minimal height to reduce space
                                   thickness: 1,  // Minimal visual thickness
                                 ),

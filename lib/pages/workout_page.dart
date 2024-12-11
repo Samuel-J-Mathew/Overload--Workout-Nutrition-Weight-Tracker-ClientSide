@@ -140,22 +140,7 @@ class _MyWidgetState extends State<WorkoutPage>{
           //),
           body: Column(
             children: [
-              Container(
-                color: Colors.grey[900],
 
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                SizedBox(
-                  //width: 120,
-                ),
-                  Text("S    W   R",
-                    style: TextStyle(color: Colors.grey[100],
-                      fontSize: 14,
-                    ),),
-                ],
-                ),
-              ),
               Expanded(
                 child: Container(
                   margin: EdgeInsets.zero,
