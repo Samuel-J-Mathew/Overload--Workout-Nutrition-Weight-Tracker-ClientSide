@@ -168,7 +168,9 @@ class _MyWidgetState extends State<WorkoutPage>{
                 ),
 
               ),
+
               Container(
+
                 constraints: BoxConstraints(
                   maxHeight: 55, // Maximum height
                 ),

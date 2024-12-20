@@ -22,7 +22,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
   DateTime? _selectedDay;
   Workout? _selectedWorkout;  // Store selected workout for display
   int _selectedIndex = 0;
-
+  String todayDateString = DateFormat('yyyy-MM-dd').format(DateTime.now());
   @override
   void initState() {
     super.initState();
