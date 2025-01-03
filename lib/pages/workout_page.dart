@@ -9,12 +9,21 @@ import '../models/SingleExercise.dart';
 class WorkoutPage extends StatefulWidget{
   final String workoutName;
   final String workoutId;  // Add workoutId
-  const WorkoutPage({super.key,required this.workoutId, required this.workoutName});
+  final bool openDialog;
+  const WorkoutPage({super.key,required this.workoutId, required this.workoutName,  this.openDialog = false });
   @override
   State<WorkoutPage> createState() => _MyWidgetState();
 }
 class _MyWidgetState extends State<WorkoutPage>{
-
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openDialog) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        createNewExercise(); // Make sure this method is callable like this
+      });
+    }
+  }
 
   //text controllers
   final exerciseNameController = TextEditingController();
@@ -138,14 +147,17 @@ class _MyWidgetState extends State<WorkoutPage>{
           //onPressed: createNewExercise,
           //child: const Icon(Icons.add),
           //),
+
           body: Column(
+
             children: [
 
               Expanded(
+
                 child: Container(
                   margin: EdgeInsets.zero,
                   color: Colors.grey[900],
-                  padding: EdgeInsets.only(left: 40, right: 14, top: 0),
+                  padding: EdgeInsets.only(left: 40, right: 14,),
 
                   child: ListView.builder(
                     itemCount: workout.exercises.length,  // Use workout fetched by ID

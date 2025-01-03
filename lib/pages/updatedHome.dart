@@ -6,6 +6,9 @@ import '../data/hive_database.dart';
 import '../data/workout_data.dart'; // Import your WorkoutData class
 import '../models/heat_map.dart';
 import '../models/heat_map_2.dart';
+import 'BuildBodyHome.dart';
+import 'MySplitPage.dart';
+import 'SearchPage.dart';
 import 'WeightLogPage.dart';
 import 'bigHeatMap.dart';
 
@@ -44,22 +47,40 @@ bool click = true;
     final todaysSplit = Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
     final workoutsThisWeek = Provider.of<WorkoutData>(context, listen: false).getThisWeekWorkoutCount();
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Dashboard',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.grey[850],
-        elevation: 0,
-      ),
+
 
       backgroundColor: Colors.grey[850],
       body: Column(
         children: [
+          SizedBox(height: 40,),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+                color: Colors.grey[850],
+                borderRadius: BorderRadius.circular(10)
+            ),
+            alignment: Alignment.centerLeft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,  // Aligns children to the start of the main-axis
+              children: [
+                Text(
+                  DateFormat('EEEE, MMMM d').format(DateTime.now()).toUpperCase(),  // Formats and converts date to upper case
+                  style: TextStyle(
+                    color: Colors.grey[600],  // Dark grey color for the date
+                    fontSize: 14,  // Smaller font size for the date
+                  ),
+                ),
+                Text(
+                  'Dashboard',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Card(
@@ -376,16 +397,47 @@ bool click = true;
                         IconButton(
                           icon: Icon(Icons.search, color: Colors.white),
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => WorkoutPage(
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (BuildContext context) {
+                                return DraggableScrollableSheet(
 
-                                  workoutId: todayDateString,  // Pass the appropriate ID
-                                  workoutName: todayDateString,  // Pass the appropriate name
-                                  //openDialog: true,  // This will open the createNewExercise dialog automatically
-                                ),
-                              ),
+                                  initialChildSize: 0.8, // initially cover 80% of the screen
+                                  maxChildSize: 0.95, // when dragged to full, cover 95% of the screen
+                                  minChildSize: 0.5, // minimum size of the sheet when collapsed
+                                  expand: false, // Set this to false if you don't want the sheet to expand to full screen
+                                  builder: (BuildContext context, ScrollController scrollController) {
+                                    return Container(
+
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[900],
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(20),
+                                          topRight: Radius.circular(20),
+                                        ),
+                                      ),
+                                      child: Container(
+                                        margin: EdgeInsets.only(top: 60),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[900], // Set the color here within the decoration
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(20),
+                                            topRight: Radius.circular(20),
+                                          ), // Circular edges at the top
+                                        ),
+                                        // padding: EdgeInsets.only(top: 30), // Padding to push the content down
+                                        child: WorkoutPage(
+                                          workoutId: todayDateString,
+                                          workoutName: todayDateString,
+                                          openDialog: true,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
                             );
                           },
                         ),
