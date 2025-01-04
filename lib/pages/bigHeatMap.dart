@@ -18,6 +18,7 @@ class _BigHeatMapState extends State<BigHeatMap> {
         title: Text('Big Heat Map',style: TextStyle(
           color: Colors.white,
         ),),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         color: Colors.grey[900],

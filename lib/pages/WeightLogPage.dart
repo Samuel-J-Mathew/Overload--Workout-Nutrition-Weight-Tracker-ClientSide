@@ -14,7 +14,9 @@ class WeightLogPage extends StatefulWidget {
   static Widget buildWeightChart(BuildContext context) {
     final db = Provider.of<HiveDatabase>(context, listen: false);
     List<WeightLog> logs = db.getWeightLogs();
-
+    if (logs.isEmpty) {
+      return Center(child: Text("No weight data available"));
+    }
     List<FlSpot> spots = logs.map((log) {
       return FlSpot(
         log.date.millisecondsSinceEpoch.toDouble(),
@@ -52,7 +54,11 @@ class _WeightLogPageState extends State<WeightLogPage> {
   void _fetchLogs() {
     final db = Provider.of<HiveDatabase>(context, listen: false);
     logs = db.getWeightLogs();  // Fetch logs from database
+    if (logs.isEmpty) {
+      setState(() {});  // To refresh and show "No data" message if needed
+    }
   }
+
   List<FlSpot> _getSpots() {
     return logs.map((log) {
       return FlSpot(
@@ -120,6 +126,9 @@ class _WeightLogPageState extends State<WeightLogPage> {
   }
 
   Widget _buildChart() {
+    if (logs.isEmpty) {
+      return Center(child: Text("Log your weight, no data available"));
+    }
     return LineChart(
       LineChartData(
         gridData: FlGridData(show: false),
@@ -132,7 +141,7 @@ class _WeightLogPageState extends State<WeightLogPage> {
             barWidth: 3,
             color: Colors.blue,
             belowBarData: BarAreaData(show: false),
-            dotData: FlDotData(show: true, ),
+            dotData: FlDotData(show: true),
           ),
         ],
         minX: logs.map((log) => log.date.millisecondsSinceEpoch.toDouble()).reduce(min),
@@ -142,18 +151,22 @@ class _WeightLogPageState extends State<WeightLogPage> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[900],
       appBar: AppBar(
-        title: Text("Weight Log"),
+        title: Text("Weight Log", style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,  // This will center the title
+        backgroundColor: Colors.grey[900],
       ),
       body: Column(
         children: [
-          SizedBox(height: 100,),
+          SizedBox(height: 20),
           Container(
-            height: 100,
-            // Set a fixed height for the chart
+            height: 200, // Increased height for better visibility
             child: _buildChart(),
           ),
           Expanded(
@@ -162,13 +175,12 @@ class _WeightLogPageState extends State<WeightLogPage> {
               itemBuilder: (context, index) {
                 final log = logs[index];
                 return ListTile(
-                  title: Text("${log.weight} lbs"),
-                  subtitle: Text(DateFormat('MM-dd-yyyy').format(log.date)),
+                  title: Text("${log.weight} lbs",style: TextStyle(color: Colors.white)),
+                  subtitle: Text(DateFormat('MM-dd-yyyy').format(log.date), style: TextStyle(color: Colors.grey[700])),
                 );
               },
             ),
           ),
-
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -178,5 +190,4 @@ class _WeightLogPageState extends State<WeightLogPage> {
       ),
     );
   }
-
 }

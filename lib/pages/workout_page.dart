@@ -86,14 +86,14 @@ class _MyWidgetState extends State<WorkoutPage>{
           actions: [
             //save button
             MaterialButton(
-              onPressed: save,
-              child: const Text ("save"),
+              onPressed: cancel,
+              child: const Text ("cancel"),
             ),
             //cancel button
 
             MaterialButton(
-              onPressed: cancel,
-              child: const Text ("cancel"),
+              onPressed: save,
+              child: const Text ("save"),
             ),
           ],
         )

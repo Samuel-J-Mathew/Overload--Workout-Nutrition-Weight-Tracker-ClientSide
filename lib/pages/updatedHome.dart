@@ -10,6 +10,7 @@ import 'BuildBodyHome.dart';
 import 'MySplitPage.dart';
 import 'SearchPage.dart';
 import 'WeightLogPage.dart';
+import 'WeightTrendpage.dart';
 import 'bigHeatMap.dart';
 
 class UpdatedHome extends StatefulWidget {
@@ -46,13 +47,15 @@ bool click = true;
     var workoutData = Provider.of<WorkoutData>(context, listen: false);
     final todaysSplit = Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
     final workoutsThisWeek = Provider.of<WorkoutData>(context, listen: false).getThisWeekWorkoutCount();
+
+
     return Scaffold(
 
 
       backgroundColor: Colors.grey[850],
       body: Column(
         children: [
-          SizedBox(height: 40,),
+          SizedBox(height: 50,),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -245,9 +248,9 @@ bool click = true;
                                 MyHeatMap2(),
                                 SizedBox(height: 8),
                                 Divider(
-                                  color: Colors.grey[600],
+                                  color: Colors.white70,
                                   height: 1,  // Set minimal height to reduce space
-                                  thickness: 0.5,  // Minimal visual thickness
+                                  thickness: .75,  // Minimal visual thickness
                                 ),
                                 Container(
                                   padding: EdgeInsets.zero,  // Ensures no extra padding
@@ -334,9 +337,9 @@ bool click = true;
                                 ),
                                 SizedBox(height: 13,),
                                 Divider(
-                                  color: Colors.grey[600],
+                                  color: Colors.white54,
                                   height: 1,  // Set minimal height to reduce space
-                                  thickness: 1,  // Minimal visual thickness
+                                  thickness: .75,  // Minimal visual thickness
                                 ),
                                 Container(
                                   padding: EdgeInsets.zero,  // Ensures no extra padding
@@ -372,7 +375,7 @@ bool click = true;
                                         onPressed: () {
                                           // Use Navigator to push WeightLogPage onto the navigation stack
                                           Navigator.of(context).push(
-                                              MaterialPageRoute(builder: (context) => WeightLogPage()),
+                                              MaterialPageRoute(builder: (context) => WeightTrendPage()),
                                           );
                                         },
                                       ),
@@ -386,69 +389,72 @@ bool click = true;
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: 210),
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.grey[850],
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.search, color: Colors.white),
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (BuildContext context) {
-                                return DraggableScrollableSheet(
-
-                                  initialChildSize: 0.8, // initially cover 80% of the screen
-                                  maxChildSize: 0.95, // when dragged to full, cover 95% of the screen
-                                  minChildSize: 0.5, // minimum size of the sheet when collapsed
-                                  expand: false, // Set this to false if you don't want the sheet to expand to full screen
-                                  builder: (BuildContext context, ScrollController scrollController) {
-                                    return Container(
-
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[900],
-                                        borderRadius: BorderRadius.only(
-                                          topLeft: Radius.circular(20),
-                                          topRight: Radius.circular(20),
-                                        ),
-                                      ),
-                                      child: Container(
-                                        margin: EdgeInsets.only(top: 60),
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[900], // Set the color here within the decoration
-                                          borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(20),
-                                            topRight: Radius.circular(20),
-                                          ), // Circular edges at the top
-                                        ),
-                                        // padding: EdgeInsets.only(top: 30), // Padding to push the content down
-                                        child: WorkoutPage(
-                                          workoutId: todayDateString,
-                                          workoutName: todayDateString,
-                                          openDialog: true,
-                                        ),
-                                      ),
-                                    );
-                                  },
+                    child: InkWell(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (BuildContext context) {
+                            return DraggableScrollableSheet(
+                              initialChildSize: 0.8, // initially cover 80% of the screen
+                              maxChildSize: 0.95, // when dragged to full, cover 95% of the screen
+                              minChildSize: 0.5, // minimum size of the sheet when collapsed
+                              expand: false, // Set this to false if you don't want the sheet to expand to full screen
+                              builder: (BuildContext context, ScrollController scrollController) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[900],
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(20),
+                                      topRight: Radius.circular(20),
+                                    ),
+                                  ),
+                                  child: Container(
+                                    margin: EdgeInsets.only(top: 60),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[900], // Set the color here within the decoration
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(20),
+                                        topRight: Radius.circular(20),
+                                      ), // Circular edges at the top
+                                    ),
+                                    child: WorkoutPage(
+                                      workoutId: todayDateString,
+                                      workoutName: todayDateString,
+                                      openDialog: true,
+                                    ),
+                                  ),
                                 );
                               },
                             );
                           },
+                        );
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(10), // Optional: adjust padding for better tap response
+                        child: Row(
+                          children: [
+                            Icon(Icons.search, color: Colors.white), // Use Icon instead of IconButton
+                            SizedBox(width: 16), // Optional: adjust spacing to your preference
+                            Expanded(
+                              child: Text(
+                                'Search for an exercise',
+                                style: TextStyle(color: Colors.grey[500]),
+                              ),
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 9),
-                        Text(
-                          'Search for an exercise',
-                          style: TextStyle(color: Colors.grey[500]),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
+
                 ],
               ),
             ),
