@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gymapp/data/hive_database.dart';
 import 'package:gymapp/data/workout_data.dart';
+import 'package:gymapp/pages/CalorieTrackerPage.dart';
+import 'package:gymapp/pages/DataAnalysisPage.dart';
 import 'package:gymapp/pages/ExerciseLogPage.dart';
 import 'package:gymapp/pages/MySplitPage.dart';
 import 'package:gymapp/pages/WeightLogPage.dart';
@@ -35,9 +37,8 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: ExerciseLogPage(),
-        //home: HomePage(),// old home
-        //home: WorkoutPage(),
+        //home: ExerciseLogPage(),
+       home:CalorieTrackerPage(),
       ),
     );
   }
