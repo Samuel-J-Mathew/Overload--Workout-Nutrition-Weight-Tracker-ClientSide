@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gymapp/pages/CalorieTrackerPage.dart';
+import 'package:gymapp/pages/FoodLogPage.dart';
 import 'package:gymapp/pages/updatedHome.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -9,7 +11,8 @@ import 'DataAnalysisPage.dart';
 import 'MySplitPage.dart';
 import 'WeightLogPage.dart';
 import 'workout_page.dart';  // Assuming this has the required UI components for displaying workouts
-
+import '../data/FoodData.dart';
+import '../data/FoodItemDatabase.dart';
 class ExerciseLogPage extends StatefulWidget {
   const ExerciseLogPage({super.key});
 
@@ -93,6 +96,9 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
       case 1:
         return buildBodyHome();  // Assume this is another widget for "My Split"
       case 2:
+      // return const MySplitPage();// Assume this is another widget for "Log"
+        return  FoodLogPage();
+      case 3:
       // return const MySplitPage();// Assume this is another widget for "Log"
         return  MySplitPage();
       default:
@@ -185,6 +191,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Dashboard'),
           BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: 'Exercise Log'),
+          BottomNavigationBarItem(icon: Icon(Icons.apple), label: 'Food Log'),
           BottomNavigationBarItem(icon: Icon(Icons.moving_rounded), label: 'Strategy'),
         ],
         currentIndex: _selectedIndex, // Highlight the selected item

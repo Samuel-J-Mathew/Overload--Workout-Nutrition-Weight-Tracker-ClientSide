@@ -1,6 +1,9 @@
+import 'package:gymapp/data/FoodItemDatabase.dart';
 import 'package:gymapp/datetime/date_time.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../models/FoodDay.dart';
 import '../models/exercise.dart';
+import '../models/step_log.dart';
 import '../models/weight_log.dart';
 import '../models/workout.dart';
 import 'WorkoutSplit.dart';
@@ -8,7 +11,9 @@ import 'WorkoutSplit.dart';
 class HiveDatabase {
   //reference our hive box
   final _myBox = Hive.box("workout_database");
+ final Box<FoodItemDatabase> foodBox = Hive.box<FoodItemDatabase>('food_items');
   final Box<WeightLog> box = Hive.box<WeightLog>('weight_logs');
+  final Box<StepLog> stepBox = Hive.box<StepLog>('stepLogs');
   //check if there is already data stored, if not , record the start date
   bool previousDataExists(){
     if(_myBox.isEmpty){
@@ -35,6 +40,36 @@ class HiveDatabase {
     }
     return Future.value(result); // Convert the result to a Future
   }
+
+  void deleteFoodItem(String id) {
+    // Obtain the key of the item you want to delete
+    final key = foodBox.keys.firstWhere(
+          (k) => foodBox.get(k)?.id == id,
+      orElse: () => null,
+    );
+
+    // If a key was found, use it to delete the item from the box
+    if (key != null) {
+      foodBox.delete(key);
+    }
+  }
+  void addFoodItem(String name, String calories, String protein, String carbs, String fats, DateTime date) {
+    final foodItem = FoodItemDatabase(
+      id: DateTime.now().toString(),
+      name: name,
+      calories: calories,
+      protein: protein,
+      carbs: carbs,
+      fats: fats,
+      date: date,
+    );
+    foodBox.add(foodItem);
+    print(getFoodLogs());
+  }
+
+  List<FoodItemDatabase> getFoodForDate(DateTime date) {
+    return foodBox.values.where((item) => item.date.isAtSameMomentAs(date)).toList();
+  }
   //write data
   void saveToDatebase(List<Workout>workouts){
     //convert workout objects into lists of strings so that we can save into hive
@@ -56,13 +91,45 @@ class HiveDatabase {
     _myBox.put("EXERCISES", exerciseList);
     _myBox.put("DATE", dateList);
   }
+  void saveToDatebaseFood(List<FoodDay>FoodDays){
+    //convert workout objects into lists of strings so that we can save into hive
+    final workoutList = convertObjectToFoodDayList(FoodDays);
+    final exerciseList = convertObjectToFoodList(FoodDays);
+    final dateList = convertObjectToFoodDateList(FoodDays);
+    /*
+    check if any exercises have been done
+    we will put a 0 or 1 foe each yyymmdd date
+     */
+//prob dont need this
 
+    //save into hive
+    //_FoodBox2.put("FOODDAYS", workoutList);
+   // _FoodBox2.put("FOOD", exerciseList);
+   // _FoodBox2.put("DATE", dateList);
+  }
+  List<FoodItemDatabase> getFoodLogs() {
+    return foodBox.values.toList();
+  }
   void saveWeightLog(WeightLog log) {
     box.add(log);
   }
 
   List<WeightLog> getWeightLogs() {
     return box.values.toList();
+  }
+
+
+  void saveStepLog(StepLog log) {
+    stepBox.add(log);
+  }
+
+  List<StepLog> getStepLogs() {
+    return stepBox.values.toList();
+  }
+
+  StepLog? getMostRecentStepLog() {
+    if (stepBox.isEmpty) return null;
+    return stepBox.values.reduce((a, b) => a.date.isAfter(b.date) ? a : b);
   }
   // Function to get the most recent weight log
   WeightLog? getMostRecentWeightLog() {
@@ -185,8 +252,32 @@ List<String> convertObjectToWorkoutList(List<Workout> workouts) {
   }
     return workoutList;
   }
+List<String> convertObjectToFoodDayList(List<FoodDay> workouts) {
+  List<String> workoutList = [
+    // eg. [ upperbody, lowerbody ]
+  ];
+  for (int i = 0; i < workouts. length; i++) {
+    // in each workout, add the name, followed by lists of exercises
+    workoutList.add(
+      workouts[i].name,
+    );
+  }
+  return workoutList;
+}
 
 List<DateTime> convertObjectToDateList(List<Workout> workouts) {
+  List<DateTime> DateList = [
+
+  ];
+  for (int i = 0; i < workouts. length; i++) {
+    // in each workout, add the name, followed by lists of exercises
+    DateList.add(
+      workouts[i].date,
+    );
+  }
+  return DateList;
+}
+List<DateTime> convertObjectToFoodDateList(List<FoodDay> workouts) {
   List<DateTime> DateList = [
 
   ];
@@ -236,6 +327,46 @@ List<List<List<String>>> convertObjectToExerciseList (List<Workout> workouts) {
       individualWorkout. add (individualExercise);
     }
       exerciseList.add(individualWorkout);
+  }
+  return exerciseList;
+}
+List<List<List<String>>> convertObjectToFoodList (List<FoodDay> workouts) {
+  List<List<List<String>>> exerciseList = [
+    /*
+        [
+        Upper Body
+        [ [biceps, 10kg, 10reps, 3sets], [triceps, 20kg, 10reps, 3sets] ],
+        Lower Body
+        [ [squats, 25kg, 10reps, 3sets], [legraise, 30kg, 10reps, 3sets], [calf, 10kg, 10reps, 3sets],
+        ]
+         */
+  ];
+  // go through each workout
+  for (int i = 0; i < workouts. length; i++) {
+    // get exercises from each workout
+    List<FoodItemDatabase> exercisesInWorkout = workouts [i].Food;
+
+    List<List<String>> individualWorkout = [
+      // Upper Body
+      // [ [biceps, 10kg, 10reps, 3sets], [triceps, 20kg, 10reps, 3sets] ],
+    ];
+    // go through each exercise in exerciseList
+    for (int j = 0; j < exercisesInWorkout. length; j++) {
+      List<String> individualExercise = [
+        // [biceps, 10kg, 10reps, 3sets]
+      ];
+      individualExercise.addAll(
+        [
+          exercisesInWorkout[j].name,
+          exercisesInWorkout[j].calories,
+          exercisesInWorkout[j].protein,
+          exercisesInWorkout[j].fats,
+          exercisesInWorkout[j].carbs,
+        ],
+      );
+      individualWorkout. add (individualExercise);
+    }
+    exerciseList.add(individualWorkout);
   }
   return exerciseList;
 }

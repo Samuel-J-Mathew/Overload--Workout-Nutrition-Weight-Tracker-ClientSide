@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:gymapp/pages/workout_page.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart'; // For WorkoutData
@@ -22,13 +23,23 @@ class _UpdatedHomeState extends State<UpdatedHome> {
   // Track expanded muscle groups
   final Set<String> expandedMuscleGroups = {};
   String todayDateString = DateFormat('yyyy-MM-dd').format(DateTime.now());
-IconData testicon = Icons.add;
-bool iconBool = true;
-bool click = true;
+  IconData testicon = Icons.add;
+  bool iconBool = true;
+  bool click = true;
   double? mostRecentWeight;
+  final ScrollController _scrollController = ScrollController();
+  bool _showSearchBar = true; // This will control the visibility of the search bar.
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(() {
+      if (_scrollController.position.userScrollDirection == ScrollDirection.reverse) {
+        if (_showSearchBar) setState(() => _showSearchBar = false);
+      } else if (_scrollController.position.userScrollDirection == ScrollDirection.forward) {
+        if (!_showSearchBar) setState(() => _showSearchBar = true);
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final workoutData = Provider.of<WorkoutData>(context, listen: false);
       final db = Provider.of<HiveDatabase>(context, listen: false); // Get the Hive database instance
@@ -40,7 +51,9 @@ bool click = true;
           mostRecentWeight = latestLog.weight;
         });
       }
+
     });
+
   }
   Widget build(BuildContext context) {
     // Fetch today's workout split dynamically
@@ -387,9 +400,97 @@ bool click = true;
                           ),
                         ),
                       ),
+
                     ],
                   ),
-                  SizedBox(height: 210),
+                  Container(
+                    height: 165,
+                    width: 185,
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      color: Colors.grey[800],
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 19.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 10),
+                            Text(
+                              'Step Logging',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Last 7 Days',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[400]),
+                            ),
+                            SizedBox(height: 10,),
+                            SizedBox(
+                              height: 30,
+                              width: 185,
+                              child: WeightLogPage.buildWeightChart(context),
+                            ),
+                            SizedBox(height: 13,),
+                            Divider(
+                              color: Colors.white54,
+                              height: 1,  // Set minimal height to reduce space
+                              thickness: .75,  // Minimal visual thickness
+                            ),
+                            Container(
+                              padding: EdgeInsets.zero,  // Ensures no extra padding
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensures spacing between the text and the icon
+                                children: [
+                                  Flexible(  // Allows the text to resize dynamically
+                                    child: RichText(
+                                      overflow: TextOverflow.ellipsis,  // Prevents text overflow by using ellipsis
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: '$mostRecentWeight ',
+                                            style: TextStyle(
+                                              fontSize: 17,
+                                              color: Colors.grey[300],  // Color for the numbers
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: 'lbs',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[500],  // Different color for the text
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  //SizedBox(width: 10,),
+                                  IconButton(
+                                    icon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.white),  // Reduced icon size
+                                    onPressed: () {
+                                      // Use Navigator to push WeightLogPage onto the navigation stack
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(builder: (context) => WeightTrendPage()),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 120),
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.grey[850],
@@ -456,11 +557,17 @@ bool click = true;
                   ),
 
                 ],
+
               ),
             ),
           ),
         ],
       ),
     );
+  }
+  @override
+  void dispose() {
+    _scrollController.dispose();  // Don't forget to dispose the controller.
+    super.dispose();
   }
 }
