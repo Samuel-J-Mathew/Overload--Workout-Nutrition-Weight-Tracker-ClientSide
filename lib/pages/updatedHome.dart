@@ -267,7 +267,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
               Padding(
                 padding: const EdgeInsets.only(top: 25.0),
               ),
-              Expanded(
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.9, // Adjust the height as needed
                 child: Container(
                   padding: EdgeInsets.all(20),
                   color: Colors.grey[900],
