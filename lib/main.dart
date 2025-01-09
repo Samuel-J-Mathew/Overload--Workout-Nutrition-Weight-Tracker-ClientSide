@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: TestClassPage(),
+        home: ExerciseLogPage(),
        //home:CalorieTrackerPage(),
       ),
     );

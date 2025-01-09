@@ -11,6 +11,7 @@ import 'BuildBodyHome.dart';
 import 'MySplitPage.dart';
 import 'SearchPage.dart';
 import 'WeightLogPage.dart';
+import 'WeightTrendpage.dart';
 import 'bigHeatMap.dart';
 import 'package:intl/intl.dart';
 

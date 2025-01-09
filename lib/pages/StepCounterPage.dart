@@ -3,46 +3,134 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../data/hive_database.dart';
-import '../models/step_log.dart';  // Ensure StepLog is correctly modeled
+import '../models/step_log.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
+
+enum TimeView { week, month, sixMonth, year, all }
 
 class StepCounterPage extends StatefulWidget {
   @override
   _StepCounterPageState createState() => _StepCounterPageState();
 
-  static Widget buildStepChart(BuildContext context) {
+  static Future<double> fetchAndCalculateAverageSteps(BuildContext context) async {
     final db = Provider.of<HiveDatabase>(context, listen: false);
-    List<StepLog> logs = db.getStepLogs();  // Fetch Step logs
-    if (logs.isEmpty) {
-      return Center(child: Text("No step data available"));
-    }
-    List<FlSpot> spots = logs.map((log) {
-      return FlSpot(
-        log.date.millisecondsSinceEpoch.toDouble(),
-        log.steps.toDouble(),  // Assuming 'steps' is an int
+    List<StepLog> logs = await db.getStepLogs();
+    DateTime now = DateTime.now();
+    DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    DateTime endOfWeek = startOfWeek.add(Duration(days: 6));
+
+    List<StepLog> weekLogs = logs.where((log) {
+      return log.date.isAfter(startOfWeek.subtract(Duration(days: 1))) && log.date.isBefore(endOfWeek.add(Duration(days: 1)));
+    }).toList();
+
+    if (weekLogs.isEmpty) return 0.0;
+    double totalSteps = weekLogs.fold(0, (sum, log) => sum + log.steps);
+    return totalSteps / weekLogs.length;
+  }
+  static Widget buildMiniStepChart(BuildContext context, List<StepLog> logs) {
+    DateTime now = DateTime.now();
+    int currentWeekday = now.weekday;
+    DateTime startOfWeek = now.subtract(Duration(days: currentWeekday - 1));
+    DateTime endOfWeek = startOfWeek.add(Duration(days: 6));
+
+    // Filter logs for the current week
+    List<StepLog> weekLogs = logs.where((log) {
+      return log.date.isAfter(startOfWeek.subtract(Duration(days: 1))) && log.date.isBefore(endOfWeek.add(Duration(days: 1)));
+    }).toList();
+
+    weekLogs.sort((a, b) => a.date.compareTo(b.date));  // Sort logs by date
+
+    // Calculate the maximum number of steps to dynamically adjust the chart's maxY
+    double maxY = weekLogs.fold(0, (prev, log) => log.steps > prev ? log.steps.toDouble() : prev);
+    maxY = maxY == 0 ? 10 : maxY + maxY * 0.2;  // Adding 20% buffer to the maximum steps, ensure non-zero maxY
+
+    // Calculate bar width dynamically based on the number of logs
+    double barWidth = weekLogs.length > 1 ? 8 : 16;  // Wider bars for fewer logs
+
+    final barGroups = weekLogs.map((log) {
+      return BarChartGroupData(
+        x: weekLogs.indexOf(log),
+        barRods: [
+          BarChartRodData(
+            toY: log.steps?.toDouble() ?? 0,
+            color: Colors.green[300] ?? Colors.green,
+            width: barWidth,
+            borderRadius: BorderRadius.zero,  // Make bars rectangular
+          ),
+        ],
       );
     }).toList();
 
-    return LineChart(
-      LineChartData(
+    return BarChart(
+      BarChartData(
+        maxY: maxY,
         gridData: FlGridData(show: false),
-        titlesData: FlTitlesData(show: false),
+        titlesData: FlTitlesData(
+          show: false,
+        ),
         borderData: FlBorderData(show: false),
-        lineBarsData: [
-          LineChartBarData(
-            spots: spots,
-            isCurved: false,
-            barWidth: 3,
-            color: Colors.green[300],  // Choose a different color if you like
-            belowBarData: BarAreaData(show: false),
-            dotData: FlDotData(show: true),
+        barGroups: barGroups,
+        alignment: BarChartAlignment.spaceBetween,
+        barTouchData: BarTouchData(enabled: false),
+      ),
+    );
+  }
+
+  static Widget buildStepChart(BuildContext context, List<StepLog> logs) {
+    logs.sort((a, b) => a.date.compareTo(b.date));
+
+    final barGroups = logs.asMap().map((index, log) {
+      return MapEntry(index, BarChartGroupData(
+        x: index,
+        barRods: [
+          BarChartRodData(
+            toY: log.steps?.toDouble() ?? 0.0,
+            color: Colors.green[300] ?? Colors.green,
+            width: 14,
+            borderRadius: BorderRadius.zero,
           ),
         ],
-        minX: logs.map((log) => log.date.millisecondsSinceEpoch.toDouble()).reduce(min),
-        maxX: logs.map((log) => log.date.millisecondsSinceEpoch.toDouble()).reduce(max),
-        minY: logs.map((log) => log.steps.toDouble()).reduce(min),
-        maxY: logs.map((log) => log.steps.toDouble()).reduce(max),
+      ));
+    }).values.toList();
+
+    return BarChart(
+      BarChartData(
+        gridData: FlGridData(show: true, drawVerticalLine: false,),
+        titlesData: FlTitlesData(
+          show: true,
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 60,
+              getTitlesWidget: (double value, TitleMeta meta) {
+                return Text(
+                  '${value.toInt()}',
+                  style: TextStyle(color: Colors.white, fontSize: 10),
+                );
+              },
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (double value, TitleMeta meta) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    DateFormat('MM/dd').format(logs[value.toInt()].date),
+                    style: TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        barGroups: barGroups,
+        alignment: BarChartAlignment.spaceAround,
+        barTouchData: BarTouchData(enabled: false),
+        groupsSpace: 1,
       ),
     );
   }
@@ -50,19 +138,69 @@ class StepCounterPage extends StatefulWidget {
 
 class _StepCounterPageState extends State<StepCounterPage> {
   List<StepLog> logs = [];
-
-  void _fetchLogs() {
-    final db = Provider.of<HiveDatabase>(context, listen: false);
-    logs = db.getStepLogs();  // Fetch logs from database
-    if (logs.isEmpty) {
-      setState(() {});  // To refresh and show "No data" message if needed
-    }
-  }
-
+  TimeView _selectedTimeView = TimeView.week;
+  double _averageSteps = 0;
   @override
   void initState() {
     super.initState();
-    _fetchLogs();  // Initial fetch
+    _fetchLogs();
+  }
+
+  void _fetchLogs() {
+    final db = Provider.of<HiveDatabase>(context, listen: false);
+    logs = db.getStepLogs();
+    _updateFilteredLogs();
+  }
+
+
+
+  void _updateFilteredLogs() {
+    final db = Provider.of<HiveDatabase>(context, listen: false);
+    DateTime now = DateTime.now();
+    DateTime startDate;
+    DateTime endDate = now.add(Duration(days: 1));  // Includes all of today
+
+    switch (_selectedTimeView) {
+      case TimeView.week:
+        startDate = now.subtract(Duration(days: now.weekday - 1));  // Start from Monday
+        endDate = startDate.add(Duration(days: 6));  // End on Sunday
+        break;
+      case TimeView.month:
+        startDate = DateTime(now.year, now.month, 1);  // Start of the month
+        endDate = DateTime(now.year, now.month + 1, 0);  // End of the month
+        break;
+      case TimeView.sixMonth:
+        startDate = DateTime(now.year, now.month - 6, 1);  // Start 6 months ago
+        endDate = DateTime(now.year, now.month + 1, 0);  // End of the current month
+        break;
+      case TimeView.year:
+        startDate = DateTime(now.year - 1, now.month, 1);  // Start of last year
+        endDate = DateTime(now.year, now.month + 1, 0);  // End of the current month
+        break;
+      case TimeView.all:
+        startDate = DateTime(2000);  // Arbitrary start date
+        endDate = DateTime.now();  // Up to now
+        break;
+    }
+
+    logs = db.getStepLogs().where((log) {
+      return log.date.isAfter(startDate.subtract(Duration(days: 1))) && log.date.isBefore(endDate);
+    }).toList();
+    if (logs.isNotEmpty) {
+      _averageSteps = logs.map((log) => log.steps).reduce((a, b) => a + b) / logs.length;
+    } else {
+      _averageSteps = 0;
+    }
+
+    setState(() {});
+  }
+
+
+  void _updateTimeView(TimeView view) {
+    setState(() {
+      _selectedTimeView = view;
+    });
+    _updateFilteredLogs();
   }
 
   Future<void> _addStepLog() async {
@@ -79,8 +217,7 @@ class _StepCounterPageState extends State<StepCounterPage> {
         final db = Provider.of<HiveDatabase>(context, listen: false);
         final log = StepLog(date: pickedDate, steps: int.parse(steps));
         db.saveStepLog(log);
-        _fetchLogs();  // Refresh logs after adding
-        setState(() {});  // Trigger rebuild with updated logs
+        _fetchLogs();
       }
     }
   }
@@ -107,7 +244,7 @@ class _StepCounterPageState extends State<StepCounterPage> {
             TextButton(
               child: Text('Save'),
               onPressed: () {
-                Navigator.of(context).pop(controller.text);
+                Navigator.of(context). pop(controller.text);
               },
             ),
           ],
@@ -118,9 +255,9 @@ class _StepCounterPageState extends State<StepCounterPage> {
 
   Widget _buildChart() {
     if (logs.isEmpty) {
-      return Center(child: Text("Log your steps, no data available"));
+      return Center(child: Text("No step data available"));
     }
-    return StepCounterPage.buildStepChart(context);  // Use static method to build chart
+    return StepCounterPage.buildStepChart(context, logs);
   }
 
   @override
@@ -131,24 +268,56 @@ class _StepCounterPageState extends State<StepCounterPage> {
         title: Text("Step Counter", style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.grey[900],
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Column(
         children: [
-          SizedBox(height: 20),
+      Container(child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Average", style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+          Text("${_averageSteps.toStringAsFixed(0)} steps", style: TextStyle(color: Colors.white, fontSize: 25))
+        ],
+      )),
           Container(
-            height: 200, // Increased height for better visibility
+            height: 200,
             child: _buildChart(),
           ),
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+            decoration: BoxDecoration(
+              color: Colors.grey[800],
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 1),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _timeButton("1W", TimeView.week),
+                  _timeButton("1M", TimeView.month),
+                  _timeButton("6M", TimeView.sixMonth),
+                  _timeButton("1Y", TimeView.year),
+                  _timeButton("ALL", TimeView.all),
+                ],
+              ),
+            ),
+          ),
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               itemCount: logs.length,
               itemBuilder: (context, index) {
-                final log = logs[index];
+                final reversedIndex = logs.length - 1 - index;
+                final log = logs[reversedIndex];
                 return ListTile(
                   title: Text("${log.steps} steps", style: TextStyle(color: Colors.white)),
-                  subtitle: Text(DateFormat('MM-dd-yyyy').format(log.date), style: TextStyle(color: Colors.grey[700])),
+                  trailing: Text(
+                    DateFormat('EEE, MMM d').format(log.date),
+                    style: TextStyle(color: Colors.grey[500]),
+                  ),
                 );
               },
+              separatorBuilder: (context, index) => Divider(color: Colors.grey[700]),
             ),
           ),
         ],
@@ -156,8 +325,30 @@ class _StepCounterPageState extends State<StepCounterPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _addStepLog,
         child: Icon(Icons.add),
-        tooltip: 'Log Steps',
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.blue,
       ),
     );
   }
+
+  Widget _timeButton(String text, TimeView view) {
+    bool isSelected = _selectedTimeView == view;  // Check if this button is selected
+    return TextButton(
+      onPressed: () => _updateTimeView(view),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: isSelected ? Colors.grey[800] : Colors.white,  // Text color changes with selection
+        ),
+      ),
+      style: TextButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),  // Rounded borders
+        ),
+        backgroundColor: isSelected ? Colors.white : Colors.grey[800],  // Background color toggles based on selection
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),  // Horizontal padding and consistent vertical padding
+      ),
+    );
+  }
+
 }
