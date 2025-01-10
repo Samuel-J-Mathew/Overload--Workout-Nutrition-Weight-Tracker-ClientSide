@@ -30,6 +30,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
   bool click = true;
   double? mostRecentWeight;
   double? getAverageSteps;
+
   final ScrollController _scrollController = ScrollController();
   bool _showSearchBar = true; // This will control the visibility of the search bar.
   List<StepLog> _stepLogs = [];
@@ -52,6 +53,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
     super.initState();
     _fetchStepLogs();
     _fetchAverageSteps();
+
     _scrollController.addListener(() {
       if (_scrollController.position.userScrollDirection == ScrollDirection.reverse) {
         if (_showSearchBar) setState(() => _showSearchBar = false);
@@ -74,7 +76,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
 
     });
 
-  }
+  } // Widget to build each exercise tile
+
   void _openSearchSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -268,7 +271,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                 padding: const EdgeInsets.only(top: 25.0),
               ),
               SizedBox(
-                height: MediaQuery.of(context).size.height * 0.9, // Adjust the height as needed
+                height: MediaQuery.of(context).size.height * 0.7, // Adjust the height as needed
                 child: Container(
                   padding: EdgeInsets.all(20),
                   color: Colors.grey[900],

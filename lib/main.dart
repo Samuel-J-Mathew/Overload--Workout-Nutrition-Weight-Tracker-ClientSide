@@ -27,6 +27,7 @@ void main() async {
 
   Hive.registerAdapter(WeightLogAdapter());  // Register adapter
   Hive.registerAdapter(StepLogAdapter());
+  Hive.registerAdapter(FoodItemDatabaseAdapter()); // Registering the adapter
   await Hive.openBox("workout_database");
   await Hive.openBox<WeightLog>('weight_logs');
   await Hive.openBox<StepLog>('stepLogs');

@@ -40,7 +40,21 @@ class HiveDatabase {
     }
     return Future.value(result); // Convert the result to a Future
   }
-
+  List<FoodItemDatabase> getAllFoodItems() {
+    return foodBox.values.toList();
+  }
+  // Method to fetch all food items and print them
+  void printAllFoodItems() {
+    List<FoodItemDatabase> allFoodItems = foodBox.values.toList();
+    if (allFoodItems.isEmpty) {
+      print("No food items found in the database.");
+    } else {
+      print("Listing all food items:");
+      for (FoodItemDatabase item in allFoodItems) {
+        print("ID: ${item.id}, Name: ${item.name}, Calories: ${item.calories}, Protein: ${item.protein}, Carbs: ${item.carbs}, Fats: ${item.fats}, Date: ${item.date}");
+      }
+    }
+  }
   void deleteFoodItem(String id) {
     // Obtain the key of the item you want to delete
     final key = foodBox.keys.firstWhere(
@@ -54,8 +68,9 @@ class HiveDatabase {
     }
   }
   void addFoodItem(String name, String calories, String protein, String carbs, String fats, DateTime date) {
+    print("Adding Food Item: $name");
     final foodItem = FoodItemDatabase(
-      id: DateTime.now().toString(),
+      id: DateTime.now().toString(), // Consider using a UUID or similar
       name: name,
       calories: calories,
       protein: protein,
@@ -64,11 +79,16 @@ class HiveDatabase {
       date: date,
     );
     foodBox.add(foodItem);
-    print(getFoodLogs());
+    print("Food item added. Current count: ${foodBox.length}");
   }
 
   List<FoodItemDatabase> getFoodForDate(DateTime date) {
-    return foodBox.values.where((item) => item.date.isAtSameMomentAs(date)).toList();
+    return foodBox.values
+        .where((item) => isSameDay(item.date, date))
+        .toList();
+  }
+  bool isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year && date1.month == date2.month && date1.day == date2.day;
   }
   //write data
   void saveToDatebase(List<Workout>workouts){
@@ -126,6 +146,7 @@ class HiveDatabase {
   List<StepLog> getStepLogs() {
     return stepBox.values.toList();
   }
+
 
   StepLog? getMostRecentStepLog() {
     if (stepBox.isEmpty) return null;

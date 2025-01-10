@@ -3,7 +3,7 @@ import 'package:gymapp/data/FoodItemDatabase.dart';
 import 'package:gymapp/data/FoodData.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-
+import 'package:intl/intl.dart';
 class FoodLogPage extends StatefulWidget {
   @override
   _FoodLogPageState createState() => _FoodLogPageState();
@@ -34,13 +34,23 @@ class _FoodLogPageState extends State<FoodLogPage> {
       _selectedDay = selectedDay;
       _focusedDay = focusedDay;
     });
-    _loadFoodsForSelectedDay(selectedDay);
+    _loadFoodsForSelectedDay(selectedDay);  // Ensure this method updates the UI correctly.
   }
 
   void _loadFoodsForSelectedDay(DateTime date) {
     var foodData = Provider.of<FoodData>(context, listen: false);
     _selectedDayFoods = foodData.getFoodForDate(date);
-    setState(() {});
+
+    if (_selectedDayFoods != null && _selectedDayFoods!.isNotEmpty) {
+      print("Foods on ${DateFormat('yyyy-MM-dd').format(date)}:");
+      for (var food in _selectedDayFoods!) {
+        print("${food.name}: ${food.calories} calories, ${food.protein}g protein, ${food.carbs}g carbs, ${food.fats}g fats");
+      }
+    } else {
+      print("No foods logged for ${DateFormat('yyyy-MM-dd').format(date)}.");
+    }
+
+    setState(() {}); // This ensures the UI updates with the new data
   }
 
   void _addFoodDialog() {
@@ -92,7 +102,9 @@ class _FoodLogPageState extends State<FoodLogPage> {
     );
   }
 
+
   void _addFoodItem() {
+    // Check if all fields are filled
     if (_foodNameController.text.isEmpty ||
         _caloriesController.text.isEmpty ||
         _proteinController.text.isEmpty ||
@@ -105,22 +117,29 @@ class _FoodLogPageState extends State<FoodLogPage> {
       return;
     }
 
-    final String name = _foodNameController.text;
-    final String calories = (_caloriesController.text);
-    final String protein = (_proteinController.text);
-    final String carbs = (_carbsController.text);
-    final String fats = (_fatsController.text);
+    // Retrieve input data
+    final String name = _foodNameController.text.trim();
+    final String calories = _caloriesController.text.trim();
+    final String protein = _proteinController.text.trim();
+    final String carbs = _carbsController.text.trim();
+    final String fats = _fatsController.text.trim();
     final DateTime date = _selectedDay ?? DateTime.now();
 
+    // Use the FoodData provider to add the food item
     Provider.of<FoodData>(context, listen: false)
         .addFood(name, calories, protein, carbs, fats, date);
+
+    // Clear the text fields after adding
     _foodNameController.clear();
     _caloriesController.clear();
     _proteinController.clear();
     _carbsController.clear();
     _fatsController.clear();
-    _loadFoodsForSelectedDay(_selectedDay!);  // Reload the day's data to reflect the new addition
+
+    // Reload the food items for the selected day to update the UI
+    _loadFoodsForSelectedDay(date);
   }
+
 
 
   @override
@@ -186,12 +205,14 @@ class _FoodLogPageState extends State<FoodLogPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        //onPressed: _addFoodDialog,
         onPressed: _addFoodDialog,
         tooltip: 'Add Food',
         child: Icon(Icons.add),
         backgroundColor: Colors.blue[900],
         foregroundColor: Colors.white,
       ),
+
     );
   }
 }
