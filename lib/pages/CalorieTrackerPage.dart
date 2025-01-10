@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:gymapp/data/FoodData.dart';
+import 'FoodLogPage.dart';
 
 class CalorieTrackerPage extends StatefulWidget {
+  final DateTime selectedDate;
+
+  CalorieTrackerPage({required this.selectedDate});
+
   @override
   _CalorieTrackerPageState createState() => _CalorieTrackerPageState();
 }
@@ -68,7 +75,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage> {
         originalCarbs = (data['foods'][0]['nf_total_carbohydrate'] as num).toDouble();
         originalServingSize = (data['foods'][0]['serving_weight_grams'] as num?)?.toDouble() ?? 100;
         _gramController.text = originalServingSize?.toString() ?? '100';
-        updateNutrition(originalServingSize ?? 100);  // Ensuring originalServingSize is not null
+        updateNutrition(originalServingSize ?? 100);
         showNutritionSheet();
       });
     } else {
@@ -111,7 +118,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage> {
                             decoration: InputDecoration(
                               labelText: 'grams',
                               labelStyle: TextStyle(
-                                color: Colors.white, fontWeight: FontWeight.bold // Sets the color of the label when it is not focused
+                                  color: Colors.white, fontWeight: FontWeight.bold // Sets the color of the label when it is not focused
                               ),
                               enabledBorder: OutlineInputBorder( // Use OutlineInputBorder for a full rectangle border
                                 borderSide: BorderSide(color: Colors.white), // Sets the color of the border when the field is not focused
@@ -128,14 +135,17 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage> {
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
                               double grams = double.tryParse(value) ?? originalServingSize!;
-                              updateNutrition(grams);
+                              setState(() {
+                                updateNutrition(grams);
+                              });
+                              setModalState(() {});
                             },
                           ),
                         ),
                         Center(child: Column(
                           mainAxisSize: MainAxisSize.min, // Use min to fit content size
                           children: [
-                              SizedBox(height: 10),
+                            SizedBox(height: 10),
                             Text(
                               "${selectedFoodName ?? 'Selected Food'} - ${_gramController.text}g",
                               style: TextStyle(color: Colors.white,fontSize: 18, fontWeight: FontWeight.bold),
@@ -155,6 +165,11 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage> {
                             Text(
                               'Carbs: ${selectedFood!['Carbs']}',
                               style: TextStyle(color: Colors.white,fontSize: 16),
+                            ),
+                            SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () => logFood(),
+                              child: Text("Log Food"),
                             ),
                           ],
 
@@ -177,12 +192,32 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage> {
       setState(() {
         selectedFood = {
           'Calories': ((originalCalories! / originalServingSize!) * grams).toStringAsFixed(0),
-          'Protein': ((originalProtein! / originalServingSize!) * grams).toStringAsFixed(2) + 'g',
-          'Fats': ((originalFats! / originalServingSize!) * grams).toStringAsFixed(2) + 'g',
-          'Carbs': ((originalCarbs! / originalServingSize!) * grams).toStringAsFixed(2) + 'g',
+          'Protein': ((originalProtein! / originalServingSize!) * grams).toStringAsFixed(2),
+          'Fats': ((originalFats! / originalServingSize!) * grams).toStringAsFixed(2),
+          'Carbs': ((originalCarbs! / originalServingSize!) * grams).toStringAsFixed(2),
         };
       });
     }
+  }
+
+  void logFood() {
+    if (selectedFood == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No food selected'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    Provider.of<FoodData>(context, listen: false).addFood(
+      selectedFoodName!,
+      selectedFood!['Calories'],
+      selectedFood!['Protein'],
+      selectedFood!['Carbs'],
+      selectedFood!['Fats'],
+      widget.selectedDate,
+    );
+
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => FoodLogPage()));
   }
 
   void showErrorDialog() {
@@ -208,8 +243,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[900],
-        title: Text("Calorie Tracker", style: TextStyle(color: Colors.white),),
-        centerTitle: true,
+        title: Text("Calorie Tracker", style: TextStyle(color: Colors.white)),
       ),
       body: Container(
         color: Colors.grey[900],

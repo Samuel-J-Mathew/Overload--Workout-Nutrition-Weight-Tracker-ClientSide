@@ -4,6 +4,7 @@ import 'package:gymapp/data/FoodData.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'CalorieTrackerPage.dart';
 class FoodLogPage extends StatefulWidget {
   @override
   _FoodLogPageState createState() => _FoodLogPageState();
@@ -206,7 +207,12 @@ class _FoodLogPageState extends State<FoodLogPage> {
       ),
       floatingActionButton: FloatingActionButton(
         //onPressed: _addFoodDialog,
-        onPressed: _addFoodDialog,
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now())),
+          );
+        },
         tooltip: 'Add Food',
         child: Icon(Icons.add),
         backgroundColor: Colors.blue[900],
