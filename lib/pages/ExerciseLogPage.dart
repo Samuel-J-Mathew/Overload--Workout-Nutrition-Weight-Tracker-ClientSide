@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gymapp/pages/CalorieTrackerPage.dart';
 import 'package:gymapp/pages/FoodLogPage.dart';
+import 'package:gymapp/pages/SearchPage.dart';
 import 'package:gymapp/pages/updatedHome.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -14,12 +15,13 @@ import 'workout_page.dart';  // Assuming this has the required UI components for
 import '../data/FoodData.dart';
 import '../data/FoodItemDatabase.dart';
 class ExerciseLogPage extends StatefulWidget {
+
   const ExerciseLogPage({super.key});
 
   @override
   State<ExerciseLogPage> createState() => _ExerciseLogPageState();
 }
-
+String todayDateString = DateFormat('yyyy-MM-dd').format(DateTime.now());
 class _ExerciseLogPageState extends State<ExerciseLogPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -32,9 +34,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
     _focusedDay = DateTime.now();
     _selectedDay = DateTime.now();  // Set today's date
     WidgetsBinding.instance.addPostFrameCallback((_) {
-
-      goToWorkout();
-
+      _onDaySelected(_selectedDay!, _focusedDay); // Automatically select and load today's workout
     });
   }
   WorkoutPage createNewWorkout(DateTime selectedDay){
@@ -94,7 +94,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
       case 0:
         return UpdatedHome();
       case 1:
-        return buildBodyHome();  // Assume this is another widget for "My Split"
+        return SearchPage(workoutId: todayDateString, workoutName: todayDateString);  // Assume this is another widget for "My Split"
       case 2:
       // return const MySplitPage();// Assume this is another widget for "Log"
         return  FoodLogPage();
@@ -148,7 +148,6 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
           daysOfWeekStyle: DaysOfWeekStyle(
             weekdayStyle: TextStyle(color: Colors.white),
             weekendStyle: TextStyle(color: Colors.white),
-
           ),
         ),
 

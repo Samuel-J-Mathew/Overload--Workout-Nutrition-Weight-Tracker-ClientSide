@@ -131,7 +131,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
           ListView(
             controller: _scrollController,  // Attach the controller here.
             children: <Widget>[
-              SizedBox(height: 50),
+              SizedBox(height: 20),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(

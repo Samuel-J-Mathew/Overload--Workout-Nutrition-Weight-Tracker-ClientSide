@@ -4,6 +4,7 @@ import 'package:gymapp/data/FoodData.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import '../components/food_tile.dart';
 import 'CalorieTrackerPage.dart';
 class FoodLogPage extends StatefulWidget {
   @override
@@ -149,7 +150,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
       backgroundColor: Colors.grey[850],
       body: Column(
         children: [
-          SizedBox(height: 20),
+          SizedBox(height: 50),
           TableCalendar(
             firstDay: DateTime.utc(2000, 1, 1),
             lastDay: DateTime.utc(2100, 12, 31),
@@ -164,23 +165,34 @@ class _FoodLogPageState extends State<FoodLogPage> {
               todayTextStyle: TextStyle(color: Colors.white),
               selectedTextStyle: TextStyle(color: Colors.white),
               todayDecoration: BoxDecoration(
-                color: Colors.blue[400],
+                color: Colors.black,
                 shape: BoxShape.circle,
               ),
               selectedDecoration: BoxDecoration(
                 color: Colors.blue[900],
                 shape: BoxShape.circle,
               ),
+              markerDecoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
             ),
             headerStyle: HeaderStyle(
               titleTextStyle: TextStyle(color: Colors.white),
+              formatButtonTextStyle: TextStyle(color: Colors.white),
               leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
               rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
             ),
+            daysOfWeekStyle: DaysOfWeekStyle(
+              weekdayStyle: TextStyle(color: Colors.white),
+              weekendStyle: TextStyle(color: Colors.white),
+            ),
           ),
+          SizedBox(height: 6,),
           Expanded(
             child: Container(
               color: Colors.grey[900],
+              padding: EdgeInsets.only(left: 40, right: 14,),
               child: _selectedDayFoods == null || _selectedDayFoods!.isEmpty
                   ? Center(
                 child: Text(
@@ -192,12 +204,18 @@ class _FoodLogPageState extends State<FoodLogPage> {
                 itemCount: _selectedDayFoods!.length,
                 itemBuilder: (context, index) {
                   var food = _selectedDayFoods![index];
-                  return ListTile(
-                    title: Text(food.name, style: TextStyle(color: Colors.white)),
-                    subtitle: Text(
-                        '${food.calories} calories, ${food.protein}g protein, ${food.carbs}g carbs, ${food.fats}g fats',
-                        style: TextStyle(color: Colors.grey)),
-                    onTap: () {},  // Optionally, expand this to edit or view more details
+                  return FoodTile(
+                    foodName: food.name,
+                    calories: double.parse(food.calories).toInt().toString(),
+                    protein: double.parse(food.protein.replaceAll("g", "")).toInt().toString(),
+                    carbs: double.parse(food.carbs.replaceAll("g", "")).toInt().toString(),
+                    fats: double.parse(food.fats.replaceAll("g", "")).toInt().toString(),
+                    isCompleted: false, // Replace with actual logic if needed
+                    onDelete: () {
+                      // Pass the correct identifier (e.g., 'id') to deleteFood
+                      Provider.of<FoodData>(context, listen: false).deleteFood(food.id);
+                      _loadFoodsForSelectedDay(_selectedDay!); // Refresh the list
+                    },
                   );
                 },
               ),

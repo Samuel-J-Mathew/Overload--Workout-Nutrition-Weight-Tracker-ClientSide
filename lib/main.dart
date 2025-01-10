@@ -24,7 +24,6 @@ import 'pages/FoodLogPage.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-
   Hive.registerAdapter(WeightLogAdapter());  // Register adapter
   Hive.registerAdapter(StepLogAdapter());
   Hive.registerAdapter(FoodItemDatabaseAdapter()); // Registering the adapter
@@ -48,6 +47,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => FoodData(HiveDatabase())),
         Provider(create: (context) => HiveDatabase()),
       ],
+
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         home: ExerciseLogPage(),

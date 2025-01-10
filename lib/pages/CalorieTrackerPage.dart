@@ -217,7 +217,9 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage> {
       widget.selectedDate,
     );
 
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => FoodLogPage()));
+    Navigator.pop(context);
+    // Then, notify the parent ExerciseLogPage to switch to FoodLogPage
+    //context.findAncestorStateOfType<_ExerciseLogPageState>()?._onItemTapped(2);
   }
 
   void showErrorDialog() {
@@ -244,6 +246,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage> {
       appBar: AppBar(
         backgroundColor: Colors.grey[900],
         title: Text("Calorie Tracker", style: TextStyle(color: Colors.white)),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         color: Colors.grey[900],

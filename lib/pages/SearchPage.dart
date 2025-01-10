@@ -36,6 +36,9 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     _focusedDay = DateTime.now();
     _selectedDay = DateTime.now();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _onDaySelected(_selectedDay!, _focusedDay); // Automatically select and load today's workout
+    });
   }
 
   WorkoutPage createNewWorkout(DateTime selectedDay){
@@ -214,22 +217,36 @@ class _SearchPageState extends State<SearchPage> {
           Expanded(
             child: Container(
               color: Colors.grey[900],
-              child: _selectedWorkout != null
-                  ? WorkoutPage(workoutId: _selectedWorkout!.id, workoutName: _selectedWorkout!.name)
-                  : InkWell(
-                onTap: () {
-                  createNewWorkout(_selectedDay!);  // Call createNewWorkout when the text is tapped
+              child: Builder(
+                builder: (context) {
+                  if (_selectedWorkout != null) {
+
+                    // Show the existing workout
+                    return WorkoutPage(
+                      workoutId: _selectedWorkout!.id,
+                      workoutName: _selectedWorkout!.name,
+                    );
+                  } else {
+                    // Create a new workout if none exists for the selected day
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      // Create the new workout
+                      var newWorkout = createNewWorkout(_selectedDay!);
+
+                      // Update the state to reflect the newly created workout
+                      setState(() {
+                        _selectedWorkout = Provider.of<WorkoutData>(context, listen: false)
+                            .getWorkoutsForDate(_selectedDay!)
+                            .firstWhere((workout) => workout.id == newWorkout.workoutId);
+                      });
+                    });
+                    return Center(
+                      child: Text(
+                        "Creating a new workout...",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }
                 },
-                child: Center(
-                  child: Text(
-                    'No workouts logged for today. Tap to add.',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        decoration: TextDecoration.underline  // Optional: style it to look tappable
-                    ),
-                  ),
-                ),
               ),
             ),
           ),

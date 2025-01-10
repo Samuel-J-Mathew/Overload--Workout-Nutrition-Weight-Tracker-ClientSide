@@ -56,17 +56,24 @@ class HiveDatabase {
     }
   }
   void deleteFoodItem(String id) {
-    // Obtain the key of the item you want to delete
+    // Find the key by matching the `id` of the food item
     final key = foodBox.keys.firstWhere(
-          (k) => foodBox.get(k)?.id == id,
-      orElse: () => null,
+          (k) {
+        final foodItem = foodBox.get(k);
+        return foodItem != null && foodItem.id == id;
+      },
+      orElse: () => null, // Return null if no match is found
     );
 
-    // If a key was found, use it to delete the item from the box
+    // If a key was found, delete the item
     if (key != null) {
       foodBox.delete(key);
+      print("Food item with ID $id deleted successfully.");
+    } else {
+      print("No food item found with ID $id.");
     }
   }
+
   void addFoodItem(String name, String calories, String protein, String carbs, String fats, DateTime date) {
     print("Adding Food Item: $name");
     final foodItem = FoodItemDatabase(

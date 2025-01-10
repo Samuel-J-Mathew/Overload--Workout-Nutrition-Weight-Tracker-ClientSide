@@ -31,11 +31,14 @@ class ExerciseTile extends StatelessWidget {
         color: Colors.grey[850],
         borderRadius: BorderRadius.circular(16),
       ),
+
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+
         Row(children: [
-          Icon(Icons.favorite),
+          SizedBox(width: 15,),
+          Icon(Icons.fitness_center),
           SizedBox(
             width:30 ,
           ),

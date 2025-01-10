@@ -105,7 +105,7 @@ class StepCounterPage extends StatefulWidget {
               reservedSize: 60,
               getTitlesWidget: (double value, TitleMeta meta) {
                 return Text(
-                  '${value.toInt()}',
+                  NumberFormat('#,###').format(value.toInt()), // Format the number with commas
                   style: TextStyle(color: Colors.white, fontSize: 10),
                 );
               },
@@ -212,15 +212,160 @@ class _StepCounterPageState extends State<StepCounterPage> {
     );
 
     if (pickedDate != null) {
-      final String? steps = await _showStepInputDialog();
-      if (steps != null && steps.isNotEmpty) {
+      final Map<String, dynamic>? result = await _showStepOrDistanceInputDialog();
+      if (result != null && result['steps'] != null) {
         final db = Provider.of<HiveDatabase>(context, listen: false);
-        final log = StepLog(date: pickedDate, steps: int.parse(steps));
+        final log = StepLog(date: pickedDate, steps: result['steps']);
         db.saveStepLog(log);
-        _fetchLogs();
+        _fetchLogs(); // Refresh logs
       }
     }
   }
+  Future<Map<String, dynamic>?> _showStepOrDistanceInputDialog() async {
+    final TextEditingController stepsController = TextEditingController();
+    final TextEditingController distanceController = TextEditingController();
+
+    void updateSteps(String distance) {
+      final double? miles = double.tryParse(distance);
+      if (miles != null) {
+        final int steps = ((miles * 5280) / 2.5).round();
+        stepsController.text = steps.toString();
+      }
+    }
+
+    void updateDistance(String steps) {
+      final int? stepsValue = int.tryParse(steps);
+      if (stepsValue != null) {
+        final double miles = (stepsValue * 2.5) / 5280;
+        distanceController.text = miles.toStringAsFixed(2);
+      }
+    }
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Enter Steps or Distance'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: stepsController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Steps'),
+                onChanged: (value) => updateDistance(value),
+              ),
+              TextField(
+                controller: distanceController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Distance (miles)'),
+                onChanged: (value) => updateSteps(value),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Save'),
+              onPressed: () {
+                final int? steps = int.tryParse(stepsController.text);
+                Navigator.of(context).pop({'steps': steps});
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  Future<void> _chooseStepOrDistance() async {
+    // Prompt the user to choose between steps or distance
+    final selectedOption = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add Steps or Distance'),
+          content: Text('Would you like to add steps or distance?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop('steps'),
+              child: Text('Steps'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop('distance'),
+              child: Text('Distance'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (selectedOption == 'steps') {
+      // Call existing method to add steps
+      await _addStepLog();
+    } else if (selectedOption == 'distance') {
+      // Handle adding distance
+      await _addDistanceLog();
+    }
+  }
+  Future<void> _addDistanceLog() async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      final String? distance = await _showDistanceInputDialog();
+      if (distance != null && distance.isNotEmpty) {
+        final double miles = double.tryParse(distance) ?? 0;
+        final int steps = ((miles * 5280) / 2.5).round(); // Convert distance to steps
+        final db = Provider.of<HiveDatabase>(context, listen: false);
+        final log = StepLog(date: pickedDate, steps: steps);
+        db.saveStepLog(log);
+        _fetchLogs(); // Refresh logs
+      }
+    }
+  }
+  Future<String?> _showDistanceInputDialog() async {
+    TextEditingController controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Enter Distance'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(labelText: 'Distance (miles)'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Save'),
+              onPressed: () {
+                Navigator.of(context).pop(controller.text);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 
   Future<String?> _showStepInputDialog() async {
     TextEditingController controller = TextEditingController();
@@ -265,18 +410,43 @@ class _StepCounterPageState extends State<StepCounterPage> {
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
-        title: Text("Step Counter", style: TextStyle(color: Colors.white)),
-        centerTitle: true,
         backgroundColor: Colors.grey[900],
         iconTheme: IconThemeData(color: Colors.white),
+        title: Align(
+          alignment: Alignment.centerLeft, // Align the title to the left
+          child: Text(
+            "Step Counter",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
       ),
       body: Column(
         children: [
       Container(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Average", style: TextStyle(color: Colors.grey[600], fontSize: 15)),
-          Text("${_averageSteps.toStringAsFixed(0)} steps", style: TextStyle(color: Colors.white, fontSize: 25))
+          Text(" Average", style: TextStyle(color: Colors.grey[600], fontSize: 18)),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: "${NumberFormat.decimalPattern().format(_averageSteps.toInt())} ", // Step count
+                  style: TextStyle(
+                    color: Colors.white, // Color for the step count
+                    fontSize: 28, // Larger font size for the step count
+                    fontWeight: FontWeight.bold, // Optional: Make it bold
+                  ),
+                ),
+                TextSpan(
+                  text: "steps", // "steps" label
+                  style: TextStyle(
+                    color: Colors.grey, // Different color for the "steps" text
+                    fontSize: 15, // Smaller font size for the "steps" text
+                  ),
+                ),
+              ],
+            ),
+          )
         ],
       )),
           Container(
