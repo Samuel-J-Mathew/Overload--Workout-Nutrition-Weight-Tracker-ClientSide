@@ -57,7 +57,7 @@ class FoodTile extends StatelessWidget {
                     SizedBox(
                       height: 0,
                     ),
-                    Text('$calories cal $protein P $fats F $carbs C',
+                    Text('$calories cal  $protein P  $fats F  $carbs C',
                         style: TextStyle(
                           fontWeight: FontWeight.normal,
                           fontSize: 15,

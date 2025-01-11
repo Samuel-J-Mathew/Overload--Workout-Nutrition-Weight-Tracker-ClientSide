@@ -15,6 +15,7 @@ import 'SearchPage.dart';
 import 'WeightLogPage.dart';
 import 'WeightTrendpage.dart';
 import 'bigHeatMap.dart';
+import 'journalPage.dart';
 
 class UpdatedHome extends StatefulWidget {
   @override
@@ -467,92 +468,183 @@ class _UpdatedHomeState extends State<UpdatedHome> {
 
                         ],
                       ),
-                      Container(
-                        height: 165,
-                        width: 185,
-                        child: Card(
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          color: Colors.grey[800],
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 19.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 10),
-                                Text(
-                                  'Step Logging',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  'Last 7 Days avg. ',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[400]),
-                                ),
-                                SizedBox(height: 10,),
-                                SizedBox(
-                                  height: 30,
-                                  width: 185,
-                                  child: StepCounterPage.buildMiniStepChart(context, _stepLogs),
-                                ),
-                                SizedBox(height: 13,),
-                                Divider(
-                                  color: Colors.white54,
-                                  height: 1,  // Set minimal height to reduce space
-                                  thickness: .75,  // Minimal visual thickness
-                                ),
-                                Container(
-                                  padding: EdgeInsets.zero,  // Ensures no extra padding
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensures spacing between the text and the icon
-                                    children: [
-                                      Flexible(  // Allows the text to resize dynamically
-                                        child: RichText(
-                                          overflow: TextOverflow.ellipsis,  // Prevents text overflow by using ellipsis
-                                          text: TextSpan(
-                                            children: [
-                                              TextSpan(
-                                                text: '${getAverageSteps?.toStringAsFixed(0)} ',
-                                                style: TextStyle(
-                                                  fontSize: 17,
-                                                  color: Colors.grey[300],  // Color for the numbers
-                                                ),
+
+                      Row(
+                        children: [
+                          Container(
+                            height: 165,
+                            width: 185,
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              color: Colors.grey[800],
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 19.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 10),
+                                    Text(
+                                      'Step Logging',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Last 7 Days avg. ',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[400]),
+                                    ),
+                                    SizedBox(height: 10,),
+                                    SizedBox(
+                                      height: 30,
+                                      width: 185,
+                                      child: StepCounterPage.buildMiniStepChart(context, _stepLogs),
+                                    ),
+                                    SizedBox(height: 13,),
+                                    Divider(
+                                      color: Colors.white54,
+                                      height: 1,  // Set minimal height to reduce space
+                                      thickness: .75,  // Minimal visual thickness
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.zero,  // Ensures no extra padding
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensures spacing between the text and the icon
+                                        children: [
+                                          Flexible(  // Allows the text to resize dynamically
+                                            child: RichText(
+                                              overflow: TextOverflow.ellipsis,  // Prevents text overflow by using ellipsis
+                                              text: TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: '${getAverageSteps?.toStringAsFixed(0)} ',
+                                                    style: TextStyle(
+                                                      fontSize: 17,
+                                                      color: Colors.grey[300],  // Color for the numbers
+                                                    ),
+                                                  ),
+                                                  TextSpan(
+                                                    text: 'steps',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey[500],  // Different color for the text
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                              TextSpan(
-                                                text: 'steps',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey[500],  // Different color for the text
-                                                ),
-                                              ),
-                                            ],
+                                            ),
                                           ),
-                                        ),
+                                          //SizedBox(width: 10,),
+                                          IconButton(
+                                            icon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.white),  // Reduced icon size
+                                            onPressed: () {
+                                              // Use Navigator to push WeightLogPage onto the navigation stack
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(builder: (context) => StepCounterPage()),
+                                              );
+                                            },
+                                          ),
+                                        ],
                                       ),
-                                      //SizedBox(width: 10,),
-                                      IconButton(
-                                        icon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.white),  // Reduced icon size
-                                        onPressed: () {
-                                          // Use Navigator to push WeightLogPage onto the navigation stack
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(builder: (context) => StepCounterPage()),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              ],
+                                    )
+
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          Container(
+                            height: 165,
+                            width: 185,
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              color: Colors.grey[800],
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 19.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 10),
+                                    Text(
+                                      'Journal Entries',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Last 30 Days',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
+                                    MyHeatMap2(),
+                                    SizedBox(height: 8),
+                                    Divider(
+                                      color: Colors.white70,
+                                      height: 1,  // Set minimal height to reduce space
+                                      thickness: .75,  // Minimal visual thickness
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.zero,  // Ensures no extra padding
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensures spacing between the text and the icon
+                                        children: [
+                                          Flexible(  // Allows the text to resize dynamically
+                                            child: RichText(
+                                              overflow: TextOverflow.ellipsis,  // Prevents text overflow by using ellipsis
+                                              text: TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: '$workoutsThisWeek/7 ',
+                                                    style: TextStyle(
+                                                      fontSize: 17,
+                                                      color: Colors.grey[300],  // Color for the numbers
+                                                    ),
+                                                  ),
+                                                  TextSpan(
+                                                    text: 'this week',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey[500],  // Different color for the text
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          //SizedBox(width: 10,),
+                                          IconButton(
+                                            icon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.white),  // Reduced icon size
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(builder: (context) => JournalPage()),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    )
+
+
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          ],
                       ),
                       SizedBox(height: 120),
 

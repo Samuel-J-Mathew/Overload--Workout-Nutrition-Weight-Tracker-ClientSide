@@ -29,6 +29,7 @@ if (flutterVersionName == null) {
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
+    namespace 'com.example.gymapp' // This should match your package in AndroidManifest.xml
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
@@ -46,7 +47,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.gymapp"
+        applicationId "com.example.gymapp" // Matches AndroidManifest.xml package
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
@@ -58,7 +59,6 @@ android {
             signingConfig signingConfigs.debug
         }
     }
-    namespace 'com.example.gymapp'
 }
 
 flutter {

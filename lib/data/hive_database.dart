@@ -1,6 +1,12 @@
+import 'dart:io';
+
+import 'package:excel/excel.dart';
+import 'package:flutter/material.dart';
 import 'package:gymapp/data/FoodItemDatabase.dart';
 import 'package:gymapp/datetime/date_time.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/FoodDay.dart';
 import '../models/exercise.dart';
 import '../models/step_log.dart';
@@ -25,6 +31,14 @@ class HiveDatabase {
       return true;
     }
 
+  }
+  Future<void> openFile(String filePath) async {
+    final Uri fileUri = Uri.file(filePath);
+    if (await canLaunchUrl(fileUri)) {
+      await launchUrl(fileUri, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not open file at $filePath';
+    }
   }
   // return start date as yyymmdd
   String getStartDate(){
@@ -73,7 +87,120 @@ class HiveDatabase {
       print("No food item found with ID $id.");
     }
   }
+// Method to export data to an Excel file
+  Future<String> exportDataToExcel() async {
+    var excel = Excel.createExcel();
+    // 1. Gym Logs Sheet
+    var gymSheet = excel['Gym Logs'];
+    gymSheet.appendRow(['Date', 'Workout Name', 'Reps', 'Sets', 'Weight', 'Muscle Group', 'Total Sets']);
 
+    List<Workout> workouts = readFromDatabase();
+    workouts.sort((a, b) => a.date.compareTo(b.date)); // Sort by date
+
+    DateTime? lastGymDate;
+    int dailySets = 0;
+    bool hasEntriesForDate = false; // Track if entries exist for a given date
+
+    for (var workout in workouts) {
+      if (lastGymDate != null && !isSameDay(lastGymDate, workout.date)) {
+        if (hasEntriesForDate) {
+          // Add total sets row for the previous day
+          gymSheet.appendRow(['', '', '', '', '', 'Total Sets:', dailySets.toString()]);
+          gymSheet.appendRow([]); // Add empty row to separate days
+        }
+        dailySets = 0; // Reset daily sets count
+        hasEntriesForDate = false; // Reset flag for the new day
+      }
+
+      lastGymDate = workout.date;
+
+      for (var exercise in workout.exercises) {
+        dailySets += int.tryParse(exercise.sets) ?? 0;
+        hasEntriesForDate = true; // Mark that there are entries for the day
+
+        gymSheet.appendRow([
+          workout.date.toIso8601String().split('T').first,
+          exercise.name,
+          exercise.reps,
+          exercise.sets,
+          exercise.weight,
+          exercise.musclegroup,
+          '', // Placeholder for Total Sets
+        ]);
+      }
+    }
+
+// Add total sets for the last day if entries exist
+    if (hasEntriesForDate) {
+      gymSheet.appendRow(['', '', '', '', '', 'Total Sets:', dailySets.toString()]);
+    }
+
+    // 2. Step Logs Sheet
+    var stepSheet = excel['Step Logs'];
+    stepSheet.appendRow(['Date', 'Steps']);
+    List<StepLog> stepLogs = getStepLogs();
+    for (var stepLog in stepLogs) {
+      stepSheet.appendRow([stepLog.date.toIso8601String().split('T').first, stepLog.steps]);
+    }
+
+    // 3. Food Logs Sheet
+
+    var foodSheet = excel['Food Logs'];
+    foodSheet.appendRow(['Date', 'Food Name', 'Calories', 'Protein', 'Carbs', 'Fats', 'Total Calories']);
+
+    List<FoodItemDatabase> foodLogs = getFoodLogs();
+    foodLogs.sort((a, b) => a.date.compareTo(b.date)); // Sort by date
+
+    DateTime? lastFoodDate;
+    double dailyCalories = 0;
+
+    for (var foodLog in foodLogs) {
+      if (lastFoodDate != null && !isSameDay(lastFoodDate, foodLog.date)) {
+        // Add total calories for the previous day
+        foodSheet.appendRow(['', '', '', '', '', 'Total:', dailyCalories.toStringAsFixed(0)]);
+        foodSheet.appendRow([]); // Add empty row to separate days
+        dailyCalories = 0; // Reset daily calories
+      }
+      lastFoodDate = foodLog.date;
+
+      dailyCalories += double.tryParse(foodLog.calories) ?? 0;
+
+      foodSheet.appendRow([
+        foodLog.date.toIso8601String().split('T').first,
+        foodLog.name,
+        foodLog.calories,
+        foodLog.protein,
+        foodLog.carbs,
+        foodLog.fats,
+        '', // Placeholder for Total Calories (will be added after the loop)
+      ]);
+    }
+
+    // Add total calories for the last day
+    if (dailyCalories > 0) {
+      foodSheet.appendRow(['', '', '', '', '', 'Total:', dailyCalories.toStringAsFixed(0)]);
+    }
+
+    // 4. Weight Logs Sheet
+    var weightSheet = excel['Weight Logs'];
+    weightSheet.appendRow(['Date', 'Weight']);
+    List<WeightLog> weightLogs = getWeightLogs();
+    for (var weightLog in weightLogs) {
+      weightSheet.appendRow([weightLog.date.toIso8601String().split('T').first, weightLog.weight]);
+    }
+
+    // Save the Excel file to temporary storage
+    Directory downloadsDir = Directory('/storage/emulated/0/Download');
+    String timestamp = DateTime.now().toIso8601String().replaceAll(':', '-'); // Ensure valid file name
+    String filePath = '${downloadsDir.path}/GymAppData_$timestamp.xlsx';
+    File file = File(filePath);
+
+    file.createSync(recursive: true);
+    file.writeAsBytesSync(excel.encode()!);
+
+    print('File created at: $filePath');
+    return filePath;
+  }
   void addFoodItem(String name, String calories, String protein, String carbs, String fats, DateTime date) {
     print("Adding Food Item: $name");
     final foodItem = FoodItemDatabase(

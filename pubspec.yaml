@@ -46,6 +46,9 @@ dependencies:
   uuid: ^4.5.0
   flutter_native_splash: ^2.4.1
   http: ^0.13.3
+  excel: ^2.0.1
+  path_provider: ^2.0.11
+  url_launcher: ^6.1.5
 dev_dependencies:
   flutter_test:
     sdk: flutter
