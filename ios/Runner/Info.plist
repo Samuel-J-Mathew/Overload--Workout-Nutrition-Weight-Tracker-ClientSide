@@ -48,6 +48,10 @@
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UIStatusBarHidden</key>
+		<key>LSApplicationQueriesSchemes</key>
+        <array>
+            <string>mailto</string>
+        </array>
 		<false/>
 	</dict>
 </plist>

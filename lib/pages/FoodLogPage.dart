@@ -41,7 +41,11 @@ class _FoodLogPageState extends State<FoodLogPage> {
 
   void _loadFoodsForSelectedDay(DateTime date) {
     var foodData = Provider.of<FoodData>(context, listen: false);
-    _selectedDayFoods = foodData.getFoodForDate(date);
+    // Filter out foods with the placeholder date (DateTime(2000, 1, 1))
+    _selectedDayFoods = foodData.getFoodForDate(date).where((food) {
+      return food.date != DateTime(2000, 1, 1); // Exclude placeholder date
+    }).toList();
+
 
     if (_selectedDayFoods != null && _selectedDayFoods!.isNotEmpty) {
       print("Foods on ${DateFormat('yyyy-MM-dd').format(date)}:");

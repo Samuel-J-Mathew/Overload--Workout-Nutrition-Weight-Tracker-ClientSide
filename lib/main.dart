@@ -4,6 +4,7 @@ import 'package:gymapp/data/workout_data.dart';
 import 'package:gymapp/pages/CalorieTrackerPage.dart';
 import 'package:gymapp/pages/DataAnalysisPage.dart';
 import 'package:gymapp/pages/ExerciseLogPage.dart';
+import 'package:gymapp/pages/ExportPage.dart';
 import 'package:gymapp/pages/FoodLogPage.dart';
 import 'package:gymapp/pages/MySplitPage.dart';
 import 'package:gymapp/pages/SearchPage.dart';
