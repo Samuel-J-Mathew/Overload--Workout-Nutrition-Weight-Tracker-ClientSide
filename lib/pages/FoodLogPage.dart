@@ -225,21 +225,53 @@ class _FoodLogPageState extends State<FoodLogPage> {
               ),
             ),
           ),
+          Container(
+
+            constraints: BoxConstraints(
+              maxHeight: 55, // Maximum height
+            ),
+            color: Colors.grey[900],
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now())),
+                  );  // The action you want to perform on tap
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[850],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.search, color: Colors.white),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now())),
+                          );
+                        },
+                      ),
+                      SizedBox(width: 9),
+                      Text(
+                        'Search for an exercise',
+                        style: TextStyle(color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
+
       ),
-      floatingActionButton: FloatingActionButton(
-        //onPressed: _addFoodDialog,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now())),
-          );
-        },
-        tooltip: 'Add Food',
-        child: Icon(Icons.add),
-        backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.white,
-      ),
+
+
 
     );
   }

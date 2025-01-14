@@ -181,45 +181,138 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   }
 
   Widget _buildAddFoodTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          TextField(
-            controller: foodNameController,
-            decoration: InputDecoration(labelText: "Food Name"),
-          ),
-          TextField(
-            controller: servingWeightController,
-            decoration: InputDecoration(labelText: "Serving Weight (g)"),
-            keyboardType: TextInputType.number,
-          ),
-          TextField(
-            controller: caloriesController,
-            decoration: InputDecoration(labelText: "Calories"),
-            keyboardType: TextInputType.number,
-          ),
-          TextField(
-            controller: carbsController,
-            decoration: InputDecoration(labelText: "Carbs"),
-            keyboardType: TextInputType.number,
-          ),
-          TextField(
-            controller: proteinController,
-            decoration: InputDecoration(labelText: "Protein"),
-            keyboardType: TextInputType.number,
-          ),
-          TextField(
-            controller: fatController,
-            decoration: InputDecoration(labelText: "Fat"),
-            keyboardType: TextInputType.number,
-          ),
-          SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: addFoodToDatabase,
-            child: Text("Create and Add"),
-          ),
-        ],
+
+    return Container(
+      color: Colors.grey[900],
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: foodNameController,
+              decoration: InputDecoration(
+                labelText: "Food Name",
+                labelStyle: TextStyle(
+                  color: Colors.grey[400], // Light grey label when inactive
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                ),
+              ),
+              style: TextStyle(
+                color: Colors.white, // White text when typing
+              ),
+            ),
+            TextField(
+              controller: servingWeightController,
+              decoration: InputDecoration(
+                labelText: "Serving Weight (g)",
+                labelStyle: TextStyle(
+                  color: Colors.grey[400], // Light grey label when inactive
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                ),
+              ),
+              style: TextStyle(
+                color: Colors.white,
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: caloriesController,
+              decoration: InputDecoration(
+                labelText: "Calories",
+                labelStyle: TextStyle(
+                  color: Colors.grey[400],
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                ),
+              ),
+              style: TextStyle(
+                color: Colors.white,
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: carbsController,
+              decoration: InputDecoration(
+                labelText: "Carbs",
+                labelStyle: TextStyle(
+                  color: Colors.grey[400],
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                ),
+              ),
+              style: TextStyle(
+                color: Colors.white,
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: proteinController,
+              decoration: InputDecoration(
+                labelText: "Protein",
+                labelStyle: TextStyle(
+                  color: Colors.grey[400],
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                ),
+              ),
+              style: TextStyle(
+                color: Colors.white,
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: fatController,
+              decoration: InputDecoration(
+                labelText: "Fat",
+                labelStyle: TextStyle(
+                  color: Colors.grey[400],
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                ),
+              ),
+              style: TextStyle(
+                color: Colors.white,
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: addFoodToDatabase,
+              child: Text(
+                "Create and Add",
+                style: TextStyle(
+                  color: Colors.black, // Set text color to black
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -463,14 +556,36 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.grey[900],
-          title: Text("Calorie Tracker"),
+          title: Text("Calorie Tracker", style: TextStyle(color: Colors.white),),
           bottom: TabBar(
             controller: _tabController,
+            labelColor: Colors.white, // Color for selected tab text
+            unselectedLabelColor: Colors.grey[500], // Dark grey for unselected tabs
+            indicatorColor: Colors.white, // White underline for the selected tab
             tabs: [
-              Tab(text: "Search"),
-              Tab(text: "Add Food"),
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.search, size: 16), // Smaller icon
+                    SizedBox(width: 8), // Spacing between icon and text
+                    Text("Search"),
+                  ],
+                ),
+              ),
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.format_list_bulleted_add, size: 16), // Smaller icon
+                    SizedBox(width: 8), // Spacing between icon and text
+                    Text("Add Food"),
+                  ],
+                ),
+              ),
             ],
           ),
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         body: TabBarView(
           controller: _tabController,
