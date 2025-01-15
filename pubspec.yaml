@@ -49,6 +49,7 @@ dependencies:
   excel: ^2.0.1
   path_provider: ^2.0.11
   url_launcher: ^6.1.5
+  collection: ^1.15.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -14,9 +14,11 @@ import 'package:gymapp/pages/WeightLogPage.dart';
 import 'package:gymapp/pages/home_page.dart';
 import 'package:gymapp/pages/newUpdatedHome.dart';
 import 'package:gymapp/pages/updatedHome.dart';
+import 'package:gymapp/pages/weeklysplittile.dart';
 import 'package:gymapp/pages/workout_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'models/NutritionalInfo.dart';
 import 'models/step_log.dart';
 import 'models/weight_log.dart';
 import 'package:gymapp/data/FoodData.dart';
@@ -28,11 +30,12 @@ void main() async {
   Hive.registerAdapter(WeightLogAdapter());  // Register adapter
   Hive.registerAdapter(StepLogAdapter());
   Hive.registerAdapter(FoodItemDatabaseAdapter()); // Registering the adapter
+  Hive.registerAdapter(NutritionalInfoAdapter());
   await Hive.openBox("workout_database");
   await Hive.openBox<WeightLog>('weight_logs');
   await Hive.openBox<StepLog>('stepLogs');
   await Hive.openBox<FoodItemDatabase>('food_items');
-
+  await Hive.openBox<NutritionalInfo>('nutritionBox');
 
   runApp(MyApp());
 }

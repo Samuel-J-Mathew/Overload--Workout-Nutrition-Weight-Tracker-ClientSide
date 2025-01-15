@@ -24,7 +24,7 @@ class _MyWidgetState extends State<WorkoutPage>{
       });
     }
   }
-
+  List<SingleExercise> filteredExercises = exerciseList;
   //text controllers
   final exerciseNameController = TextEditingController();
   final weightController = TextEditingController();
@@ -65,18 +65,21 @@ class _MyWidgetState extends State<WorkoutPage>{
               //sets
               TextField(
                 controller: setsController,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Sets'),
               ),
 
               //reps
               TextField(
                 controller: repsController,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Reps'),
               ),
 
               //weight
               TextField(
                 controller: weightController,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Weight'),
               ),
 
@@ -142,28 +145,26 @@ class _MyWidgetState extends State<WorkoutPage>{
       builder: (context, value, child) {
         var workout = value.getWorkoutById(widget.workoutId);  // Fetch workout using workoutId
         return Scaffold(
-
-          //floatingActionButton: FloatingActionButton(
-          //onPressed: createNewExercise,
-          //child: const Icon(Icons.add),
-          //),
-
           body: Column(
-
             children: [
-
               Expanded(
-
                 child: Container(
                   margin: EdgeInsets.zero,
                   color: Colors.grey[900],
                   padding: EdgeInsets.only(left: 40, right: 14,),
-
-                  child: ListView.builder(
+                  child: workout.exercises.isEmpty ?  // Check if the exercises list is empty
+                  Center(  // Center widget to center the message
+                    child: InkWell(  // InkWell to make the text clickable
+                      onTap: createNewExercise,  // Call the function to add a new exercise when tapped
+                      child: Text(
+                        "No Workout logged for this day. Tap to Add.",
+                        style: TextStyle(color: Colors.white, fontSize: 16),  // Styling for the text
+                      ),
+                    ),
+                  ) : ListView.builder(
                     itemCount: workout.exercises.length,  // Use workout fetched by ID
                     itemBuilder: (context, index) {
                       var exercises = workout.exercises;
-
                       return ExerciseTile(
                         exerciseName: exercises[index].name,
                         weight: exercises[index].weight,
@@ -172,17 +173,11 @@ class _MyWidgetState extends State<WorkoutPage>{
                         isCompleted: exercises[index].isCompleted,
                         onDelete: () => _deleteExercise(index, value),  // Pass the callback for deletion
                       );
-
                     },
-
                   ),
-
                 ),
-
               ),
-
               Container(
-
                 constraints: BoxConstraints(
                   maxHeight: 55, // Maximum height
                 ),

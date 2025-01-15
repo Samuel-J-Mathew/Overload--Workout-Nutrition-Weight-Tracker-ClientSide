@@ -305,7 +305,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
             ElevatedButton(
               onPressed: addFoodToDatabase,
               child: Text(
-                "Create and Add",
+                "Add to Database",
                 style: TextStyle(
                   color: Colors.black, // Set text color to black
                 ),
