@@ -341,14 +341,62 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       apiFoods = results['common'];
     }
 
+    // Combine API and local foods into one list
+    final List<Map<String, dynamic>> combinedFoods = [];
+
+    // Add local foods first
+    for (var food in _localFoods) {
+      combinedFoods.add({
+        ...food,
+        'match_score': _calculateMatchScore(query, food['food_name']),
+        'is_local': true,
+      });
+    }
+
+    // Add API foods
+    for (var food in apiFoods) {
+      combinedFoods.add({
+        ...food,
+        'match_score': _calculateMatchScore(query, food['food_name']),
+        'is_local': false,
+      });
+    }
+
+    // Deduplicate foods by their name (local foods take precedence)
+    final Map<String, dynamic> uniqueFoods = {};
+    for (var food in combinedFoods) {
+      final foodNameKey = food['food_name'].toLowerCase();
+      if (!uniqueFoods.containsKey(foodNameKey) || !food['is_local']) {
+        uniqueFoods[foodNameKey] = food;
+      }
+    }
+
+    // Sort by match score (descending) and prioritize API results for ties
+    final sortedFoods = uniqueFoods.values.toList()
+      ..sort((a, b) {
+        final scoreComparison = b['match_score'].compareTo(a['match_score']);
+        if (scoreComparison != 0) return scoreComparison;
+        return (a['is_local'] ? 1 : 0).compareTo(b['is_local'] ? 1 : 0);
+      });
+
     setState(() {
-      _suggestions = [
-        ..._localFoods.where((food) =>
-            food['food_name'].toLowerCase().contains(query.toLowerCase())),
-        ...apiFoods,
-      ];
+      _suggestions = sortedFoods;
     });
   }
+
+// Helper function to calculate match score
+  int _calculateMatchScore(String query, String foodName) {
+    final lowerQuery = query.toLowerCase();
+    final lowerFoodName = foodName.toLowerCase();
+
+    if (lowerQuery == lowerFoodName) return 3; // Exact match
+    if (lowerFoodName.contains(lowerQuery)) return 2; // Partial match
+    if (lowerQuery.split(' ').any((word) => lowerFoodName.contains(word))) {
+      return 1; // Contains part of the query
+    }
+    return 0; // No match
+  }
+
 
   void fetchNutritionDetails(Map<String, dynamic> food) {
     if (food['is_local'] == true) {

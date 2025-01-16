@@ -13,6 +13,7 @@ import 'package:gymapp/pages/TestClassPage.dart';
 import 'package:gymapp/pages/WeightLogPage.dart';
 import 'package:gymapp/pages/home_page.dart';
 import 'package:gymapp/pages/newUpdatedHome.dart';
+import 'package:gymapp/pages/testExample.dart';
 import 'package:gymapp/pages/updatedHome.dart';
 import 'package:gymapp/pages/weeklysplittile.dart';
 import 'package:gymapp/pages/workout_page.dart';

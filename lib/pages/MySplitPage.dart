@@ -4,6 +4,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:gymapp/pages/weeklysplittile.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
+import '../data/GlobalState.dart';
 import '../data/WorkoutSplit.dart';
 import '../data/hive_database.dart';
 import '../models/NutritionalInfo.dart';
@@ -88,6 +89,9 @@ String _averageProtein = "0";
       setState(() {
         _averageCals = info.calories;
         _averageProtein = info.protein;
+
+        // Update the global state
+        GlobalState().averageCals = _averageCals;
       });
     }
   }
@@ -158,41 +162,71 @@ String _averageProtein = "0";
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 19.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center, // Center vertically
-                    crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
-                    children: [
-                      SizedBox(height: 40),
-                      Align(
-                        alignment: Alignment.centerLeft, // Aligns the child to the left of the available space.
-                        child: Text("Workout Program", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
-                      ),
-
-                      SizedBox(height: 10,),
-                      Row(
-
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children:
-                        daysOfWeek.map((day) => buildDaySplit(day)).toList(),
-                      ),
-                      SizedBox(height: 20),
-                      Divider(
-                        color: Colors.grey[100],
-                        height: 1,
-                        // Set minimal height to reduce space
-                        thickness: .75, // Minimal visual thickness
-                      ),
-                      SizedBox(height:5),
-                      ElevatedButton.icon(
-                        onPressed: () => _showEditSplitDialog(context),
-                        icon: Icon(Icons.edit, color: Colors.white,),  // Icon for editing
-                        label: Text("Edit Program"),  // Text label
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white, backgroundColor: Colors.grey[800],  // Text and icon color
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center, // Center vertically
+                      crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
+                      children: [
+                        SizedBox(height: 40),
+                        Align(
+                          alignment: Alignment.centerLeft, // Aligns the child to the left of the available space.
+                          child: Text("Workout Program", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
                         ),
-                      ),
-                    ],
+                    
+                        SizedBox(height: 10,),
+                        Row(
+                    
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children:
+                          daysOfWeek.map((day) => buildDaySplit(day)).toList(),
+                        ),
+                        SizedBox(height: 20),
+                        Divider(
+                          color: Colors.grey[100],
+                          height: 1,
+                          // Set minimal height to reduce space
+                          thickness: .75, // Minimal visual thickness
+                        ),
+                        SizedBox(height: 10),
+                        // Horizontal Key for muscle groups
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              for (int i = 0; i < allMuscleGroups.length; i++)
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: Colors.primaries[i % Colors.primaries.length], // Color for the muscle group
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      allMuscleGroups[i],
+                                      style: TextStyle(color: Colors.white, fontSize: 14),
+                                    ),
+                                    SizedBox(width: 16), // Space between each key item
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height:5),
+                        ElevatedButton.icon(
+                          onPressed: () => _showEditSplitDialog(context),
+                          icon: Icon(Icons.edit, color: Colors.white,),  // Icon for editing
+                          label: Text("Edit Program"),  // Text label
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white, backgroundColor: Colors.grey[800],  // Text and icon color
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 )
             ),

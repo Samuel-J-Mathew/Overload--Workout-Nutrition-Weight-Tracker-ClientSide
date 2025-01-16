@@ -63,7 +63,7 @@ class WorkoutData extends ChangeNotifier{
       }
     }
 
-    // Check if most recent exercise exists and if the number of reps is 8 or more
+    // Check if most recent exercise exists and if the number of reps is 9 or more
     //progressive overload
     if (mostRecentExercise != null && (int.tryParse(mostRecentExercise.reps) ?? 0) >= 9) {
       int newWeight = (int.tryParse(mostRecentExercise.weight) ?? 0) + 5;

@@ -6,6 +6,7 @@ import 'package:gymapp/data/FoodItemDatabase.dart';
 import 'package:gymapp/datetime/date_time.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/FoodDay.dart';
 import '../models/exercise.dart';
@@ -393,6 +394,7 @@ int getCompletionStatus(String yyyymmdd){
     return completionStatus;
 }
 }
+
 
   //converts workout objects into a list -> eg [Back bi, Arms]
 List<String> convertObjectToWorkoutList(List<Workout> workouts) {
