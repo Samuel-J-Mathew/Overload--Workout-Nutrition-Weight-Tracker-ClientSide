@@ -18,7 +18,8 @@ class MySplitPage extends StatefulWidget {
   _MySplitPageState createState() => _MySplitPageState();
 }
 
-class _MySplitPageState extends State<MySplitPage> {
+class _MySplitPageState extends State<MySplitPage>  {
+
   List<WorkoutSplit> weeklySplits = [];
   HiveDatabase db = HiveDatabase();
 String _averageCals = "0";
@@ -183,7 +184,7 @@ String _averageProtein = "0";
                         ),
                         SizedBox(height: 20),
                         Divider(
-                          color: Colors.grey[100],
+                          color: Colors.grey[500],
                           height: 1,
                           // Set minimal height to reduce space
                           thickness: .75, // Minimal visual thickness
@@ -314,7 +315,7 @@ String _averageProtein = "0";
                     ),
                     SizedBox(height: 10),
                     Divider(
-                      color: Colors.grey[600],
+                      color: Colors.grey[500],
                       height: 1, // Set minimal height to reduce space
                       thickness: .75, // Minimal visual thickness
                     ),
@@ -525,8 +526,28 @@ String _averageProtein = "0";
               ),
             ),
             items: exerciseList,
-            dropdownDecoratorProps: const DropDownDecoratorProps(
-              dropdownSearchDecoration: InputDecoration(labelText: 'Exercise', labelStyle: TextStyle(color: Colors.white)),
+            dropdownDecoratorProps: DropDownDecoratorProps(
+              dropdownSearchDecoration: InputDecoration(
+                labelText: 'Exercise',
+                labelStyle: TextStyle(color: Colors.white), // This is for the label
+                // Style for the text inside the dropdown, including selected item
+                filled: true, // Optional: adds a fill color to the dropdown
+                fillColor: Colors.grey[900], // Optional: sets the fill color
+                hintStyle: TextStyle(color: Colors.grey), // Optional: style for hint text if you have it
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10), // Optional: border styling
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.grey.shade800),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.blue),
+                ),
+              ),
+              baseStyle: TextStyle(color: Colors.white, fontSize: 16), // Style for text inside dropdown
             ),
             selectedItem: selectedExercise,
             onChanged: (SingleExercise? selected) {
@@ -541,16 +562,19 @@ String _averageProtein = "0";
             controller: setsController,
             decoration: const InputDecoration(labelText: 'Sets',labelStyle: TextStyle(color: Colors.white)),
             keyboardType: TextInputType.number,
+            style: const TextStyle(color: Colors.white), // Input text color
           ),
           TextField(
             controller: repsController,
             decoration: const InputDecoration(labelText: 'Reps',labelStyle: TextStyle(color: Colors.white)),
             keyboardType: TextInputType.number,
+            style: const TextStyle(color: Colors.white), // Input text color
           ),
           TextField(
             controller: weightController,
             decoration: const InputDecoration(labelText: 'Weight (lbs)',labelStyle: TextStyle(color: Colors.white)),
             keyboardType: TextInputType.number,
+            style: const TextStyle(color: Colors.white), // Input text color
           ),
           const SizedBox(height: 8.0),
           ElevatedButton(

@@ -7,8 +7,8 @@ import '../data/hive_database.dart';
 
 class CalorieTrackerPage extends StatefulWidget {
   final DateTime selectedDate;
-
-  CalorieTrackerPage({required this.selectedDate});
+  final Function? onReturn;
+  CalorieTrackerPage({required this.selectedDate,this.onReturn});
 
   @override
   _CalorieTrackerPageState createState() => _CalorieTrackerPageState();
@@ -32,7 +32,11 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   List<dynamic> _suggestions = [];
   List<dynamic> _localFoods = [];
   Map<String, dynamic>? selectedFood;
-  double? originalCalories, originalProtein, originalFats, originalCarbs, originalServingSize = 100;
+  double? originalCalories,
+      originalProtein,
+      originalFats,
+      originalCarbs,
+      originalServingSize = 100;
   String? selectedFoodName;
 
   @override
@@ -88,10 +92,14 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     double servingSize = double.tryParse(servingWeightController.text) ?? 100;
     double factor = 100 / servingSize;
 
-    String adjustedCalories = (double.parse(caloriesController.text) * factor).toStringAsFixed(0);
-    String adjustedProtein = (double.parse(proteinController.text) * factor).toStringAsFixed(2);
-    String adjustedCarbs = (double.parse(carbsController.text) * factor).toStringAsFixed(2);
-    String adjustedFats = (double.parse(fatController.text) * factor).toStringAsFixed(2);
+    String adjustedCalories = (double.parse(caloriesController.text) * factor)
+        .toStringAsFixed(0);
+    String adjustedProtein = (double.parse(proteinController.text) * factor)
+        .toStringAsFixed(2);
+    String adjustedCarbs = (double.parse(carbsController.text) * factor)
+        .toStringAsFixed(2);
+    String adjustedFats = (double.parse(fatController.text) * factor)
+        .toStringAsFixed(2);
 
     // Add the new food item to the Hive database for future searches
     hiveDatabase.addFoodItem(
@@ -164,7 +172,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                           fetchNutritionDetails(food);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Invalid food data structure")),
+                            SnackBar(
+                                content: Text("Invalid food data structure")),
                           );
                         }
                       },
@@ -181,7 +190,6 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   }
 
   Widget _buildAddFoodTab() {
-
     return Container(
       color: Colors.grey[900],
       child: Padding(
@@ -196,10 +204,12 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   color: Colors.grey[400], // Light grey label when inactive
                 ),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                  borderSide: BorderSide(
+                      color: Colors.white), // White underline when focused
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                  borderSide: BorderSide(color: Colors
+                      .grey[400]!), // Light grey underline when inactive
                 ),
               ),
               style: TextStyle(
@@ -214,10 +224,12 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   color: Colors.grey[400], // Light grey label when inactive
                 ),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                  borderSide: BorderSide(
+                      color: Colors.white), // White underline when focused
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                  borderSide: BorderSide(color: Colors
+                      .grey[400]!), // Light grey underline when inactive
                 ),
               ),
               style: TextStyle(
@@ -233,10 +245,12 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   color: Colors.grey[400],
                 ),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                  borderSide: BorderSide(
+                      color: Colors.white), // White underline when focused
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                  borderSide: BorderSide(color: Colors
+                      .grey[400]!), // Light grey underline when inactive
                 ),
               ),
               style: TextStyle(
@@ -252,10 +266,12 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   color: Colors.grey[400],
                 ),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                  borderSide: BorderSide(
+                      color: Colors.white), // White underline when focused
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                  borderSide: BorderSide(color: Colors
+                      .grey[400]!), // Light grey underline when inactive
                 ),
               ),
               style: TextStyle(
@@ -271,10 +287,12 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   color: Colors.grey[400],
                 ),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                  borderSide: BorderSide(
+                      color: Colors.white), // White underline when focused
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                  borderSide: BorderSide(color: Colors
+                      .grey[400]!), // Light grey underline when inactive
                 ),
               ),
               style: TextStyle(
@@ -290,10 +308,12 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   color: Colors.grey[400],
                 ),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white), // White underline when focused
+                  borderSide: BorderSide(
+                      color: Colors.white), // White underline when focused
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey[400]!), // Light grey underline when inactive
+                  borderSide: BorderSide(color: Colors
+                      .grey[400]!), // Light grey underline when inactive
                 ),
               ),
               style: TextStyle(
@@ -436,7 +456,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         originalCalories = (data['foods'][0]['nf_calories'] as num).toDouble();
         originalProtein = (data['foods'][0]['nf_protein'] as num).toDouble();
         originalFats = (data['foods'][0]['nf_total_fat'] as num).toDouble();
-        originalCarbs = (data['foods'][0]['nf_total_carbohydrate'] as num).toDouble();
+        originalCarbs =
+            (data['foods'][0]['nf_total_carbohydrate'] as num).toDouble();
         originalServingSize = 100;
         _gramController.text = '100';
         updateNutrition(100);
@@ -448,13 +469,18 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   }
 
   void updateNutrition(double grams) {
-    if (originalCalories != null && originalProtein != null && originalFats != null && originalCarbs != null) {
+    if (originalCalories != null && originalProtein != null &&
+        originalFats != null && originalCarbs != null) {
       setState(() {
         selectedFood = {
-          'Calories': ((originalCalories! / originalServingSize!) * grams).toStringAsFixed(0),
-          'Protein': ((originalProtein! / originalServingSize!) * grams).toStringAsFixed(2),
-          'Fats': ((originalFats! / originalServingSize!) * grams).toStringAsFixed(2),
-          'Carbs': ((originalCarbs! / originalServingSize!) * grams).toStringAsFixed(2),
+          'Calories': ((originalCalories! / originalServingSize!) * grams)
+              .toStringAsFixed(0),
+          'Protein': ((originalProtein! / originalServingSize!) * grams)
+              .toStringAsFixed(2),
+          'Fats': ((originalFats! / originalServingSize!) * grams)
+              .toStringAsFixed(2),
+          'Carbs': ((originalCarbs! / originalServingSize!) * grams)
+              .toStringAsFixed(2),
         };
       });
     }
@@ -493,12 +519,14 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                             controller: _gramController,
                             decoration: InputDecoration(
                               labelText: 'grams',
-                              labelStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              labelStyle: TextStyle(color: Colors.white,
+                                  fontWeight: FontWeight.bold),
                               enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.white),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white, width: 2.0),
+                                borderSide: BorderSide(
+                                    color: Colors.white, width: 2.0),
                               ),
                               fillColor: Colors.transparent,
                               filled: true,
@@ -506,7 +534,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                             style: TextStyle(color: Colors.white),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
-                              double grams = double.tryParse(value) ?? originalServingSize!;
+                              double grams = double.tryParse(value) ??
+                                  originalServingSize!;
                               setState(() {
                                 updateNutrition(grams);
                               });
@@ -520,24 +549,32 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                             children: [
                               SizedBox(height: 10),
                               Text(
-                                "${selectedFoodName ?? 'Selected Food'} - ${_gramController.text}g",
-                                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                "${selectedFoodName ??
+                                    'Selected Food'} - ${_gramController
+                                    .text}g",
+                                style: TextStyle(color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 'Calories: ${selectedFood!['Calories']}',
-                                style: TextStyle(color: Colors.white, fontSize: 16),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
                               ),
                               Text(
                                 'Protein: ${selectedFood!['Protein']}g',
-                                style: TextStyle(color: Colors.white, fontSize: 16),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
                               ),
                               Text(
                                 'Fats: ${selectedFood!['Fats']}g',
-                                style: TextStyle(color: Colors.white, fontSize: 16),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
                               ),
                               Text(
                                 'Carbs: ${selectedFood!['Carbs']}g',
-                                style: TextStyle(color: Colors.white, fontSize: 16),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
                               ),
                               SizedBox(height: 20),
                               ElevatedButton(
@@ -562,7 +599,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   void logFood() {
     if (selectedFood == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No food selected'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('No food selected'), backgroundColor: Colors.red),
       );
       return;
     }
@@ -582,65 +620,81 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   void showErrorDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text("Error"),
-        content: Text("Failed to load nutrition data."),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Okay'),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
+      builder: (ctx) =>
+          AlertDialog(
+            title: Text("Error"),
+            content: Text("Failed to load nutrition data."),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Okay'),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.grey[900],
-          title: Text("Calorie Tracker", style: TextStyle(color: Colors.white),),
-          bottom: TabBar(
+    return WillPopScope(
+      onWillPop: () async {
+        // Call the callback function before popping
+        if (widget.onReturn != null) {
+          widget.onReturn!();
+        }
+        return true; // Return true to allow pop to happen
+      },
+      child: DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.grey[900],
+            title: Text(
+              "Calorie Tracker", style: TextStyle(color: Colors.white),),
+            bottom: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              // Color for selected tab text
+              unselectedLabelColor: Colors.grey[500],
+              // Dark grey for unselected tabs
+              indicatorColor: Colors.white,
+              // White underline for the selected tab
+              tabs: [
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search, size: 16), // Smaller icon
+                      SizedBox(width: 8), // Spacing between icon and text
+                      Text("Search"),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.format_list_bulleted_add, size: 16),
+                      // Smaller icon
+                      SizedBox(width: 8),
+                      // Spacing between icon and text
+                      Text("Add Food"),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            iconTheme: IconThemeData(color: Colors.white),
+          ),
+          body: TabBarView(
             controller: _tabController,
-            labelColor: Colors.white, // Color for selected tab text
-            unselectedLabelColor: Colors.grey[500], // Dark grey for unselected tabs
-            indicatorColor: Colors.white, // White underline for the selected tab
-            tabs: [
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.search, size: 16), // Smaller icon
-                    SizedBox(width: 8), // Spacing between icon and text
-                    Text("Search"),
-                  ],
-                ),
-              ),
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.format_list_bulleted_add, size: 16), // Smaller icon
-                    SizedBox(width: 8), // Spacing between icon and text
-                    Text("Add Food"),
-                  ],
-                ),
-              ),
+            children: [
+              _buildSearchTab(),
+              _buildAddFoodTab(),
             ],
           ),
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildSearchTab(),
-            _buildAddFoodTab(),
-          ],
         ),
       ),
     );

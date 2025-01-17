@@ -1,10 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../models/NutritionalInfo.dart';
 import '../data/hive_database.dart';
-import 'dart:math';
+
 class CalorieTile extends StatefulWidget {
-  final String averageCalories; // Passed from MySplitPage
-  const CalorieTile({Key? key, required this.averageCalories}) : super(key: key);
+  const CalorieTile({Key? key}) : super(key: key);
 
   @override
   _CalorieTileState createState() => _CalorieTileState();
@@ -14,26 +16,32 @@ class _CalorieTileState extends State<CalorieTile> {
   final HiveDatabase hiveDatabase = HiveDatabase();
   double _caloriesLeft = 0;
   double _caloriesConsumedToday = 0;
+  double _dailyGoal = 0;
 
   @override
   void initState() {
     super.initState();
-    _calculateCalories();
+    loadNutritionalInfo();
   }
 
-  void _calculateCalories() {
-    final today = DateTime.now();
-    // Get consumed calories for today
-    final foodItems = hiveDatabase.getFoodForDate(today);
+  void loadNutritionalInfo() async {
+    var box = await Hive.openBox<NutritionalInfo>('nutritionBox');
+    NutritionalInfo? info = box.get('nutrition');
+    if (info != null) {
+      _dailyGoal = double.tryParse(info.calories) ?? 0;
+      calculateCalories();
+    }
+  }
+
+  void calculateCalories() {
+    DateTime today = DateTime.now();
+    var foodItems = hiveDatabase.getFoodForDate(today);
     _caloriesConsumedToday = foodItems.fold(0, (sum, item) {
       return sum + (double.tryParse(item.calories) ?? 0);
     });
 
-    // Calculate remaining calories
-    double dailyGoal = double.tryParse(widget.averageCalories) ?? 0;
     setState(() {
-      _caloriesLeft = max(0, dailyGoal - _caloriesConsumedToday);
-
+      _caloriesLeft = max(0, _dailyGoal - _caloriesConsumedToday);
     });
   }
 
@@ -41,31 +49,56 @@ class _CalorieTileState extends State<CalorieTile> {
   Widget build(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      color: Colors.grey[850],
+      color: Colors.grey[800],
       elevation: 4,
-      margin: const EdgeInsets.all(10),
+      margin: const EdgeInsets.all(0),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 1),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Calories Left Today",
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              "Daily Nutrition",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              "${_caloriesLeft.toStringAsFixed(0)} kcal",
-              style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              "Consumed: ${_caloriesConsumedToday.toStringAsFixed(0)} kcal",
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildNutritionData("${_caloriesLeft.toStringAsFixed(0)}", "Remaining"),
+                _buildNutritionData("${_caloriesConsumedToday.toStringAsFixed(0)}", "Consumed"),
+                _buildNutritionData("${_dailyGoal.toStringAsFixed(0)}", "Target"),
+              ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildNutritionData(String value, String label) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: label == "Consumed" ? 35 : 25,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 12,
+          ),
+        ),
+      ],
     );
   }
 }

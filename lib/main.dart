@@ -19,6 +19,7 @@ import 'package:gymapp/pages/weeklysplittile.dart';
 import 'package:gymapp/pages/workout_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'data/NutritionProvider.dart';
 import 'models/NutritionalInfo.dart';
 import 'models/step_log.dart';
 import 'models/weight_log.dart';
@@ -51,6 +52,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => WorkoutData()),
         ChangeNotifierProvider(create: (context) => FoodData(HiveDatabase())),
         Provider(create: (context) => HiveDatabase()),
+        ChangeNotifierProvider(create: (context) => NutritionProvider()..loadNutritionalInfo()),  // Changed to ChangeNotifierProvider
       ],
 
       child: MaterialApp(

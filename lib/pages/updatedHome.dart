@@ -6,11 +6,13 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart'; // For WorkoutData
 import '../components/CalorieTile.dart';
 import '../data/GlobalState.dart';
+import '../data/NutritionProvider.dart';
 import '../data/hive_database.dart';
 import '../data/workout_data.dart'; // Import your WorkoutData class
 import '../models/heat_map.dart';
 import '../models/heat_map_2.dart';
 import '../models/step_log.dart';
+import '../models/workout.dart';
 import 'BuildBodyHome.dart';
 import 'MySplitPage.dart';
 import 'SearchPage.dart';
@@ -60,6 +62,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
     super.initState();
     _fetchStepLogs();
     _fetchAverageSteps();
+    Provider.of<NutritionProvider>(context, listen: false).loadNutritionalInfo();
     // Fetching today's split and adjusting height dynamically
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final todaysSplit = Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
@@ -114,6 +117,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
     }
   }
   void _openSearchSheet(BuildContext context) {
+    Workout todayWorkout = Provider.of<WorkoutData>(context, listen: false).ensureTodayWorkout();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -143,8 +147,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                   ), // Circular edges at the top
                 ),
                 child: WorkoutPage(
-                  workoutId: todayDateString,
-                  workoutName: todayDateString,
+                  workoutId: todayWorkout.id,
+                  workoutName: todayWorkout.name,
                   openDialog: true,
                 ),
               ),
@@ -289,17 +293,18 @@ class _UpdatedHomeState extends State<UpdatedHome> {
 
   Widget buildCustomCard(String title, String content) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      margin: const EdgeInsets.all(0),
       color: Colors.grey[800],
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(8.0),
+
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center, // Centers vertically in the available space
+          crossAxisAlignment: CrossAxisAlignment.stretch, // Centers horizontally in the available space
           children: [
-            CalorieTile(averageCalories: averageCals),
+            Expanded(
+                child: CalorieTile(),
+            ),
 
           ],
         ),
@@ -386,13 +391,15 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                           });
                         },
                         children: [
-                          buildWorkoutCard(
-                            'Today\'s Workout',
-                            todaysSplit == null
-                                ? 'No workout data available.'
-                                : todaysSplit.muscleGroups.isEmpty
-                                ? 'No workout planned for today.'
-                                : '',
+                          SingleChildScrollView( // added single child scrolling take this out if you dont liek it
+                            child: buildWorkoutCard(
+                              'Today\'s Workout',
+                              todaysSplit == null
+                                  ? 'No workout data available.'
+                                  : todaysSplit.muscleGroups.isEmpty
+                                  ? 'No workout planned for today.'
+                                  : '',
+                            ),
                           ),
                           buildCustomCard('Card 2', 'This is the second card.'),
                         ],

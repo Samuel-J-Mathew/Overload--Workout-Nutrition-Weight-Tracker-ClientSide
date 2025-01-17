@@ -15,7 +15,7 @@ class WeightLogPage extends StatefulWidget {
     final db = Provider.of<HiveDatabase>(context, listen: false);
     List<WeightLog> logs = db.getWeightLogs();
     if (logs.isEmpty) {
-      return Center(child: Text("No weight data available"));
+      return Center(child: Text("Add Weight Data", style: TextStyle(color: Colors.white, fontSize: 12),));
     }
     List<FlSpot> spots = logs.map((log) {
       return FlSpot(

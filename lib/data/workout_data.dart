@@ -82,6 +82,25 @@ class WorkoutData extends ChangeNotifier{
   }
 
 
+  Workout ensureTodayWorkout() {
+    DateTime today = DateTime.now();
+    // Normalize the date to remove time
+    DateTime normalizedToday = DateTime(today.year, today.month, today.day);
+    // Try to get today's workout
+    Workout todayWorkout = workoutList.firstWhere(
+            (workout) => workout.date.year == normalizedToday.year &&
+            workout.date.month == normalizedToday.month &&
+            workout.date.day == normalizedToday.day,
+        orElse: () {
+          // If no workout exists for today, create one
+          String workoutId = addWorkout("Workout for ${DateFormat('yyyy-MM-dd').format(today)}", today);
+          return getWorkoutById(workoutId);
+        }
+    );
+
+    return todayWorkout;
+  }
+
 
   // Method to get today's workout split based on the day of the week
   WorkoutSplit getTodaysSplit() {

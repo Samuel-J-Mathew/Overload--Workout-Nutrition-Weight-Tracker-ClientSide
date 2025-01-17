@@ -47,6 +47,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
     }).toList();
 
 
+
     if (_selectedDayFoods != null && _selectedDayFoods!.isNotEmpty) {
       print("Foods on ${DateFormat('yyyy-MM-dd').format(date)}:");
       for (var food in _selectedDayFoods!) {
@@ -147,7 +148,9 @@ class _FoodLogPageState extends State<FoodLogPage> {
   }
 
 
-
+  void refreshFoodLog() {
+    _loadFoodsForSelectedDay(_selectedDay!);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -237,7 +240,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now())),
+                    MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now(), onReturn: refreshFoodLog, )),
                   );  // The action you want to perform on tap
                 },
                 child: Container(
@@ -252,7 +255,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now())),
+                            MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now(),onReturn: refreshFoodLog,)),
                           );
                         },
                       ),
