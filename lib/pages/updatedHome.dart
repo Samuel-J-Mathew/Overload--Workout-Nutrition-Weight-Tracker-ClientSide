@@ -174,7 +174,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
-      color: Colors.grey[800],
+      color: Colors.grey[850],
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -339,7 +339,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
      // Track the current page index
 
     return Scaffold(
-      backgroundColor: Colors.grey[850],
+      backgroundColor: Color.fromRGBO(31, 31, 31, 1),
       body: Stack(
         children: [
           ListView(
@@ -349,7 +349,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                    color: Colors.grey[850],
+                    color: Color.fromRGBO(31, 31, 31, 1),
                     borderRadius: BorderRadius.circular(10)
                 ),
                 alignment: Alignment.centerLeft,
@@ -435,7 +435,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                 height: MediaQuery.of(context).size.height * 0.7, // Adjust the height as needed
                 child: Container(
                   padding: EdgeInsets.all(20),
-                  color: Colors.grey[900],
+                  color: Color.fromRGBO(20, 20, 20, 1),
                   child: Column(
                     children: [
                       Row(
@@ -461,7 +461,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              color: Colors.grey[800],
+                              color: Color.fromRGBO(31, 31, 31, 1),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 19.0),
                                 child: Column(
@@ -546,7 +546,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              color: Colors.grey[800],
+                              color: Color.fromRGBO(31, 31, 31, 1),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 19.0),
                                 child: Column(
@@ -639,7 +639,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              color: Colors.grey[800],
+                              color: Color.fromRGBO(31, 31, 31, 1),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 19.0),
                                 child: Column(
@@ -727,7 +727,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              color: Colors.grey[800],
+                              color: Color.fromRGBO(31, 31, 31, 1),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 19.0),
                                 child: Column(
@@ -821,33 +821,46 @@ class _UpdatedHomeState extends State<UpdatedHome> {
           ),
           if (_showSearchBar)
             Positioned(
-              bottom: 20,
+              bottom: 0,
               left: 0,
               right: 0,
-              child: InkWell(
-                onTap: () => _openSearchSheet(context),
-                child: Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[850],
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.search, color: Colors.white),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          'Search for an exercise',
-                          style: TextStyle(color: Colors.grey[500]),
-                        ),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 0, vertical: 9), // Adjust vertical padding to control the height above and below the search bar
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(25, 25, 25, 1), // Black background for the outer container
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8.0, right: 8),
+                  child: InkWell(
+                    onTap: () => _openSearchSheet(context),
+                    child: Container(
+                      padding: EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: Color.fromRGBO(40, 40, 40, 1), // Original search bar color
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                    ],
+                      child: Row(
+                        children: [
+                          Icon(Icons.search, color: Colors.white),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              'Search for an exercise',
+                              style: TextStyle(color: Colors.grey[500]),
+                            ),
+
+                          ),
+
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
+
         ],
+
       ),
     );
 

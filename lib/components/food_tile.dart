@@ -30,7 +30,7 @@ class FoodTile extends StatelessWidget {
         //padding: EdgeInsets.all(16),
         padding: EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.grey[850],
+          color: Color.fromRGBO(31, 31, 31, 1),
           borderRadius: BorderRadius.circular(16),
         ),
 

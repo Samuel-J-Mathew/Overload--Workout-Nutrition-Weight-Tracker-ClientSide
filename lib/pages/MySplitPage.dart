@@ -147,19 +147,19 @@ String _averageProtein = "0";
           'Strategy',
           style: TextStyle(fontSize: 29, color: Colors.white),
         ),
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Color.fromRGBO(20, 20, 20, 1),
       ),
       body: Column(
         children: [
           Container(
-            color: Colors.black87,
+            color: Color.fromRGBO(20, 20, 20, 1),
             height: 400,
             child: Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                color: Colors.grey[850],
+                color: Color.fromRGBO(31, 31, 31, 1),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 19.0),
@@ -236,14 +236,14 @@ String _averageProtein = "0";
           ),
           Container(
 
-            color: Colors.grey[900],
+            color: Color.fromRGBO(20, 20, 20, 1),
             width: MediaQuery.of(context).size.width * 1, // 90% of screen width
             child: Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              color: Colors.grey[850],
+              color: Color.fromRGBO(31, 31, 31, 1),
               child: Padding(
                   padding:  const EdgeInsets.symmetric(horizontal: 19.0, vertical: 18),
                 child: Column(
@@ -334,7 +334,7 @@ String _averageProtein = "0";
             ),
           ),
           Container(
-            color: Colors.grey[900],
+            color: Color.fromRGBO(20, 20, 20, 1),
             height: 79,
           ),
         ],

@@ -152,7 +152,7 @@ class _MyWidgetState extends State<WorkoutPage>{
               Expanded(
                 child: Container(
                   margin: EdgeInsets.zero,
-                  color: Colors.grey[900],
+                  color: Color.fromRGBO(20, 20, 20, 1),
                   padding: EdgeInsets.only(left: 40, right: 14,),
                   child: workout.exercises.isEmpty ?  // Check if the exercises list is empty
                   Center(  // Center widget to center the message
@@ -183,7 +183,7 @@ class _MyWidgetState extends State<WorkoutPage>{
                 constraints: BoxConstraints(
                   maxHeight: 55, // Maximum height
                 ),
-                color: Colors.grey[900],
+                color: Color.fromRGBO(25, 25, 25, 1),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: InkWell(
@@ -192,7 +192,7 @@ class _MyWidgetState extends State<WorkoutPage>{
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey[850],
+                        color: Color.fromRGBO(40, 40, 40, 1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

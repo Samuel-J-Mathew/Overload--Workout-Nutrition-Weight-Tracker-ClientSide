@@ -155,7 +155,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
         SizedBox(height: 6,),
         Expanded(
           child: Container(
-            color: Colors.grey[900],
+            color: Color.fromRGBO(20, 20, 20, 1),
             child: _selectedWorkout != null
                 ? (() {
               print('workoutID dumbdumb: ${_selectedWorkout!.id}');
@@ -185,7 +185,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
     final workoutData = Provider.of<WorkoutData>(context);
 
     return Scaffold(
-      backgroundColor: Colors.grey[850],
+      backgroundColor: Color.fromRGBO(31, 31, 31, 1),
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Dashboard'),
@@ -195,7 +195,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
         ],
         currentIndex: _selectedIndex, // Highlight the selected item
         onTap: _onItemTapped, // Call _onItemTapped when an item is tapped
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Color.fromRGBO(20, 20, 20, 1),
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,
         type: BottomNavigationBarType.fixed,

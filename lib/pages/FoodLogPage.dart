@@ -196,7 +196,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[850],
+      backgroundColor: Color.fromRGBO(31, 31, 31, 1),
       body: Column(
         children: [
           SizedBox(height: 50),
@@ -240,7 +240,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
           SizedBox(height: 6,),
           Expanded(
             child: Container(
-              color: Colors.grey[900],
+              color: Color.fromRGBO(20, 20, 20, 1),
               padding: EdgeInsets.only(left: 40, right: 14,),
               child: _selectedDayFoods == null || _selectedDayFoods!.isEmpty
                   ? Center(
@@ -368,7 +368,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
             constraints: BoxConstraints(
               maxHeight: 55, // Maximum height
             ),
-            color: Colors.grey[900],
+            color: Color.fromRGBO(25, 25, 25, 1),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: InkWell(
@@ -380,7 +380,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[850],
+                    color: Color.fromRGBO(40, 40, 40, 1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -396,7 +396,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
                       ),
                       SizedBox(width: 9),
                       Text(
-                        'Search for an exercise',
+                        'Search for a food',
                         style: TextStyle(color: Colors.grey[500]),
                       ),
                     ],
