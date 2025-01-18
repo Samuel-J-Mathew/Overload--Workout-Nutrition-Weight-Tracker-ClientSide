@@ -77,7 +77,11 @@ class _UpdatedHomeState extends State<UpdatedHome> {
             _workoutCardHeight = 320;
           } else if (muscleGroupCount >= 4) {
             _workoutCardHeight = 420;
-          } else {
+          }
+          else if (muscleGroupCount >= 5) {
+            _workoutCardHeight = 520;
+          }
+          else {
             _workoutCardHeight = 120; // Default for no muscle groups
           }
         });
@@ -225,23 +229,39 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                         expandedMuscleGroups.add(muscleGroup.muscleGroupName);
                       }
 
-                      // Calculate the height dynamically
-                      int totalExpandedExercises = expandedMuscleGroups.fold(
-                        0,
-                            (sum, groupName) {
-                          final group = todaysSplit.muscleGroups.firstWhere(
-                                (g) => g.muscleGroupName == groupName,
+                      // Calculate the new height based on which muscle groups are currently expanded
+                      int totalExpandedExercises = expandedMuscleGroups.fold(0, (sum, groupName) {
+                        final group = todaysSplit.muscleGroups.firstWhere(
+                                (g) => g.muscleGroupName == groupName);
+                            // Return null if not found to prevent exceptions
 
-                          );
-                          return sum + (group?.exercises.length ?? 0);
-                        },
-                      );
+                        return sum + (group?.exercises.length ?? 0);
+                      });
 
-                      const double baseHeight = 300; // Default height
-                      const double extraHeightPerExercise = 50; // Height per exercise
-                      _workoutCardHeight = baseHeight + (totalExpandedExercises * extraHeightPerExercise);
+                      const double baseHeight = 300; // Base height when no muscle groups are expanded
+                      const double extraHeightPerExercise = 100; // Additional height per expanded exercise
+
+                      if (totalExpandedExercises > 0) {
+                        _workoutCardHeight = baseHeight + (totalExpandedExercises * extraHeightPerExercise);
+                      } else {
+                        // Revert to the initial sizing based on muscle group counts
+                        final muscleGroupCount = todaysSplit.muscleGroups.length;
+                        if (muscleGroupCount == 1) {
+                          _workoutCardHeight = 150;
+                        } else if (muscleGroupCount == 2) {
+                          _workoutCardHeight = 220;
+                        } else if (muscleGroupCount == 3) {
+                          _workoutCardHeight = 320;
+                        } else if (muscleGroupCount >= 4) {
+                          _workoutCardHeight = 420;
+                        }
+                        else {
+                          _workoutCardHeight = 120; // Default for no muscle groups
+                        }
+                      }
                     });
                   },
+
                 ),
                 Divider(color: Colors.grey[600]),
                 if (expandedMuscleGroups.contains(muscleGroup.muscleGroupName)) ...[
@@ -297,7 +317,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
   Widget buildCustomCard(String title, String content) {
     return Card(
       margin: const EdgeInsets.all(0),
-      color: Colors.grey[800],
+      color: Color.fromRGBO(42, 42, 42, 1),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
 
@@ -306,7 +326,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
           crossAxisAlignment: CrossAxisAlignment.stretch, // Centers horizontally in the available space
           children: [
             Expanded(
-                child: CalorieTile(),
+              child: CalorieTile(),
             ),
 
           ],
@@ -335,11 +355,11 @@ class _UpdatedHomeState extends State<UpdatedHome> {
   }
 
 
-
+  @override
   Widget build(BuildContext context) {
     final workoutsThisWeek = Provider.of<WorkoutData>(context, listen: false).getThisWeekWorkoutCount();
     final todaysSplit = Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
-     // Track the current page index
+    // Track the current page index
 
     return Scaffold(
       backgroundColor: Color.fromRGBO(31, 31, 31, 1),
@@ -384,17 +404,36 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                     // Add padding or header if needed
                     SizedBox(height: 1),
                     SizedBox(
-                      height: _workoutCardHeight, // Dynamically adjust height
+                      height: _workoutCardHeight, // Dynamically adjust height based on the state
                       child: PageView(
                         controller: _pageController,
                         onPageChanged: (index) {
-                          // This gets called whenever the user swipes to a new page
                           setState(() {
                             _currentIndex = index; // Update the current index to reflect the new page
+                            if (index == 1) { // If the second page is visible
+                              _workoutCardHeight = 220; // Set height to 220 when on the second page
+                            } else {
+                              // Fetch the today's split again to determine muscle group count
+                              final todaysSplit = Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
+                              if (todaysSplit != null) {
+                                int muscleGroupCount = todaysSplit.muscleGroups.length;
+                                if (muscleGroupCount == 1) {
+                                  _workoutCardHeight = 150;
+                                } else if (muscleGroupCount == 2) {
+                                  _workoutCardHeight = 220;
+                                } else if (muscleGroupCount == 3) {
+                                  _workoutCardHeight = 320;
+                                } else if (muscleGroupCount >= 4) {
+                                  _workoutCardHeight = 420;
+                                }
+                              } else {
+                                _workoutCardHeight = 120; // Default for no muscle groups if no split found
+                              }
+                            }
                           });
                         },
                         children: [
-                          SingleChildScrollView( // added single child scrolling take this out if you dont liek it
+                          SingleChildScrollView(
                             child: buildWorkoutCard(
                               'Today\'s Workout',
                               todaysSplit == null
@@ -404,10 +443,12 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                   : '',
                             ),
                           ),
-                          buildCustomCard('Card 2', 'This is the second card.'),
+                          Center(child: buildCustomCard('Card 2', 'This is the second card.')),
                         ],
                       ),
                     ),
+
+
                     SizedBox(height: 3,),
                     // Optionally add dots or indicators for pages
                     Row(
@@ -807,7 +848,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               ),
                             ),
                           ),
-                          ],
+                        ],
                       ),
                       SizedBox(height: 120),
 

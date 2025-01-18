@@ -191,7 +191,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Dashboard'),
           BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: 'Exercise Log'),
           BottomNavigationBarItem(icon: Icon(Icons.apple), label: 'Food Log'),
-          BottomNavigationBarItem(icon: Icon(Icons.moving_rounded), label: 'Strategy'),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book_sharp), label: 'Plan'),
         ],
         currentIndex: _selectedIndex, // Highlight the selected item
         onTap: _onItemTapped, // Call _onItemTapped when an item is tapped

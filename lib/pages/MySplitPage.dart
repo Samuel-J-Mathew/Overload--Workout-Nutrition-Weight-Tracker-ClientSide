@@ -168,7 +168,7 @@ String _averageProtein = "0";
                       mainAxisAlignment: MainAxisAlignment.center, // Center vertically
                       crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
                       children: [
-                        SizedBox(height: 40),
+                        SizedBox(height: 2),
                         Align(
                           alignment: Alignment.centerLeft, // Aligns the child to the left of the available space.
                           child: Text("Workout Program", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
