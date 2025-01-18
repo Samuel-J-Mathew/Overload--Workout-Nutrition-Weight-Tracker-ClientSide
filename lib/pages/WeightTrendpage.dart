@@ -29,14 +29,15 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
   void _fetchLogs() {
     final db = Provider.of<HiveDatabase>(context, listen: false);
     logs = db.getWeightLogs();
-    // Sort logs by date in descending order
-    logs.sort((a, b) => b.date.compareTo(a.date));
+    // Sort logs by date in ascending order
+    logs.sort((a, b) => a.date.compareTo(b.date));
     if (logs.isEmpty) {
       setState(() {});  // Refresh UI if no data is found
     } else {
       setState(() {});  // Ensure the UI is updated with the sorted logs
     }
   }
+
   double calculateInterval(double maxY, double minY) {
     if (maxY == minY) {
       // To avoid a zero interval, provide a default value when maxY equals minY
@@ -74,6 +75,9 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
     List<WeightLog> filteredLogs = db.getWeightLogs().where((log) {
       return log.date.isAfter(startDate) && log.date.isBefore(now);
     }).toList();
+
+    // Sort the filtered logs in ascending order by date
+    filteredLogs.sort((a, b) => a.date.compareTo(b.date));
 
     setState(() {
       logs = filteredLogs;
@@ -147,27 +151,24 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
     IconData icon = Icons.horizontal_rule;  // Default icon for no change
     Color iconColor = Colors.grey;  // Default color for no change
     String weightChange = '';  // Initialize an empty string for weight change
-    TextStyle weightChangeStyle;  // Define a style for the weight change text
+    TextStyle weightChangeStyle = TextStyle(color: iconColor, fontSize: 14);  // Default grey text if no change
 
-    if (index < logs.length - 1) {  // Ensure there's a next log to compare with
-      final nextLog = logs[index + 1];  // Get the next log in the list
-      double change = log.weight - nextLog.weight;  // Calculate the weight difference
+    // Adjust to use previous log for comparison
+    if (index > 0) {  // Ensure there's a previous log to compare with
+      final prevLog = logs[index - 1];  // Get the previous log in the list
+      double change = log.weight - prevLog.weight;  // Calculate the weight difference
 
       if (change > 0) {
         icon = Icons.arrow_upward;  // Up arrow for weight gain
-        iconColor = Colors.purple.shade300;  // Green for gain
+        iconColor = Colors.green;  // Green for gain
         weightChange = "+${change.toStringAsFixed(1)} lbs";  // Format gain as positive
-        weightChangeStyle = TextStyle(color: Colors.grey[400], fontSize: 14);  // Green text for weight gain
+        weightChangeStyle = TextStyle(color: Colors.white, fontSize: 14);  // Green text for weight gain
       } else if (change < 0) {
         icon = Icons.arrow_downward;  // Down arrow for weight loss
-        iconColor = Colors.purple.shade300;  // Red for loss
+        iconColor = Colors.red;  // Red for loss
         weightChange = "${change.toStringAsFixed(1)} lbs";  // Format loss as negative
-        weightChangeStyle = TextStyle(color: Colors.grey[400], fontSize: 14);  // Red text for weight loss
-      } else {
-        weightChangeStyle = TextStyle(color: iconColor, fontSize: 14);  // Default grey text if no change
+        weightChangeStyle = TextStyle(color: Colors.white, fontSize: 14);  // Red text for weight loss
       }
-    } else {
-      weightChangeStyle = TextStyle(color: iconColor, fontSize: 14);  // Ensure there is always a style even if no change
     }
 
     return Container(
@@ -187,13 +188,14 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
             ],
           ),
           Text(
-            DateFormat('EEE, MMM d').format(log.date),  // 'EEE' for abbreviated day of the week, 'MMM' for abbreviated month, 'd' for day of the month without leading zeros
+            DateFormat('EEE, MMM d').format(log.date),
             style: TextStyle(color: Colors.grey[400], fontSize: 16),
           ),
         ],
       ),
     );
   }
+
 
 
   Widget _timeButton(String text, TimeView timeView) {
@@ -256,8 +258,8 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
                 padding: EdgeInsets.all(8), // Ensures padding inside the container
                 itemCount: logs.length,
                 itemBuilder: (context, index) {
-                  final log = logs[index];
-                  return _buildWeightItem(log, index);
+                  final log = logs[logs.length - 1 - index];
+                  return _buildWeightItem(log, logs.length - 1 - index);
                 },
                 separatorBuilder: (context, index) => Divider(color: Colors.grey[500]),  // Adjust the divider color for better contrast
               ),
@@ -275,48 +277,78 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
 
 
   Future<void> _addWeightLog() async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (pickedDate != null) {
-      final String? weight = await _showWeightInputDialog();
-      if (weight != null && weight.isNotEmpty) {
-        final db = Provider.of<HiveDatabase>(context, listen: false);
-        final log = WeightLog(date: pickedDate, weight: double.parse(weight));
-        db.saveWeightLog(log);
-        _fetchLogs();
-        setState(() {});
-      }
+    // Initialize with today's date, but let user change it in the dialog
+    DateTime selectedDate = DateTime.now();
+    final result = await _showWeightInputDialog(selectedDate);
+
+    if (result != null && result['weight'].isNotEmpty) {
+      final db = Provider.of<HiveDatabase>(context, listen: false);
+      final log = WeightLog(date: result['date'], weight: double.parse(result['weight']));
+      db.saveWeightLog(log);
+      _fetchLogs();  // Refresh logs after adding
     }
   }
 
-  Future<String?> _showWeightInputDialog() async {
+  Future<Map<String, dynamic>?> _showWeightInputDialog(DateTime initialDate) async {
     TextEditingController controller = TextEditingController();
-    return showDialog<String>(
+    DateTime selectedDate = initialDate;
+
+    Future<void> _changeDate(BuildContext dialogContext) async {
+      DateTime? newDate = await showDatePicker(
+        context: dialogContext,
+        initialDate: selectedDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100),
+      );
+      if (newDate != null && newDate != selectedDate) {
+        selectedDate = newDate;
+        (dialogContext as Element).markNeedsBuild(); // Force rebuild of the dialog
+      }
+    }
+
+    return showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Enter your weight'),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: 'Weight (lbs)'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: Text('Save'),
-              onPressed: () => Navigator.of(context).pop(controller.text),
-            ),
-          ],
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext dialogContext, StateSetter setState) {
+            return AlertDialog(
+              title: GestureDetector(
+                onTap: () => _changeDate(dialogContext),
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 20),
+                    SizedBox(width: 8),
+                    Text(DateFormat('yyyy-MM-dd').format(selectedDate)),  // Display selected date
+                  ],
+                ),
+              ),
+              content: TextField(
+                controller: controller,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(labelText: 'Weight (lbs)'),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: Text('Save'),
+                  onPressed: () {
+                    Navigator.of(context).pop({
+                      'weight': controller.text,
+                      'date': selectedDate
+                    });
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
+
 }

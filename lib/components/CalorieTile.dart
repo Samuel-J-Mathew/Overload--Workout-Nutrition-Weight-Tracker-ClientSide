@@ -1,7 +1,7 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:pie_chart/pie_chart.dart';
 import '../models/NutritionalInfo.dart';
 import '../data/hive_database.dart';
 
@@ -53,7 +53,7 @@ class _CalorieTileState extends State<CalorieTile> {
       elevation: 4,
       margin: const EdgeInsets.all(0),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 1),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -65,12 +65,12 @@ class _CalorieTileState extends State<CalorieTile> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 5),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildNutritionData("${_caloriesLeft.toStringAsFixed(0)}", "Remaining"),
-                _buildNutritionData("${_caloriesConsumedToday.toStringAsFixed(0)}", "Consumed"),
+                _buildPieChart(),
                 _buildNutritionData("${_dailyGoal.toStringAsFixed(0)}", "Target"),
               ],
             ),
@@ -87,7 +87,7 @@ class _CalorieTileState extends State<CalorieTile> {
           value,
           style: TextStyle(
             color: Colors.white,
-            fontSize: label == "Consumed" ? 35 : 25,
+            fontSize: 25,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -99,6 +99,55 @@ class _CalorieTileState extends State<CalorieTile> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPieChart() {
+    Map<String, double> dataMap = {
+      "Consumed": _caloriesConsumedToday,
+      "Remaining": max(0, _dailyGoal - _caloriesConsumedToday),
+    };
+    return Expanded(
+      child: PieChart(
+        dataMap: dataMap,
+        animationDuration: Duration(milliseconds: 800),
+        chartLegendSpacing: 32,
+        chartRadius: MediaQuery.of(context).size.width / 3.5,
+        colorList: [Colors.blue, Colors.blueGrey[200]!],
+        initialAngleInDegree: 0,
+        chartType: ChartType.ring,
+        ringStrokeWidth: 12,
+        centerText: "", // Clear this to use a custom widget
+        centerWidget: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "${_caloriesConsumedToday.toStringAsFixed(0)}",
+              style: TextStyle(
+                fontSize: 38, // Larger font size for calories
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              "Consumed",
+              style: TextStyle(
+                fontSize: 12, // Smaller font size for "Consumed"
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        legendOptions: LegendOptions(
+          showLegends: false,
+        ),
+        chartValuesOptions: ChartValuesOptions(
+          showChartValueBackground: true,
+          showChartValues: false,
+          showChartValuesInPercentage: false,
+          showChartValuesOutside: false,
+        ),
+      ),
     );
   }
 }

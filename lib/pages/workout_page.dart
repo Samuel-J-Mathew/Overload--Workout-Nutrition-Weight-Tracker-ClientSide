@@ -15,6 +15,7 @@ class WorkoutPage extends StatefulWidget{
   State<WorkoutPage> createState() => _MyWidgetState();
 }
 class _MyWidgetState extends State<WorkoutPage>{
+
   @override
   void initState() {
     super.initState();
@@ -24,6 +25,7 @@ class _MyWidgetState extends State<WorkoutPage>{
       });
     }
   }
+
   List<SingleExercise> filteredExercises = exerciseList;
   //text controllers
   final exerciseNameController = TextEditingController();

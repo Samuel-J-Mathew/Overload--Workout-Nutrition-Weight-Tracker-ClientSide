@@ -203,27 +203,21 @@ class _StepCounterPageState extends State<StepCounterPage> {
     _updateFilteredLogs();
   }
 
+  // Function to initiate adding a step log
   Future<void> _addStepLog() async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      final Map<String, dynamic>? result = await _showStepOrDistanceInputDialog();
-      if (result != null && result['steps'] != null) {
-        final db = Provider.of<HiveDatabase>(context, listen: false);
-        final log = StepLog(date: pickedDate, steps: result['steps']);
-        db.saveStepLog(log);
-        _fetchLogs(); // Refresh logs
-      }
+    final Map<String, dynamic>? result = await _showStepOrDistanceInputDialog(DateTime.now());
+    if (result != null && result['steps'] != null && result['date'] != null) {
+      final db = Provider.of<HiveDatabase>(context, listen: false);
+      final log = StepLog(date: result['date'], steps: result['steps']);
+      db.saveStepLog(log);
+      _fetchLogs(); // Refresh logs
     }
   }
-  Future<Map<String, dynamic>?> _showStepOrDistanceInputDialog() async {
+
+  Future<Map<String, dynamic>?> _showStepOrDistanceInputDialog(DateTime initialDate) async {
     final TextEditingController stepsController = TextEditingController();
     final TextEditingController distanceController = TextEditingController();
+    DateTime selectedDate = initialDate;
 
     void updateSteps(String distance) {
       final double? miles = double.tryParse(distance);
@@ -241,43 +235,69 @@ class _StepCounterPageState extends State<StepCounterPage> {
       }
     }
 
+    Future<void> _changeDate(BuildContext dialogContext) async {
+      DateTime? newDate = await showDatePicker(
+        context: dialogContext,
+        initialDate: selectedDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100),
+      );
+      if (newDate != null && newDate != selectedDate) {
+        selectedDate = newDate;
+        (dialogContext as Element).markNeedsBuild(); // This will force the dialog to rebuild with the new date
+      }
+    }
+
     return showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Enter Steps or Distance'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: stepsController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: 'Steps'),
-                onChanged: (value) => updateDistance(value),
+      builder: (BuildContext context) {
+        return StatefulBuilder( // This allows us to rebuild just the content of the dialog
+          builder: (BuildContext dialogContext, StateSetter setState) {
+            return AlertDialog(
+              title: GestureDetector(
+                onTap: () => _changeDate(dialogContext),
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 20),
+                    SizedBox(width: 8),
+                    Text(DateFormat('yyyy-MM-dd').format(selectedDate)),
+                  ],
+                ),
               ),
-              TextField(
-                controller: distanceController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: 'Distance (miles)'),
-                onChanged: (value) => updateSteps(value),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: stepsController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(labelText: 'Steps'),
+                    onChanged: (value) => updateDistance(value),
+                  ),
+                  TextField(
+                    controller: distanceController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(labelText: 'Distance (miles)'),
+                    onChanged: (value) => updateSteps(value),
+                  ),
+                ],
               ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Save'),
-              onPressed: () {
-                final int? steps = int.tryParse(stepsController.text);
-                Navigator.of(context).pop({'steps': steps});
-              },
-            ),
-          ],
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: Text('Save'),
+                  onPressed: () {
+                    final int? steps = int.tryParse(stepsController.text);
+                    Navigator.of(context).pop({'steps': steps, 'date': selectedDate});
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );

@@ -50,6 +50,8 @@ dependencies:
   path_provider: ^2.0.11
   url_launcher: ^6.1.5
   collection: ^1.15.0
+  pie_chart: ^5.4.0
+  material_design_icons_flutter: ^7.0.7296
 dev_dependencies:
   flutter_test:
     sdk: flutter

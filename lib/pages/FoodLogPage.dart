@@ -1,17 +1,30 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:gymapp/data/FoodItemDatabase.dart';
 import 'package:gymapp/data/FoodData.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../components/food_tile.dart';
+import '../data/hive_database.dart';
+import '../models/NutritionalInfo.dart';
 import 'CalorieTrackerPage.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 class FoodLogPage extends StatefulWidget {
   @override
   _FoodLogPageState createState() => _FoodLogPageState();
 }
 
 class _FoodLogPageState extends State<FoodLogPage> {
+  final HiveDatabase hiveDatabase = HiveDatabase();
+  double _caloriesLeft = 0;
+  double _caloriesConsumedToday = 0;
+  double _proteinConsumedToday = 0;
+  double _carbsConsumedToday = 0;
+  double _fatsConsumedToday = 0;
+  double _dailyGoal = 0;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   List<FoodItemDatabase>? _selectedDayFoods;
@@ -25,12 +38,40 @@ class _FoodLogPageState extends State<FoodLogPage> {
   @override
   void initState() {
     super.initState();
+    loadNutritionalInfo();
     _selectedDay = _focusedDay;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadFoodsForSelectedDay(_selectedDay!);
     });
   }
+  void loadNutritionalInfo() async {
+    var box = await Hive.openBox<NutritionalInfo>('nutritionBox');
+    NutritionalInfo? info = box.get('nutrition');
+    if (info != null) {
+      _dailyGoal = double.tryParse(info.calories) ?? 0;
+      calculateCalories();
+    }
+  }
 
+  void calculateCalories() {
+    DateTime today = DateTime.now();
+    var foodItems = hiveDatabase.getFoodForDate(today);
+    _caloriesConsumedToday = foodItems.fold(0, (sum, item) {
+      return sum + (double.tryParse(item.calories) ?? 0);
+    });
+    _proteinConsumedToday = foodItems.fold(0, (sum, item) {
+      return sum + (double.tryParse(item.protein) ?? 0);
+    });
+    _carbsConsumedToday = foodItems.fold(0, (sum, item) {
+      return sum + (double.tryParse(item.carbs) ?? 0);
+    });
+    _fatsConsumedToday = foodItems.fold(0, (sum, item) {
+      return sum + (double.tryParse(item.fats) ?? 0);
+    });
+    setState(() {
+      _caloriesLeft = max(0, _dailyGoal - _caloriesConsumedToday);
+    });
+  }
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     setState(() {
       _selectedDay = selectedDay;
@@ -150,6 +191,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
 
   void refreshFoodLog() {
     _loadFoodsForSelectedDay(_selectedDay!);
+    calculateCalories();
   }
   @override
   Widget build(BuildContext context) {
@@ -208,22 +250,115 @@ class _FoodLogPageState extends State<FoodLogPage> {
                 ),
               )
                   : ListView.builder(
-                itemCount: _selectedDayFoods!.length,
+                itemCount: (_selectedDayFoods?.isEmpty ?? true) ? 1 : _selectedDayFoods!.length + 1, // Adjust the count to include the header text
                 itemBuilder: (context, index) {
-                  var food = _selectedDayFoods![index];
-                  return FoodTile(
-                    foodName: food.name,
-                    calories: double.parse(food.calories).toInt().toString(),
-                    protein: double.parse(food.protein.replaceAll("g", "")).toInt().toString(),
-                    carbs: double.parse(food.carbs.replaceAll("g", "")).toInt().toString(),
-                    fats: double.parse(food.fats.replaceAll("g", "")).toInt().toString(),
-                    isCompleted: false, // Replace with actual logic if needed
-                    onDelete: () {
-                      // Pass the correct identifier (e.g., 'id') to deleteFood
-                      Provider.of<FoodData>(context, listen: false).deleteFood(food.id);
-                      _loadFoodsForSelectedDay(_selectedDay!); // Refresh the list
-                    },
-                  );
+                  if (index == 0 && (_selectedDayFoods?.isEmpty ?? true)) {
+                    // This is the header or message when no food items are available
+                    return Center(
+                      child: Text(
+                        'No foods logged for this day. Tap to add.',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    );
+                  } else if (index == 0) {
+                    // This is the header when items are available
+                    return Padding(
+                      padding: EdgeInsets.symmetric( vertical: 5),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
+                        children: [
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: "${(_caloriesConsumedToday.toInt())} ",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.normal, // Optional: Make it bold
+                                  ),
+                                ),
+                                WidgetSpan(
+                                  child: Icon(Icons.local_fire_department, color: Colors.white, size: 18), // Fire icon with adjustable color and size
+                                ),
+                              ],
+                            ),
+                          ),
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: "${(_proteinConsumedToday.toInt())} ",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.normal, // Optional: Make it bold
+                                  ),
+                                ),
+                                WidgetSpan(
+                                  child: Icon(MdiIcons.alphaPCircle, color: Colors.white, size: 18), // Fire icon with adjustable color and size
+                                ),
+                              ],
+                            ),
+                          ),
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: "${(_fatsConsumedToday.toInt())} ",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.normal, // Optional: Make it bold
+                                  ),
+                                ),
+                                WidgetSpan(
+                                  child: Icon(MdiIcons.alphaFCircle, color: Colors.white, size: 18), // Fire icon with adjustable color and size
+                                ),
+                              ],
+                            ),
+                          ),
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: "${(_carbsConsumedToday.toInt())} ",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.normal, // Optional: Make it bold
+                                  ),
+                                ),
+                                WidgetSpan(
+                                  child: Icon(MdiIcons.alphaCCircle, color: Colors.white, size: 18), // Fire icon with adjustable color and size
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        ],
+
+                      ),
+                    );
+                  } else {
+                    // Return FoodTile
+                    var food = _selectedDayFoods![index - 1]; // Adjust index because of the added header
+                    return FoodTile(
+                      foodName: food.name,
+                      calories: double.parse(food.calories).toInt().toString(),
+                      protein: double.parse(food.protein.replaceAll("g", "")).toInt().toString(),
+                      carbs: double.parse(food.carbs.replaceAll("g", "")).toInt().toString(),
+                      fats: double.parse(food.fats.replaceAll("g", "")).toInt().toString(),
+                      isCompleted: false, // Replace with actual logic if needed
+                      onDelete: () {
+                        // Pass the correct identifier (e.g., 'id') to deleteFood
+                        Provider.of<FoodData>(context, listen: false).deleteFood(food.id);
+                        calculateCalories();
+                        _loadFoodsForSelectedDay(_selectedDay!); // Refresh the list
+                      },
+                    );
+                  }
                 },
               ),
             ),
