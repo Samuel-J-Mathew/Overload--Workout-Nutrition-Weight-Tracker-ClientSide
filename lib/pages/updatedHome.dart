@@ -38,7 +38,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
   bool click = true;
   double? mostRecentWeight;
   double? getAverageSteps;
-
+  Map<String, bool> exerciseClickStatus = {};
   final ScrollController _scrollController = ScrollController();
   double _workoutCardHeight = 320; // Default height
   bool _showSearchBar = true; // This will control the visibility of the search bar.
@@ -267,16 +267,19 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               style: TextStyle(color: Colors.grey[400]),
                             ),
                             trailing: IconButton(
-                              icon: Icon(click ? Icons.add : Icons.check, color: Colors.white),
-                              onPressed: click ? () {
+                              icon: Icon(
+                                  exerciseClickStatus[exercise.name] ?? false ? Icons.check : Icons.add,
+                                  color: Colors.white
+                              ),
+                              onPressed: () {
                                 setState(() {
-                                  click = false;
+                                  exerciseClickStatus[exercise.name] = true; // Set the status to true when clicked
                                 });
                                 workoutData.logExercise(exercise);
-                                setState(() {});
-                              } : null,
+                              },
                             ),
                           ),
+
                         );
                       },
                     ),
