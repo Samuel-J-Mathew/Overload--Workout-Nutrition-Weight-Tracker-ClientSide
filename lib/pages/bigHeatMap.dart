@@ -22,10 +22,10 @@ class BigHeatMap extends StatelessWidget {
           "Gym Logging",
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.grey[850],
+        backgroundColor: Color.fromRGBO(31, 31, 31, 1),
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Color.fromRGBO(20, 20, 20, 1),
       body: SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Column(
@@ -147,7 +147,7 @@ class BigHeatMap extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Divider(color: Colors.grey[700], thickness: 1),
+                  Divider(color: Colors.grey[800], thickness: 1),
                 ],
               );
             }).toList(),

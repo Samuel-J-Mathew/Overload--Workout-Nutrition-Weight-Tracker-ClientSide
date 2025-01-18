@@ -49,7 +49,7 @@ class _CalorieTileState extends State<CalorieTile> {
   Widget build(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      color: Colors.grey[800],
+      color: Color.fromRGBO(31, 31, 31, 1),
       elevation: 4,
       margin: const EdgeInsets.all(0),
       child: Padding(

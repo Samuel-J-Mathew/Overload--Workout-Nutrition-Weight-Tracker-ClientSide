@@ -342,6 +342,28 @@ String _averageProtein = "0";
       ),
     );
   }
+  void _saveAllSplits() {
+    List<WorkoutSplit> newWeeklySplits = [];
+
+    daySplitData.forEach((day, exercises) {
+      List<MuscleGroupSplit> muscleGroupSplits = exercises.entries.map((entry) {
+        return MuscleGroupSplit(
+          muscleGroupName: entry.key,
+          exercises: entry.value,
+        );
+      }).toList();
+
+      newWeeklySplits.add(WorkoutSplit(
+        day: day,
+        muscleGroups: muscleGroupSplits,
+      ));
+    });
+
+    setState(() {
+      weeklySplits = newWeeklySplits;
+      db.saveWorkoutSplits(weeklySplits);
+    });
+  }
 
   void _showEditSplitDialog(BuildContext context) {
     showDialog(
@@ -440,11 +462,7 @@ String _averageProtein = "0";
             ),
             ElevatedButton(
               onPressed: () {
-                _saveSplit(
-                  selectedDay,
-                  selectedMuscleGroups,
-                  daySplitData[selectedDay]!,
-                );
+                _saveAllSplits();
                 Navigator.pop(context);
               },
               child: const Text('Save Split',style: TextStyle(color: Colors.black),),

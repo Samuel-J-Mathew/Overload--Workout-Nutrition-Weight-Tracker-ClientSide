@@ -36,7 +36,7 @@ class MyHeatMap2 extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(0),
       decoration: BoxDecoration(
-        color: Colors.grey[800],
+        color: Color.fromRGBO(31, 31, 31, 1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

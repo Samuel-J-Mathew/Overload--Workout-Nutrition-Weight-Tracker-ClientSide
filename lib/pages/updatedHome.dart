@@ -174,7 +174,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
-      color: Colors.grey[850],
+      color: Color.fromRGBO(42, 42, 42, 1),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

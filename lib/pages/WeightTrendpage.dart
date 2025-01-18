@@ -205,7 +205,7 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
       child: Text(text, style: TextStyle(color: isSelected ? Colors.grey[800] : Colors.white)),
       style: TextButton.styleFrom(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        backgroundColor: isSelected ? Colors.white : Colors.grey[800],  // Toggle color based on selection
+        backgroundColor: isSelected ? Colors.white : Color.fromRGBO(31, 31, 31, 1),  // Toggle color based on selection
         padding: EdgeInsets.symmetric(horizontal: 16),
       ),
     );
@@ -213,9 +213,9 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Color.fromRGBO(20, 20, 20, 1),
       appBar: AppBar(
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Color.fromRGBO(31, 31, 31, 1),
         title: Text("Scale Weight", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
         centerTitle: true,
         iconTheme: IconThemeData(color: Colors.white),
@@ -231,7 +231,7 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
           Container(
             margin: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors.grey[800], // Grey color for the container
+              color: Color.fromRGBO(31, 31, 31, 1),// Grey color for the container
               borderRadius: BorderRadius.circular(30), // Circular borders
             ),
             child: Padding(
@@ -251,7 +251,7 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey[850], // Lighter grey background
+                color: Color.fromRGBO(31, 31, 31, 1), // Lighter grey background
                 borderRadius: BorderRadius.circular(15), // Rounded edges
               ),
               child: ListView.separated(
@@ -261,7 +261,7 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
                   final log = logs[logs.length - 1 - index];
                   return _buildWeightItem(log, logs.length - 1 - index);
                 },
-                separatorBuilder: (context, index) => Divider(color: Colors.grey[500]),  // Adjust the divider color for better contrast
+                separatorBuilder: (context, index) => Divider(color: Colors.grey[700]),  // Adjust the divider color for better contrast
               ),
             ),
           ),

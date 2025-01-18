@@ -99,21 +99,27 @@ class StepCounterPage extends StatefulWidget {
         gridData: FlGridData(show: true, drawVerticalLine: false,),
         titlesData: FlTitlesData(
           show: true,
+          rightTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),  // Disable right titles
+          ),
+          topTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),  // Disable top titles
+          ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 60,
+              showTitles: true,  // Enable left titles
               getTitlesWidget: (double value, TitleMeta meta) {
                 return Text(
                   NumberFormat('#,###').format(value.toInt()), // Format the number with commas
-                  style: TextStyle(color: Colors.white, fontSize: 10),
+                  style: TextStyle(color: Colors.white, fontSize: 12),
                 );
               },
+              reservedSize: 40,  // Space reserved for left titles
             ),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
-              showTitles: true,
+              showTitles: true,  // Enable bottom titles
               getTitlesWidget: (double value, TitleMeta meta) {
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
@@ -126,6 +132,7 @@ class StepCounterPage extends StatefulWidget {
             ),
           ),
         ),
+
         borderData: FlBorderData(show: false),
         barGroups: barGroups,
         alignment: BarChartAlignment.spaceAround,
@@ -428,9 +435,9 @@ class _StepCounterPageState extends State<StepCounterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Color.fromRGBO(20, 20, 20, 1),
       appBar: AppBar(
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Color.fromRGBO(31, 31, 31, 1),
         iconTheme: IconThemeData(color: Colors.white),
         title: Align(
           alignment: Alignment.centerLeft, // Align the title to the left
@@ -469,14 +476,17 @@ class _StepCounterPageState extends State<StepCounterPage> {
           )
         ],
       )),
-          Container(
-            height: 200,
-            child: _buildChart(),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              height: 200,
+              child: _buildChart(),
+            ),
           ),
           Container(
             margin: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors.grey[800],
+              color: Colors.grey[900],
               borderRadius: BorderRadius.circular(30),
             ),
             child: Padding(
@@ -516,7 +526,7 @@ class _StepCounterPageState extends State<StepCounterPage> {
         onPressed: _addStepLog,
         child: Icon(Icons.add),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.blue,
+        foregroundColor: Colors.black,
       ),
     );
   }
@@ -535,7 +545,7 @@ class _StepCounterPageState extends State<StepCounterPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),  // Rounded borders
         ),
-        backgroundColor: isSelected ? Colors.white : Colors.grey[800],  // Background color toggles based on selection
+        backgroundColor: isSelected ? Colors.white : Colors.grey[900],  // Background color toggles based on selection
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),  // Horizontal padding and consistent vertical padding
       ),
     );
