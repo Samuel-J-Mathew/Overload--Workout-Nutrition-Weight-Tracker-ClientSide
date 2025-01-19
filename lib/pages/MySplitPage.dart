@@ -161,75 +161,84 @@ String _averageProtein = "0";
                 ),
                 color: Color.fromRGBO(31, 31, 31, 1),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 19.0),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center, // Center vertically
-                      crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
-                      children: [
-                        SizedBox(height: 2),
-                        Align(
-                          alignment: Alignment.centerLeft, // Aligns the child to the left of the available space.
-                          child: Text("Workout Program", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
-                        ),
-                    
-                        SizedBox(height: 10,),
-                        Row(
-                    
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children:
-                          daysOfWeek.map((day) => buildDaySplit(day)).toList(),
-                        ),
-                        SizedBox(height: 20),
-                        Divider(
-                          color: Colors.grey[500],
-                          height: 1,
-                          // Set minimal height to reduce space
-                          thickness: .75, // Minimal visual thickness
-                        ),
-                        SizedBox(height: 10),
-                        // Horizontal Key for muscle groups
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              for (int i = 0; i < allMuscleGroups.length; i++)
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        color: Colors.primaries[i % Colors.primaries.length], // Color for the muscle group
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      allMuscleGroups[i],
-                                      style: TextStyle(color: Colors.white, fontSize: 14),
-                                    ),
-                                    SizedBox(width: 16), // Space between each key item
-                                  ],
+                  padding: const EdgeInsets.symmetric(horizontal: 19.0),
+                  child: LayoutBuilder( // Use LayoutBuilder to get the available space for centering content
+                    builder: (BuildContext context, BoxConstraints constraints) {
+                      return SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight, // Ensure the container takes at least the full height of the viewport
+                          ),
+                          child: IntrinsicHeight( // Ensures the content can size itself properly within the available space
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center, // Center vertically
+                              crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
+                              children: [
+                                SizedBox(height: 2),
+                                Align(
+                                  alignment: Alignment.centerLeft, // Aligns the child to the left of the available space.
+                                  child: Text("Workout Program", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
                                 ),
-                            ],
+
+                                SizedBox(height: 10),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: daysOfWeek.map((day) => buildDaySplit(day)).toList(),
+                                ),
+                                SizedBox(height: 20),
+                                Divider(
+                                  color: Colors.grey[500],
+                                  height: 1,
+                                  // Set minimal height to reduce space
+                                  thickness: .75, // Minimal visual thickness
+                                ),
+                                SizedBox(height: 10),
+                                // Horizontal Key for muscle groups
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      for (int i = 0; i < allMuscleGroups.length; i++)
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 20,
+                                              height: 20,
+                                              decoration: BoxDecoration(
+                                                color: Colors.primaries[i % Colors.primaries.length], // Color for the muscle group
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text(
+                                              allMuscleGroups[i],
+                                              style: TextStyle(color: Colors.white, fontSize: 14),
+                                            ),
+                                            SizedBox(width: 16), // Space between each key item
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height:5),
+                                ElevatedButton.icon(
+                                  onPressed: () => _showEditSplitDialog(context),
+                                  icon: Icon(Icons.edit, color: Colors.white,),  // Icon for editing
+                                  label: Text("Edit Program"),  // Text label
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white, backgroundColor: Colors.grey[800],  // Text and icon color
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        SizedBox(height:5),
-                        ElevatedButton.icon(
-                          onPressed: () => _showEditSplitDialog(context),
-                          icon: Icon(Icons.edit, color: Colors.white,),  // Icon for editing
-                          label: Text("Edit Program"),  // Text label
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white, backgroundColor: Colors.grey[800],  // Text and icon color
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 )
+
             ),
 
 
@@ -408,39 +417,46 @@ String _averageProtein = "0";
                   ),
                   // Muscle Group Selector
                   DropdownButtonHideUnderline(
-                    child: DropdownButton2<String>(
-                      isExpanded: true,
-                      hint: const Text('Select Muscle Groups', style: TextStyle(color: Colors.white),),
-                      items: allMuscleGroups
-                          .map((item) => DropdownMenuItem<String>(
+                  child: DropdownButton2<String>(
+                    isExpanded: true,
+                    hint: const Text('Add Muscle Groups', style: TextStyle(color: Colors.white)),
+                    items: allMuscleGroups.map((item) {
+                      return DropdownMenuItem<String>(
                         value: item,
-                        child: Row(
-                          children: [
-                            Checkbox(
-                              value: selectedMuscleGroups.contains(item),
-                              onChanged: (bool? value) {
-                                setState(() {
-                                  if (value == true) {
+                        child: StatefulBuilder(
+                        builder: (BuildContext context, StateSetter localSetState) {
+                          return Row(
+                            children: [
+                              Checkbox(
+                                value: selectedMuscleGroups.contains(item),
+                                onChanged: (bool? value) {
+                                  localSetState(() {  // This will only rebuild the checkbox and not the entire list
+                                    if (value == true) {
                                     selectedMuscleGroups.add(item);
                                     daySplitData[selectedDay]![item] ??= [];
-                                  } else {
+                                    } else {
                                     selectedMuscleGroups.remove(item);
                                     daySplitData[selectedDay]!.remove(item);
-                                  }
-                                });
-                              },
-                              checkColor: Colors.white, // Color of the tick
-                              activeColor: Colors.blue, // Background color of the checkbox
-                            ),
-                            Text(item),
-                          ],
+                                    }
+                                  });
+                                  setState(() { // Use this if changes need to be reflected elsewhere in the UI
+                                  // Empty here as setState is needed to rebuild the whole widget if necessary.
+                                  });
+                                },
+                                checkColor: Colors.white, // Color of the tick
+                                activeColor: Colors.blue, // Background color of the checkbox
+                              ),
+                              Text(item),
+                            ],
+                          );
+                        },
                         ),
-                      ))
-                          .toList(),
-                      onChanged: (_) {},
-
-                    ),
+                      );
+                    }).toList(),
+                    onChanged: (_) {}, // This is here in case you need to handle changes at the dropdown level
                   ),
+                  ),
+
                   // Exercise Inputs
                   Expanded(
                     child: SingleChildScrollView(
@@ -506,6 +522,11 @@ String _averageProtein = "0";
     final TextEditingController weightController = TextEditingController();
     SingleExercise? selectedExercise;
 
+    // Check if the muscle group still exists in the data structure
+    if (!daySplitData[selectedDay]!.containsKey(muscleGroup)) {
+      return Container();  // Return an empty container if the muscle group has been deleted
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       padding: const EdgeInsets.all(16.0),
@@ -516,9 +537,44 @@ String _averageProtein = "0";
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            muscleGroup,
-            style: const TextStyle(color: Colors.white, fontSize: 18),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                muscleGroup,
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+              ),
+              IconButton(
+                icon: Icon(Icons.delete, color: Colors.red),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text("Confirm Deletion"),
+                        content: Text("Are you sure you want to delete the muscle group '$muscleGroup'?"),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text("Cancel"),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                daySplitData[selectedDay]!.remove(muscleGroup);
+                                selectedMuscleGroups.remove(muscleGroup);
+                                Navigator.of(context).pop();
+                              });
+                            },
+                            child: const Text("Delete"),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 8.0),
           ...daySplitData[selectedDay]![muscleGroup]!.map((exercise) {
@@ -531,8 +587,16 @@ String _averageProtein = "0";
                 '${exercise.sets} sets x ${exercise.reps} reps at ${exercise.weight} lbs',
                 style: const TextStyle(color: Colors.grey),
               ),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () {
+                  setState(() {
+                    daySplitData[selectedDay]![muscleGroup]!.remove(exercise);
+                  });
+                },
+              ),
             );
-          }),
+          }).toList(),
           const SizedBox(height: 8.0),
           DropdownSearch<SingleExercise>(
             popupProps: PopupProps.menu(
@@ -548,7 +612,6 @@ String _averageProtein = "0";
               dropdownSearchDecoration: InputDecoration(
                 labelText: 'Exercise',
                 labelStyle: TextStyle(color: Colors.white), // This is for the label
-                // Style for the text inside the dropdown, including selected item
                 filled: true, // Optional: adds a fill color to the dropdown
                 fillColor: Colors.grey[900], // Optional: sets the fill color
                 hintStyle: TextStyle(color: Colors.grey), // Optional: style for hint text if you have it
@@ -578,19 +641,19 @@ String _averageProtein = "0";
           ),
           TextField(
             controller: setsController,
-            decoration: const InputDecoration(labelText: 'Sets',labelStyle: TextStyle(color: Colors.white)),
+            decoration: const InputDecoration(labelText: 'Sets', labelStyle: TextStyle(color: Colors.white)),
             keyboardType: TextInputType.number,
             style: const TextStyle(color: Colors.white), // Input text color
           ),
           TextField(
             controller: repsController,
-            decoration: const InputDecoration(labelText: 'Reps',labelStyle: TextStyle(color: Colors.white)),
+            decoration: const InputDecoration(labelText: 'Reps', labelStyle: TextStyle(color: Colors.white)),
             keyboardType: TextInputType.number,
             style: const TextStyle(color: Colors.white), // Input text color
           ),
           TextField(
             controller: weightController,
-            decoration: const InputDecoration(labelText: 'Weight (lbs)',labelStyle: TextStyle(color: Colors.white)),
+            decoration: const InputDecoration(labelText: 'Weight (lbs)', labelStyle: TextStyle(color: Colors.white)),
             keyboardType: TextInputType.number,
             style: const TextStyle(color: Colors.white), // Input text color
           ),
@@ -625,12 +688,13 @@ String _averageProtein = "0";
                 }
               }
             },
-            child: const Text('Add Exercise', style: TextStyle(color: Colors.black),),
+            child: const Text('Add Exercise', style: TextStyle(color: Colors.black)),
           ),
         ],
       ),
     );
   }
+
 
 
   void _saveSplit(String day, List<String> muscleGroups,

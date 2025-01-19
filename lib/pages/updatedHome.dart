@@ -239,7 +239,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                       });
 
                       const double baseHeight = 300; // Base height when no muscle groups are expanded
-                      const double extraHeightPerExercise = 100; // Additional height per expanded exercise
+                      const double extraHeightPerExercise = 65; // Additional height per expanded exercise
 
                       if (totalExpandedExercises > 0) {
                         _workoutCardHeight = baseHeight + (totalExpandedExercises * extraHeightPerExercise);
