@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:gymapp/data/FoodItemDatabase.dart';
 import 'package:gymapp/data/FoodData.dart';
@@ -55,7 +54,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
 
   void calculateCalories() {
     DateTime today = DateTime.now();
-    var foodItems = hiveDatabase.getFoodForDate(today);
+    var foodItems = hiveDatabase.getFoodForDate(_selectedDay ?? DateTime.now());  // Use _selectedDay, fallback to today if null
     _caloriesConsumedToday = foodItems.fold(0, (sum, item) {
       return sum + (double.tryParse(item.calories) ?? 0);
     });
@@ -77,7 +76,8 @@ class _FoodLogPageState extends State<FoodLogPage> {
       _selectedDay = selectedDay;
       _focusedDay = focusedDay;
     });
-    _loadFoodsForSelectedDay(selectedDay);  // Ensure this method updates the UI correctly.
+    _loadFoodsForSelectedDay(selectedDay);
+    calculateCalories();  // Call this here to recalculate with the new selected day
   }
 
   void _loadFoodsForSelectedDay(DateTime date) {

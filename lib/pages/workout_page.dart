@@ -4,7 +4,7 @@ import 'package:gymapp/data/workout_data.dart';
 import 'package:gymapp/data/exercise_list.dart';
 import 'package:provider/provider.dart';
 import 'package:dropdown_search/dropdown_search.dart';
-
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../models/SingleExercise.dart';
 class WorkoutPage extends StatefulWidget{
   final String workoutName;
@@ -146,9 +146,18 @@ class _MyWidgetState extends State<WorkoutPage>{
     return Consumer<WorkoutData>(
       builder: (context, value, child) {
         var workout = value.getWorkoutById(widget.workoutId);  // Fetch workout using workoutId
+        int totalSets = 0;
+        int totalReps = 0;
+        double totalWeight = 0.00;
+        for (var exercise in workout.exercises) {
+          totalSets += int.parse(exercise.sets);
+          totalReps += int.parse(exercise.reps)* int.parse(exercise.sets);
+          totalWeight += (double.tryParse(exercise.weight) ?? 0.0) * (int.tryParse(exercise.sets) ?? 0);
+        }
         return Scaffold(
           body: Column(
             children: [
+
               Expanded(
                 child: Container(
                   margin: EdgeInsets.zero,
@@ -156,7 +165,8 @@ class _MyWidgetState extends State<WorkoutPage>{
                   padding: EdgeInsets.only(left: 40, right: 14,),
                   child: workout.exercises.isEmpty ?  // Check if the exercises list is empty
                   Center(  // Center widget to center the message
-                    child: InkWell(  // InkWell to make the text clickable
+                    child:
+                    InkWell(  // InkWell to make the text clickable
                       onTap: createNewExercise,  // Call the function to add a new exercise when tapped
                       child: Text(
                         "No Workout logged for this day. Tap to Add.",
@@ -164,17 +174,83 @@ class _MyWidgetState extends State<WorkoutPage>{
                       ),
                     ),
                   ) : ListView.builder(
-                    itemCount: workout.exercises.length,  // Use workout fetched by ID
+                    itemCount: workout.exercises.length + 1, // Adding 1 for the header
                     itemBuilder: (context, index) {
-                      var exercises = workout.exercises;
-                      return ExerciseTile(
-                        exerciseName: exercises[index].name,
-                        weight: exercises[index].weight,
-                        reps: exercises[index].reps,
-                        sets: exercises[index].sets,
-                        isCompleted: exercises[index].isCompleted,
-                        onDelete: () => _deleteExercise(index, value),  // Pass the callback for deletion
-                      );
+                      if (index == 0) { // Header
+                        return Padding(
+                          padding: EdgeInsets.symmetric( vertical: 5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
+                            children: [
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: "${(totalSets.toInt())} ",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.normal, // Optional: Make it bold
+                                      ),
+                                    ),
+                                    WidgetSpan(
+                                      child: Icon(MdiIcons.alphaSCircle, color: Colors.white, size: 18), // Fire icon with adjustable color and size
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: "${(totalReps.toInt())} ",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.normal, // Optional: Make it bold
+                                      ),
+                                    ),
+                                    WidgetSpan(
+                                      child: Icon(MdiIcons.alphaRCircle, color: Colors.white, size: 18), // Fire icon with adjustable color and size
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: "${totalWeight.toStringAsFixed(2)} ",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.normal, // Optional: Make it bold
+                                      ),
+                                    ),
+
+                                    WidgetSpan(
+                                      child: Icon(MdiIcons.weightPound, color: Colors.white, size: 18), // Fire icon with adjustable color and size
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                            ],
+
+                          ),
+                        );
+                      } else { // Exercise tiles
+                        var exercise = workout.exercises[index - 1]; // Adjust index for header
+                        return ExerciseTile(
+                          exerciseName: exercise.name,
+                          weight: exercise.weight,
+                          reps: exercise.reps,
+                          sets: exercise.sets,
+                          isCompleted: exercise.isCompleted,
+                          onDelete: () => _deleteExercise(index - 1, value),
+                        );
+                      }
                     },
                   ),
                 ),
