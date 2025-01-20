@@ -21,7 +21,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   final TextEditingController _controller = TextEditingController();
   final TextEditingController _gramController = TextEditingController();
   final HiveDatabase hiveDatabase = HiveDatabase();
-
+  final FocusNode _searchFocusNode = FocusNode();  // Added FocusNode here
+  bool _initialFocusRequested = false;
   // Controllers for the "Add Food" form
   final TextEditingController foodNameController = TextEditingController();
   final TextEditingController servingWeightController = TextEditingController();
@@ -45,6 +46,11 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     fetchLocalFoods();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_tabController.index == 0) {
+        _searchFocusNode.requestFocus();
+      }
+    });
   }
 
   @override
@@ -58,9 +64,15 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     fatController.dispose();
     _controller.dispose();
     _gramController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
-
+  void requestFocus() {
+    if (!_initialFocusRequested) {
+      _searchFocusNode.requestFocus();
+      _initialFocusRequested = true;
+    }
+  }
   void fetchLocalFoods() {
     setState(() {
       _localFoods = hiveDatabase.getAllFoodItems().map((foodItem) {
@@ -136,6 +148,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
             padding: EdgeInsets.all(16.0),
             child: TextField(
               controller: _controller,
+              focusNode: _searchFocusNode,
               decoration: InputDecoration(
                 labelText: 'Enter a food item',
                 labelStyle: TextStyle(color: Colors.grey[400]),
@@ -198,8 +211,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             ElevatedButton.icon(
-              icon: Icon(Icons.camera_alt),
-              label: Text('Scan Barcode'),
+              icon: Icon(Icons.camera_alt, color: Colors.black,),
+              label: Text('Scan Barcode', style: TextStyle(color: Colors.black),),
               onPressed: _scanBarcode,
             ),
             SizedBox(height: 20),

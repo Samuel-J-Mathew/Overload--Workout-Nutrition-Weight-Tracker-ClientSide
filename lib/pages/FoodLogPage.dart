@@ -390,10 +390,16 @@ class _FoodLogPageState extends State<FoodLogPage> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now(),onReturn: refreshFoodLog,)),
+                            MaterialPageRoute(
+                              builder: (context) => CalorieTrackerPage(
+                                selectedDate: _selectedDay ?? DateTime.now(),
+                                onReturn: refreshFoodLog,
+                              ),
+                            ),
                           );
                         },
                       ),
+
                       SizedBox(width: 9),
                       Text(
                         'Search for a food',
