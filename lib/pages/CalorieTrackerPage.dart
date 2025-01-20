@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:gymapp/data/FoodData.dart';
 import '../data/hive_database.dart';
-
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:barcode_scan2/barcode_scan2.dart';
 class CalorieTrackerPage extends StatefulWidget {
   final DateTime selectedDate;
   final Function? onReturn;
@@ -42,7 +43,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     fetchLocalFoods();
   }
 
@@ -188,6 +189,86 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       ),
     );
   }
+  Widget _buildBarcodeScan() {
+    return Container(
+      color: Colors.grey[900],
+      padding: EdgeInsets.all(16),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ElevatedButton.icon(
+              icon: Icon(Icons.camera_alt),
+              label: Text('Scan Barcode'),
+              onPressed: _scanBarcode,
+            ),
+            SizedBox(height: 20),
+
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _scanBarcode() async {
+    var result = await BarcodeScanner.scan(options: ScanOptions(
+      useCamera: -1, // default camera
+      autoEnableFlash: false,
+    ));
+
+    if (result.type == ResultType.Barcode) {
+      fetchNutritionDetailsFromBarcode(result.rawContent);
+    } else if (result.type == ResultType.Error || result.type == ResultType.Cancelled) {
+      _buildAddFoodTab();
+    }
+  }
+
+  void fetchNutritionDetailsFromBarcode(String barcode) async {
+    var url = Uri.parse('https://world.openfoodfacts.org/api/v0/product/$barcode.json');
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      if (data['status'] == 1 && data['product'] != null) {
+        setState(() {
+          selectedFoodName = data['product']['product_name'];
+          originalServingSize = double.tryParse(data['product']['serving_quantity'] ?? '100') ?? 100;
+          _gramController.text = originalServingSize.toString();
+          selectedFood = {
+            'Calories': ((data['product']['nutriments']['energy-kcal_100g'] ?? 0) / 100 * originalServingSize).toStringAsFixed(0),
+            'Protein': ((data['product']['nutriments']['proteins_100g'] ?? 0) / 100 * originalServingSize).toStringAsFixed(2),
+            'Fats': ((data['product']['nutriments']['fat_100g'] ?? 0) / 100 * originalServingSize).toStringAsFixed(2),
+            'Carbs': ((data['product']['nutriments']['carbohydrates_100g'] ?? 0) / 100 * originalServingSize).toStringAsFixed(2),
+          };
+          showNutritionSheet();
+        });
+      } else {
+        showErrorDialog2("Product not found", "The product does not exist in the database.");
+      }
+    } else {
+      showErrorDialog2("Error", "Failed to retrieve data.");
+    }
+  }
+
+  void showErrorDialog2([String title = "Error", String message = "Failed to load nutrition data."]) {
+    showDialog(
+      context: context,
+      builder: (ctx) =>
+          AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Okay'),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
 
   Widget _buildAddFoodTab() {
     return Container(
@@ -646,55 +727,63 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         }
         return true; // Return true to allow pop to happen
       },
-      child: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.grey[900],
-            title: Text(
-              "Calorie Tracker", style: TextStyle(color: Colors.white),),
-            bottom: TabBar(
-              controller: _tabController,
-              labelColor: Colors.white,
-              // Color for selected tab text
-              unselectedLabelColor: Colors.grey[500],
-              // Dark grey for unselected tabs
-              indicatorColor: Colors.white,
-              // White underline for the selected tab
-              tabs: [
-                Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.search, size: 16), // Smaller icon
-                      SizedBox(width: 8), // Spacing between icon and text
-                      Text("Search"),
-                    ],
-                  ),
-                ),
-                Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.format_list_bulleted_add, size: 16),
-                      // Smaller icon
-                      SizedBox(width: 8),
-                      // Spacing between icon and text
-                      Text("Add Food"),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            iconTheme: IconThemeData(color: Colors.white),
-          ),
-          body: TabBarView(
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.grey[900],
+          title: Text(
+            "Calorie Tracker", style: TextStyle(color: Colors.white),),
+          bottom: TabBar(
             controller: _tabController,
-            children: [
-              _buildSearchTab(),
-              _buildAddFoodTab(),
+            labelColor: Colors.white,
+            // Color for selected tab text
+            unselectedLabelColor: Colors.grey[500],
+            // Dark grey for unselected tabs
+            indicatorColor: Colors.white,
+            // White underline for the selected tab
+            tabs: [
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.search, size: 16), // Smaller icon
+                    SizedBox(width: 8), // Spacing between icon and text
+                    Text("Search"),
+                  ],
+                ),
+              ),
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(MdiIcons.barcodeScan, size: 16), // Smaller icon
+                    SizedBox(width: 8), // Spacing between icon and text
+                    Text("Scan"),
+                  ],
+                ),
+              ),
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.format_list_bulleted_add, size: 16),
+                    // Smaller icon
+                    SizedBox(width: 8),
+                    // Spacing between icon and text
+                    Text("Add Food"),
+                  ],
+                ),
+              ),
             ],
           ),
+          iconTheme: IconThemeData(color: Colors.white),
+        ),
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildSearchTab(),
+            _buildBarcodeScan(),
+            _buildAddFoodTab(),
+          ],
         ),
       ),
     );

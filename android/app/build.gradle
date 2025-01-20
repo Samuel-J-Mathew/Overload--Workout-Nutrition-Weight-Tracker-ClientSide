@@ -29,7 +29,8 @@ if (flutterVersionName == null) {
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
-    namespace 'com.example.gymapp' // This should match your package in AndroidManifest.xml
+    namespace 'com.example.gymapp'
+    // This should match your package in AndroidManifest.xml
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
