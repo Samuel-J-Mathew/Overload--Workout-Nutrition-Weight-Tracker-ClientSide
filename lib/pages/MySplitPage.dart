@@ -342,9 +342,11 @@ String _averageProtein = "0";
               ),
             ),
           ),
-          Container(
-            color: Color.fromRGBO(20, 20, 20, 1),
-            height: 79,
+          Expanded(
+            child: Container(
+              color: Color.fromRGBO(20, 20, 20, 1),
+              height: 79,
+            ),
           ),
         ],
 

@@ -246,13 +246,13 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         setState(() {
           selectedFoodName = data['product']['product_name'];
           originalServingSize = double.tryParse(data['product']['serving_quantity'] ?? '100') ?? 100;
+          originalCalories = ((data['product']['nutriments']['energy-kcal_100g'] ?? 0) / 100 * originalServingSize).toDouble();
+          originalProtein = ((data['product']['nutriments']['proteins_100g'] ?? 0) / 100 * originalServingSize).toDouble();
+          originalFats = ((data['product']['nutriments']['fat_100g'] ?? 0) / 100 * originalServingSize).toDouble();
+          originalCarbs = ((data['product']['nutriments']['carbohydrates_100g'] ?? 0) / 100 * originalServingSize).toDouble();
           _gramController.text = originalServingSize.toString();
-          selectedFood = {
-            'Calories': ((data['product']['nutriments']['energy-kcal_100g'] ?? 0) / 100 * originalServingSize).toStringAsFixed(0),
-            'Protein': ((data['product']['nutriments']['proteins_100g'] ?? 0) / 100 * originalServingSize).toStringAsFixed(2),
-            'Fats': ((data['product']['nutriments']['fat_100g'] ?? 0) / 100 * originalServingSize).toStringAsFixed(2),
-            'Carbs': ((data['product']['nutriments']['carbohydrates_100g'] ?? 0) / 100 * originalServingSize).toStringAsFixed(2),
-          };
+          updateNutrition(originalServingSize!);
+          print(originalServingSize);// Updates the UI with the default values calculated for 100 grams
           showNutritionSheet();
         });
       } else {
@@ -262,6 +262,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       showErrorDialog2("Error", "Failed to retrieve data.");
     }
   }
+
 
   void showErrorDialog2([String title = "Error", String message = "Failed to load nutrition data."]) {
     showDialog(
@@ -564,21 +565,16 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
 
   void updateNutrition(double grams) {
     if (originalCalories != null && originalProtein != null &&
-        originalFats != null && originalCarbs != null) {
-      setState(() {
-        selectedFood = {
-          'Calories': ((originalCalories! / originalServingSize!) * grams)
-              .toStringAsFixed(0),
-          'Protein': ((originalProtein! / originalServingSize!) * grams)
-              .toStringAsFixed(2),
-          'Fats': ((originalFats! / originalServingSize!) * grams)
-              .toStringAsFixed(2),
-          'Carbs': ((originalCarbs! / originalServingSize!) * grams)
-              .toStringAsFixed(2),
-        };
-      });
+        originalFats != null && originalCarbs != null && grams > 0) {
+      selectedFood = {
+        'Calories': ((originalCalories! / originalServingSize!) * grams).toStringAsFixed(0),
+        'Protein': ((originalProtein! / originalServingSize!) * grams).toStringAsFixed(2),
+        'Fats': ((originalFats! / originalServingSize!) * grams).toStringAsFixed(2),
+        'Carbs': ((originalCarbs! / originalServingSize!) * grams).toStringAsFixed(2),
+      };
     }
   }
+
 
   void showNutritionSheet() {
     showModalBottomSheet(
@@ -628,12 +624,10 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                             style: TextStyle(color: Colors.white),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
-                              double grams = double.tryParse(value) ??
-                                  originalServingSize!;
-                              setState(() {
+                              double grams = double.tryParse(value) ?? originalServingSize!;
+                              setModalState(() {
                                 updateNutrition(grams);
                               });
-                              setModalState(() {});
                             },
                           ),
                         ),

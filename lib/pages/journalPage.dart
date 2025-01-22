@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../models/heat_map_2.dart';
 
 class JournalPage extends StatefulWidget {
   @override
@@ -14,21 +13,12 @@ class _JournalPageState extends State<JournalPage> {
   List<Map<String, String>> _journalEntries = [];
   List<Map<String, String>> _filteredEntries = [];
 
-  final List<String> _prompts = [
-    "What made you happy today?",
-    "Describe a challenge you faced today.",
-    "What are you grateful for?",
-    "What did you learn today?",
-    "How are you feeling right now?",
-  ];
-
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
     _fetchJournalEntries();
   }
-
   void _fetchJournalEntries() {
     // Placeholder: Replace with database call to fetch journal entries
     setState(() {
@@ -71,162 +61,147 @@ class _JournalPageState extends State<JournalPage> {
       }
     });
   }
-
-  void _createJournalEntry() async {
-    String? selectedPrompt = await showDialog(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: Text("Choose a Prompt"),
-        children: _prompts
-            .map((prompt) => SimpleDialogOption(
-          onPressed: () => Navigator.pop(context, prompt),
-          child: Text(prompt),
-        ))
-            .toList(),
-      ),
-    );
-
-    if (selectedPrompt != null) {
-      TextEditingController controller = TextEditingController();
-      await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(selectedPrompt),
-          content: TextField(
-            controller: controller,
-            maxLines: 10,
-            decoration: InputDecoration(hintText: "Write your journal entry..."),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  setState(() {
-                    _journalEntries.add({
-                      "date": DateTime.now().toIso8601String().split('T').first,
-                      "entry": controller.text,
-                    });
-                  });
-                  _applyFilter();
-                }
-                Navigator.pop(context);
-              },
-              child: Text("Save"),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  void _showFullEntry(String date, String entry) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Journal Entry - $date"),
-        content: SingleChildScrollView(
-          child: Text(entry),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Close"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeatMap() {
-    // Replace this with your actual heatmap logic
-    return Container(
-      height: 200,
-      child: Center(
-        child: Text("30-Day Heat Map Placeholder"),
-      ),
-      color: Colors.grey[900],
-    );
-  }
+  List<Map<String, dynamic>> categories = [
+    {
+      'title': 'Productivity',
+      'prompts': [
+        'Think back to this time last year, how did you feel?',
+        'What are your main goals today?',
+      ],
+    },
+    {
+      'title': 'Happiness',
+      'prompts': [
+        'What made you smile today?',
+        'Name three things you are grateful for today.',
+      ],
+    },
+    {
+      'title': 'Self-Discovery',
+      'prompts': [
+        'What is one thing you discovered about yourself today?',
+        'Describe a recent situation that made you proud of yourself.',
+      ],
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text("Journal Entries", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
-        centerTitle: true,
-        backgroundColor: Colors.grey[900],
-        iconTheme: IconThemeData(color: Colors.white),
+        title: Text('Journaling', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
       ),
-
-      body: Column(
-
-        children: [
-          SizedBox(height: 10),
-          Container(
-            height: 50,
-            width: 185,
-            child: MyHeatMap2(),
-          ),
-          SizedBox(height: 15),
-
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                DropdownButton<String>(
-                  value: _selectedFilter,
-                  items: ["This Week", "This Month", "This Year", ]
-                      .map((filter) => DropdownMenuItem<String>(
-                    value: filter,
-                    child: Text(filter),
-                  ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedFilter = value!;
-                      _applyFilter();
-                    });
+      body: ListView.builder(
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          var category = categories[index];
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  category['title'],
+                  style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Container(
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: category['prompts'].length,
+                  itemBuilder: (context, idx) {
+                    return GestureDetector(
+                      onTap: () {
+                        _createJournalEntry(category['prompts'][idx]);
+                      },
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.8,
+                        margin: EdgeInsets.symmetric(horizontal: 8),
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[850],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: Text(
+                            category['prompts'][idx],
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    );
                   },
                 ),
-                ElevatedButton(
-                  onPressed: _createJournalEntry,
-                  child: Text("Create Entry"),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _filteredEntries.length,
-              itemBuilder: (context, index) {
-                var entry = _filteredEntries[index];
-                return ListTile(
-                  title: Text(
-                    entry['entry']!.length > 50
-                        ? entry['entry']!.substring(0, 50) + "..."
-                        : entry['entry']!,
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  subtitle: Text(
-                    entry['date']!,
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  onTap: () => _showFullEntry(entry['date']!, entry['entry']!),
-                );
-              },
-            ),
-
-          ),
-
-        ],
-
+              ),
+            ],
+          );
+        },
       ),
-      backgroundColor: Colors.grey[850],
+    );
+  }
+
+  void _createJournalEntry(String prompt) {
+    TextEditingController _entryController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(prompt, style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
+        content: TextField(
+          controller: _entryController,
+          style: TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: "Write your journal entry here...",
+            hintStyle: TextStyle(color: Colors.white70),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.amber),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.amber),
+            ),
+          ),
+          maxLines: null,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (_entryController.text.isNotEmpty) {
+                setState(() {
+                  _journalEntries.add({
+                    "date": DateTime.now().toIso8601String().split('T').first,
+                    "entry": _entryController.text,
+                  });
+                });
+                _applyFilter();
+              }
+              Navigator.pop(context);
+            },
+            child: Text("Save"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class JourneyPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: Text('Journey', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
+      ),
+      body: Center(
+        child: Text(
+          'Implement the Journey view here',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
     );
   }
 }

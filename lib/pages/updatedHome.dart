@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:gymapp/pages/Jounral2.dart';
 import 'package:gymapp/pages/StepCounterPage.dart';
 import 'package:gymapp/pages/workout_page.dart';
 import 'package:intl/intl.dart';
@@ -834,7 +835,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                             onPressed: () {
                                               Navigator.push(
                                                 context,
-                                                MaterialPageRoute(builder: (context) => JournalPage()),
+                                                MaterialPageRoute(builder: (context) => Jounral2()),
                                               );
                                             },
                                           ),
