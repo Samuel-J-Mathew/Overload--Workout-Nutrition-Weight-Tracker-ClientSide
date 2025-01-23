@@ -52,7 +52,7 @@ class JournalHeatMap extends StatelessWidget {
                     margin: const EdgeInsets.all(1.5),
                     decoration: BoxDecoration(
                       color: activityLevel > 0
-                          ? const Color.fromARGB(255, 221, 18, 160)
+                          ? const Color.fromARGB(255, 218, 100, 3)
                           : Colors.grey[700], // Change to blue for visibility
                       borderRadius: BorderRadius.circular(2),
                     ),

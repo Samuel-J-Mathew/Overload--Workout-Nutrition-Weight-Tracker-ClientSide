@@ -12,6 +12,7 @@ import 'package:gymapp/pages/SearchPage.dart';
 import 'package:gymapp/pages/StepCounterPage.dart';
 import 'package:gymapp/pages/TestClassPage.dart';
 import 'package:gymapp/pages/WeightLogPage.dart';
+import 'package:gymapp/pages/auth_page.dart';
 import 'package:gymapp/pages/home_page.dart';
 import 'package:gymapp/pages/newUpdatedHome.dart';
 import 'package:gymapp/pages/testExample.dart';
@@ -78,7 +79,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: ExerciseLogPage(),
+        home: AuthPage(),
         //home:CalorieTrackerPage(),
       ),
     );
