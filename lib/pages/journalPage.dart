@@ -166,7 +166,7 @@ class JourneyPage extends StatelessWidget {
               var entry = journalEntries[index];
               return ListTile(
                 title:
-                    Text(entry['date']!, style: TextStyle(color: Colors.white)),
+                Text(entry['date']!, style: TextStyle(color: Colors.white)),
                 subtitle: Text(entry['entry']!,
                     style: TextStyle(color: Colors.white70)),
               );

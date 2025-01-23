@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "644555737003",
+    "project_id": "gymapp-2d58a",
+    "storage_bucket": "gymapp-2d58a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:644555737003:android:29fc86ae335dec4d84b4ee",
+        "android_client_info": {
+          "package_name": "com.example.gymapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBswSBU2h7S9q6xXRV3t5jDNLHDahXMhco"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gymapp/data/hive_database.dart';
 import 'package:gymapp/data/workout_data.dart';
@@ -27,9 +28,23 @@ import 'package:gymapp/data/FoodData.dart';
 import 'package:gymapp/data/FoodItemDatabase.dart';
 import 'pages/FoodLogPage.dart';
 import 'models/JournalProvider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if(kIsWeb){
+    await Firebase.initializeApp(options: FirebaseOptions( apiKey: "AIzaSyB_JQeM5PzMDIG8pvwY9fPL_beApfoThyE",
+        authDomain: "gymapp-2d58a.firebaseapp.com",
+        projectId: "gymapp-2d58a",
+        storageBucket: "gymapp-2d58a.firebasestorage.app",
+        messagingSenderId: "644555737003",
+        appId: "1:644555737003:web:93fb96fa62f41c2984b4ee",
+        measurementId: "G-DCQ9BNHJG9"));
+  }else{
+    await Firebase.initializeApp();
+  }
+
+
   await Hive.initFlutter();
   Hive.registerAdapter(WeightLogAdapter()); // Register adapter
   Hive.registerAdapter(StepLogAdapter());
@@ -41,7 +56,7 @@ void main() async {
   await Hive.openBox<FoodItemDatabase>('food_items');
   await Hive.openBox<NutritionalInfo>('nutritionBox');
   await Hive.openBox<Map>('journalBox'); // Open the journalBox
-
+  await Hive.openBox<Map<String, dynamic>>('journal_entries');
   runApp(MyApp());
 }
 
