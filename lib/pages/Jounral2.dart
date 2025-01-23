@@ -21,6 +21,7 @@ class _Jounral2AppState extends State<Jounral2> {
     _selectedDay = _focusedDay;
     _fetchJournalEntries();
   }
+
   void _fetchJournalEntries() {
     // Placeholder: Replace with database call to fetch journal entries
     setState(() {
@@ -32,36 +33,32 @@ class _Jounral2AppState extends State<Jounral2> {
       _applyFilter();
     });
   }
+
   void _applyFilter() {
     DateTime now = DateTime.now();
     setState(() {
       if (_selectedFilter == "This Week") {
         DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
         DateTime endOfWeek = startOfWeek.add(Duration(days: 6));
-        _filteredEntries = _journalEntries
-            .where((entry) {
+        _filteredEntries = _journalEntries.where((entry) {
           DateTime entryDate = DateTime.parse(entry['date']!);
           return entryDate.isAfter(startOfWeek.subtract(Duration(days: 1))) &&
               entryDate.isBefore(endOfWeek.add(Duration(days: 1)));
-        })
-            .toList();
+        }).toList();
       } else if (_selectedFilter == "This Month") {
-        _filteredEntries = _journalEntries
-            .where((entry) {
+        _filteredEntries = _journalEntries.where((entry) {
           DateTime entryDate = DateTime.parse(entry['date']!);
           return entryDate.month == now.month && entryDate.year == now.year;
-        })
-            .toList();
+        }).toList();
       } else if (_selectedFilter == "This Year") {
-        _filteredEntries = _journalEntries
-            .where((entry) {
+        _filteredEntries = _journalEntries.where((entry) {
           DateTime entryDate = DateTime.parse(entry['date']!);
           return entryDate.year == now.year;
-        })
-            .toList();
+        }).toList();
       }
     });
   }
+
   static List<Widget> _widgetOptions = <Widget>[
     JournalPage(),
     JourneyPage(),
@@ -92,7 +89,10 @@ class _Jounral2AppState extends State<Jounral2> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
+        selectedItemColor: const Color.fromARGB(255, 45, 89, 185),
+        unselectedItemColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor:
+            Color.fromRGBO(31, 31, 31, 1), // Set the background color here
         onTap: _onItemTapped,
       ),
     );

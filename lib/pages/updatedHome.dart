@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:gymapp/models/journalHeatMap.dart';
 import 'package:gymapp/pages/Jounral2.dart';
 import 'package:gymapp/pages/StepCounterPage.dart';
 import 'package:gymapp/pages/workout_page.dart';
@@ -42,15 +43,19 @@ class _UpdatedHomeState extends State<UpdatedHome> {
   Map<String, bool> exerciseClickStatus = {};
   final ScrollController _scrollController = ScrollController();
   double _workoutCardHeight = 320; // Default height
-  bool _showSearchBar = true; // This will control the visibility of the search bar.
+  bool _showSearchBar =
+      true; // This will control the visibility of the search bar.
   List<StepLog> _stepLogs = [];
   void _fetchStepLogs() async {
     final db = Provider.of<HiveDatabase>(context, listen: false);
-    _stepLogs = db.getStepLogs();  // Adjust this method according to your actual data fetching logic
+    _stepLogs = db
+        .getStepLogs(); // Adjust this method according to your actual data fetching logic
     setState(() {});
   }
+
   void _fetchAverageSteps() async {
-    double averageSteps = await StepCounterPage.fetchAndCalculateAverageSteps(context);
+    double averageSteps =
+        await StepCounterPage.fetchAndCalculateAverageSteps(context);
     if (mounted) {
       setState(() {
         getAverageSteps = averageSteps;
@@ -63,10 +68,12 @@ class _UpdatedHomeState extends State<UpdatedHome> {
     super.initState();
     _fetchStepLogs();
     _fetchAverageSteps();
-    Provider.of<NutritionProvider>(context, listen: false).loadNutritionalInfo();
+    Provider.of<NutritionProvider>(context, listen: false)
+        .loadNutritionalInfo();
     // Fetching today's split and adjusting height dynamically
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final todaysSplit = Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
+      final todaysSplit =
+          Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
       if (todaysSplit != null) {
         setState(() {
           final muscleGroupCount = todaysSplit.muscleGroups.length;
@@ -78,28 +85,30 @@ class _UpdatedHomeState extends State<UpdatedHome> {
             _workoutCardHeight = 320;
           } else if (muscleGroupCount >= 4) {
             _workoutCardHeight = 420;
-          }
-          else if (muscleGroupCount >= 5) {
+          } else if (muscleGroupCount >= 5) {
             _workoutCardHeight = 520;
-          }
-          else {
+          } else {
             _workoutCardHeight = 120; // Default for no muscle groups
           }
         });
       }
     });
     _scrollController.addListener(() {
-      if (_scrollController.position.userScrollDirection == ScrollDirection.reverse) {
+      if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.reverse) {
         if (_showSearchBar) setState(() => _showSearchBar = false);
-      } else if (_scrollController.position.userScrollDirection == ScrollDirection.forward) {
+      } else if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.forward) {
         if (!_showSearchBar) setState(() => _showSearchBar = true);
       }
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final workoutData = Provider.of<WorkoutData>(context, listen: false);
-      final db = Provider.of<HiveDatabase>(context, listen: false); // Get the Hive database instance
-      workoutData.initalizeWorkoutList(); // Initialize workout list from database
+      final db = Provider.of<HiveDatabase>(context,
+          listen: false); // Get the Hive database instance
+      workoutData
+          .initalizeWorkoutList(); // Initialize workout list from database
       // Fetch the most recent weight and update the state
       final latestLog = db.getMostRecentWeightLog();
       if (latestLog != null) {
@@ -107,10 +116,9 @@ class _UpdatedHomeState extends State<UpdatedHome> {
           mostRecentWeight = latestLog.weight;
         });
       }
-
     });
-
   }
+
   // Widget to build each exercise tile
   double _calculateHeight(int muscleGroupCount) {
     if (muscleGroupCount == 1) {
@@ -121,8 +129,10 @@ class _UpdatedHomeState extends State<UpdatedHome> {
       return 320; // Default maximum height
     }
   }
+
   void _openSearchSheet(BuildContext context) {
-    Workout todayWorkout = Provider.of<WorkoutData>(context, listen: false).ensureTodayWorkout();
+    Workout todayWorkout =
+        Provider.of<WorkoutData>(context, listen: false).ensureTodayWorkout();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -132,7 +142,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
           initialChildSize: 0.8, // initially cover 80% of the screen
           maxChildSize: 0.95, // when dragged to full, cover 95% of the screen
           minChildSize: 0.5, // minimum size of the sheet when collapsed
-          expand: false, // Set this to false if you don't want the sheet to expand to full screen
+          expand:
+              false, // Set this to false if you don't want the sheet to expand to full screen
           builder: (BuildContext context, ScrollController scrollController) {
             return Container(
               decoration: BoxDecoration(
@@ -145,7 +156,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
               child: Container(
                 margin: EdgeInsets.only(top: 60),
                 decoration: BoxDecoration(
-                  color: Colors.grey[900], // Set the color here within the decoration
+                  color: Colors
+                      .grey[900], // Set the color here within the decoration
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
@@ -163,9 +175,11 @@ class _UpdatedHomeState extends State<UpdatedHome> {
       },
     );
   }
+
   Widget buildWorkoutCard(String title, String message) {
     var workoutData = Provider.of<WorkoutData>(context, listen: false);
-    final todaysSplit = Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
+    final todaysSplit =
+        Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
     if (todaysSplit == null || todaysSplit.muscleGroups.isEmpty) {
       return Center(
         child: Text(
@@ -200,9 +214,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                   'No workout planned for today.',
                   style: TextStyle(color: Colors.grey[400]),
                 ),
-
               )
-
             else
               for (var muscleGroup in todaysSplit.muscleGroups) ...[
                 ListTile(
@@ -224,29 +236,36 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                   ),
                   onTap: () {
                     setState(() {
-                      if (expandedMuscleGroups.contains(muscleGroup.muscleGroupName)) {
-                        expandedMuscleGroups.remove(muscleGroup.muscleGroupName);
+                      if (expandedMuscleGroups
+                          .contains(muscleGroup.muscleGroupName)) {
+                        expandedMuscleGroups
+                            .remove(muscleGroup.muscleGroupName);
                       } else {
                         expandedMuscleGroups.add(muscleGroup.muscleGroupName);
                       }
 
                       // Calculate the new height based on which muscle groups are currently expanded
-                      int totalExpandedExercises = expandedMuscleGroups.fold(0, (sum, groupName) {
-                        final group = todaysSplit.muscleGroups.firstWhere(
-                                (g) => g.muscleGroupName == groupName);
-                            // Return null if not found to prevent exceptions
+                      int totalExpandedExercises =
+                          expandedMuscleGroups.fold(0, (sum, groupName) {
+                        final group = todaysSplit.muscleGroups
+                            .firstWhere((g) => g.muscleGroupName == groupName);
+                        // Return null if not found to prevent exceptions
 
                         return sum + (group?.exercises.length ?? 0);
                       });
 
-                      const double baseHeight = 300; // Base height when no muscle groups are expanded
-                      const double extraHeightPerExercise = 65; // Additional height per expanded exercise
+                      const double baseHeight =
+                          300; // Base height when no muscle groups are expanded
+                      const double extraHeightPerExercise =
+                          65; // Additional height per expanded exercise
 
                       if (totalExpandedExercises > 0) {
-                        _workoutCardHeight = baseHeight + (totalExpandedExercises * extraHeightPerExercise);
+                        _workoutCardHeight = baseHeight +
+                            (totalExpandedExercises * extraHeightPerExercise);
                       } else {
                         // Revert to the initial sizing based on muscle group counts
-                        final muscleGroupCount = todaysSplit.muscleGroups.length;
+                        final muscleGroupCount =
+                            todaysSplit.muscleGroups.length;
                         if (muscleGroupCount == 1) {
                           _workoutCardHeight = 150;
                         } else if (muscleGroupCount == 2) {
@@ -255,30 +274,34 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                           _workoutCardHeight = 320;
                         } else if (muscleGroupCount >= 4) {
                           _workoutCardHeight = 420;
-                        }
-                        else {
-                          _workoutCardHeight = 120; // Default for no muscle groups
+                        } else {
+                          _workoutCardHeight =
+                              120; // Default for no muscle groups
                         }
                       }
                     });
                   },
-
                 ),
                 Divider(color: Colors.grey[600]),
-                if (expandedMuscleGroups.contains(muscleGroup.muscleGroupName)) ...[
+                if (expandedMuscleGroups
+                    .contains(muscleGroup.muscleGroupName)) ...[
                   for (var exercise in muscleGroup.exercises) ...[
                     Builder(
                       builder: (context) {
                         // Attempt to fetch most recent exercise details
-                        var recentExercise = Provider.of<WorkoutData>(context, listen: false).getMostRecentExerciseDetails(exercise.name);
+                        var recentExercise =
+                            Provider.of<WorkoutData>(context, listen: false)
+                                .getMostRecentExerciseDetails(exercise.name);
                         var displaySets = recentExercise?.sets ?? exercise.sets;
                         var displayReps = recentExercise?.reps ?? exercise.reps;
-                        var displayWeight = recentExercise?.weight ?? exercise.weight;
+                        var displayWeight =
+                            recentExercise?.weight ?? exercise.weight;
 
                         return Padding(
                           padding: const EdgeInsets.only(left: 16.0),
                           child: ListTile(
-                            leading: Icon(Icons.check_circle_outline, color: Colors.white),
+                            leading: Icon(Icons.check_circle_outline,
+                                color: Colors.white),
                             title: Text(
                               exercise.name,
                               style: TextStyle(color: Colors.white),
@@ -289,18 +312,19 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                             ),
                             trailing: IconButton(
                               icon: Icon(
-                                  exerciseClickStatus[exercise.name] ?? false ? Icons.check : Icons.add,
-                                  color: Colors.white
-                              ),
+                                  exerciseClickStatus[exercise.name] ?? false
+                                      ? Icons.check
+                                      : Icons.add,
+                                  color: Colors.white),
                               onPressed: () {
                                 setState(() {
-                                  exerciseClickStatus[exercise.name] = true; // Set the status to true when clicked
+                                  exerciseClickStatus[exercise.name] =
+                                      true; // Set the status to true when clicked
                                 });
                                 workoutData.logExercise(exercise);
                               },
                             ),
                           ),
-
                         );
                       },
                     ),
@@ -308,7 +332,6 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                   ],
                 ],
               ],
-
           ],
         ),
       ),
@@ -321,20 +344,21 @@ class _UpdatedHomeState extends State<UpdatedHome> {
       color: Color.fromRGBO(42, 42, 42, 1),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Centers vertically in the available space
-          crossAxisAlignment: CrossAxisAlignment.stretch, // Centers horizontally in the available space
+          mainAxisAlignment: MainAxisAlignment
+              .center, // Centers vertically in the available space
+          crossAxisAlignment: CrossAxisAlignment
+              .stretch, // Centers horizontally in the available space
           children: [
             Expanded(
               child: CalorieTile(),
             ),
-
           ],
         ),
       ),
     );
   }
+
   double calculateDynamicHeight(dynamic todaysSplit) {
     // Default height when no data is present
     if (todaysSplit == null || todaysSplit.muscleGroups.isEmpty) {
@@ -348,18 +372,19 @@ class _UpdatedHomeState extends State<UpdatedHome> {
     // Count the total number of exercises
     int totalExercises = todaysSplit.muscleGroups.fold(
       0,
-          (sum, group) => sum + group.exercises.length,
+      (sum, group) => sum + group.exercises.length,
     );
 
     // Calculate total height
-    return baseHeight + (totalExercises * extraHeightPerExercise) ;
+    return baseHeight + (totalExercises * extraHeightPerExercise);
   }
-
 
   @override
   Widget build(BuildContext context) {
-    final workoutsThisWeek = Provider.of<WorkoutData>(context, listen: false).getThisWeekWorkoutCount();
-    final todaysSplit = Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
+    final workoutsThisWeek = Provider.of<WorkoutData>(context, listen: false)
+        .getThisWeekWorkoutCount();
+    final todaysSplit =
+        Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
     // Track the current page index
 
     return Scaffold(
@@ -367,24 +392,26 @@ class _UpdatedHomeState extends State<UpdatedHome> {
       body: Stack(
         children: [
           ListView(
-            controller: _scrollController,  // Attach the controller here.
+            controller: _scrollController, // Attach the controller here.
             children: <Widget>[
               SizedBox(height: 20),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                     color: Color.fromRGBO(31, 31, 31, 1),
-                    borderRadius: BorderRadius.circular(10)
-                ),
+                    borderRadius: BorderRadius.circular(10)),
                 alignment: Alignment.centerLeft,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,  // Aligns children to the start of the main-axis
+                  crossAxisAlignment: CrossAxisAlignment
+                      .start, // Aligns children to the start of the main-axis
                   children: [
                     Text(
-                      DateFormat('EEEE, MMMM d').format(DateTime.now()).toUpperCase(),  // Formats and converts date to upper case
+                      DateFormat('EEEE, MMMM d')
+                          .format(DateTime.now())
+                          .toUpperCase(), // Formats and converts date to upper case
                       style: TextStyle(
-                        color: Colors.grey[600],  // Dark grey color for the date
-                        fontSize: 14,  // Smaller font size for the date
+                        color: Colors.grey[600], // Dark grey color for the date
+                        fontSize: 14, // Smaller font size for the date
                       ),
                     ),
                     Text(
@@ -405,19 +432,27 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                     // Add padding or header if needed
                     SizedBox(height: 1),
                     SizedBox(
-                      height: _workoutCardHeight, // Dynamically adjust height based on the state
+                      height:
+                          _workoutCardHeight, // Dynamically adjust height based on the state
                       child: PageView(
                         controller: _pageController,
                         onPageChanged: (index) {
                           setState(() {
-                            _currentIndex = index; // Update the current index to reflect the new page
-                            if (index == 1) { // If the second page is visible
-                              _workoutCardHeight = 220; // Set height to 220 when on the second page
+                            _currentIndex =
+                                index; // Update the current index to reflect the new page
+                            if (index == 1) {
+                              // If the second page is visible
+                              _workoutCardHeight =
+                                  220; // Set height to 220 when on the second page
                             } else {
                               // Fetch the today's split again to determine muscle group count
-                              final todaysSplit = Provider.of<WorkoutData>(context, listen: false).getTodaysSplit();
+                              final todaysSplit = Provider.of<WorkoutData>(
+                                      context,
+                                      listen: false)
+                                  .getTodaysSplit();
                               if (todaysSplit != null) {
-                                int muscleGroupCount = todaysSplit.muscleGroups.length;
+                                int muscleGroupCount =
+                                    todaysSplit.muscleGroups.length;
                                 if (muscleGroupCount == 1) {
                                   _workoutCardHeight = 150;
                                 } else if (muscleGroupCount == 2) {
@@ -428,7 +463,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                   _workoutCardHeight = 420;
                                 }
                               } else {
-                                _workoutCardHeight = 120; // Default for no muscle groups if no split found
+                                _workoutCardHeight =
+                                    120; // Default for no muscle groups if no split found
                               }
                             }
                           });
@@ -440,29 +476,34 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               todaysSplit == null
                                   ? 'No workout data available.'
                                   : todaysSplit.muscleGroups.isEmpty
-                                  ? 'No workout planned for today.'
-                                  : '',
+                                      ? 'No workout planned for today.'
+                                      : '',
                             ),
                           ),
-                          Center(child: buildCustomCard('Card 2', 'This is the second card.')),
+                          Center(
+                              child: buildCustomCard(
+                                  'Card 2', 'This is the second card.')),
                         ],
                       ),
                     ),
 
-
-                    SizedBox(height: 3,),
+                    SizedBox(
+                      height: 3,
+                    ),
                     // Optionally add dots or indicators for pages
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
                         2,
-                            (index) => AnimatedContainer(
+                        (index) => AnimatedContainer(
                           duration: Duration(milliseconds: 300),
                           margin: EdgeInsets.symmetric(horizontal: 4),
                           width: _currentIndex == index ? 12 : 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: _currentIndex == index ? Colors.blue : Colors.grey,
+                            color: _currentIndex == index
+                                ? Colors.blue
+                                : Colors.grey,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -471,13 +512,13 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                     SizedBox(height: 1),
                   ],
                 ),
-
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 10.0),
               ),
               SizedBox(
-                height: MediaQuery.of(context).size.height * 0.7, // Adjust the height as needed
+                height: MediaQuery.of(context).size.height *
+                    0.7, // Adjust the height as needed
                 child: Container(
                   padding: EdgeInsets.all(20),
                   color: Color.fromRGBO(20, 20, 20, 1),
@@ -508,7 +549,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               ),
                               color: Color.fromRGBO(31, 31, 31, 1),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 19.0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 19.0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -532,31 +574,40 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                     SizedBox(height: 8),
                                     Divider(
                                       color: Colors.white70,
-                                      height: 1,  // Set minimal height to reduce space
-                                      thickness: .75,  // Minimal visual thickness
+                                      height:
+                                          1, // Set minimal height to reduce space
+                                      thickness:
+                                          .75, // Minimal visual thickness
                                     ),
                                     Container(
-                                      padding: EdgeInsets.zero,  // Ensures no extra padding
+                                      padding: EdgeInsets
+                                          .zero, // Ensures no extra padding
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensures spacing between the text and the icon
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .spaceBetween, // Ensures spacing between the text and the icon
                                         children: [
-                                          Flexible(  // Allows the text to resize dynamically
+                                          Flexible(
+                                            // Allows the text to resize dynamically
                                             child: RichText(
-                                              overflow: TextOverflow.ellipsis,  // Prevents text overflow by using ellipsis
+                                              overflow: TextOverflow
+                                                  .ellipsis, // Prevents text overflow by using ellipsis
                                               text: TextSpan(
                                                 children: [
                                                   TextSpan(
-                                                    text: '$workoutsThisWeek/7 ',
+                                                    text:
+                                                        '$workoutsThisWeek/7 ',
                                                     style: TextStyle(
                                                       fontSize: 17,
-                                                      color: Colors.grey[300],  // Color for the numbers
+                                                      color: Colors.grey[
+                                                          300], // Color for the numbers
                                                     ),
                                                   ),
                                                   TextSpan(
                                                     text: 'this week',
                                                     style: TextStyle(
                                                       fontSize: 12,
-                                                      color: Colors.grey[500],  // Different color for the text
+                                                      color: Colors.grey[
+                                                          500], // Different color for the text
                                                     ),
                                                   ),
                                                 ],
@@ -565,19 +616,22 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                           ),
                                           //SizedBox(width: 10,),
                                           IconButton(
-                                            icon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.white),  // Reduced icon size
+                                            icon: Icon(Icons.arrow_forward_ios,
+                                                size: 15,
+                                                color: Colors
+                                                    .white), // Reduced icon size
                                             onPressed: () {
                                               Navigator.push(
                                                 context,
-                                                MaterialPageRoute(builder: (context) => const BigHeatMap()),
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const BigHeatMap()),
                                               );
                                             },
                                           ),
                                         ],
                                       ),
                                     )
-
-
                                   ],
                                 ),
                               ),
@@ -593,7 +647,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               ),
                               color: Color.fromRGBO(31, 31, 31, 1),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 19.0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 19.0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -612,40 +667,53 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                           fontSize: 12,
                                           color: Colors.grey[400]),
                                     ),
-                                    SizedBox(height: 10,),
+                                    SizedBox(
+                                      height: 10,
+                                    ),
                                     SizedBox(
                                       height: 30,
                                       width: 185,
-                                      child: WeightLogPage.buildWeightChart(context),
+                                      child: WeightLogPage.buildWeightChart(
+                                          context),
                                     ),
-                                    SizedBox(height: 13,),
+                                    SizedBox(
+                                      height: 13,
+                                    ),
                                     Divider(
                                       color: Colors.white54,
-                                      height: 1,  // Set minimal height to reduce space
-                                      thickness: .75,  // Minimal visual thickness
+                                      height:
+                                          1, // Set minimal height to reduce space
+                                      thickness:
+                                          .75, // Minimal visual thickness
                                     ),
                                     Container(
-                                      padding: EdgeInsets.zero,  // Ensures no extra padding
+                                      padding: EdgeInsets
+                                          .zero, // Ensures no extra padding
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensures spacing between the text and the icon
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .spaceBetween, // Ensures spacing between the text and the icon
                                         children: [
-                                          Flexible(  // Allows the text to resize dynamically
+                                          Flexible(
+                                            // Allows the text to resize dynamically
                                             child: RichText(
-                                              overflow: TextOverflow.ellipsis,  // Prevents text overflow by using ellipsis
+                                              overflow: TextOverflow
+                                                  .ellipsis, // Prevents text overflow by using ellipsis
                                               text: TextSpan(
                                                 children: [
                                                   TextSpan(
                                                     text: '$mostRecentWeight ',
                                                     style: TextStyle(
                                                       fontSize: 17,
-                                                      color: Colors.grey[300],  // Color for the numbers
+                                                      color: Colors.grey[
+                                                          300], // Color for the numbers
                                                     ),
                                                   ),
                                                   TextSpan(
                                                     text: 'lbs',
                                                     style: TextStyle(
                                                       fontSize: 12,
-                                                      color: Colors.grey[500],  // Different color for the text
+                                                      color: Colors.grey[
+                                                          500], // Different color for the text
                                                     ),
                                                   ),
                                                 ],
@@ -654,11 +722,16 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                           ),
                                           //SizedBox(width: 10,),
                                           IconButton(
-                                            icon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.white),  // Reduced icon size
+                                            icon: Icon(Icons.arrow_forward_ios,
+                                                size: 15,
+                                                color: Colors
+                                                    .white), // Reduced icon size
                                             onPressed: () {
                                               // Use Navigator to push WeightLogPage onto the navigation stack
                                               Navigator.of(context).push(
-                                                MaterialPageRoute(builder: (context) => WeightTrendPage()),
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        WeightTrendPage()),
                                               );
                                             },
                                           ),
@@ -670,10 +743,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               ),
                             ),
                           ),
-
                         ],
                       ),
-
                       Row(
                         children: [
                           Container(
@@ -686,7 +757,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               ),
                               color: Color.fromRGBO(31, 31, 31, 1),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 19.0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 19.0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -705,40 +777,54 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                           fontSize: 12,
                                           color: Colors.grey[400]),
                                     ),
-                                    SizedBox(height: 10,),
+                                    SizedBox(
+                                      height: 10,
+                                    ),
                                     SizedBox(
                                       height: 30,
                                       width: 185,
-                                      child: StepCounterPage.buildMiniStepChart(context, _stepLogs),
+                                      child: StepCounterPage.buildMiniStepChart(
+                                          context, _stepLogs),
                                     ),
-                                    SizedBox(height: 13,),
+                                    SizedBox(
+                                      height: 13,
+                                    ),
                                     Divider(
                                       color: Colors.white54,
-                                      height: 1,  // Set minimal height to reduce space
-                                      thickness: .75,  // Minimal visual thickness
+                                      height:
+                                          1, // Set minimal height to reduce space
+                                      thickness:
+                                          .75, // Minimal visual thickness
                                     ),
                                     Container(
-                                      padding: EdgeInsets.zero,  // Ensures no extra padding
+                                      padding: EdgeInsets
+                                          .zero, // Ensures no extra padding
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensures spacing between the text and the icon
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .spaceBetween, // Ensures spacing between the text and the icon
                                         children: [
-                                          Flexible(  // Allows the text to resize dynamically
+                                          Flexible(
+                                            // Allows the text to resize dynamically
                                             child: RichText(
-                                              overflow: TextOverflow.ellipsis,  // Prevents text overflow by using ellipsis
+                                              overflow: TextOverflow
+                                                  .ellipsis, // Prevents text overflow by using ellipsis
                                               text: TextSpan(
                                                 children: [
                                                   TextSpan(
-                                                    text: '${getAverageSteps?.toStringAsFixed(0)} ',
+                                                    text:
+                                                        '${getAverageSteps?.toStringAsFixed(0)} ',
                                                     style: TextStyle(
                                                       fontSize: 17,
-                                                      color: Colors.grey[300],  // Color for the numbers
+                                                      color: Colors.grey[
+                                                          300], // Color for the numbers
                                                     ),
                                                   ),
                                                   TextSpan(
                                                     text: 'steps',
                                                     style: TextStyle(
                                                       fontSize: 12,
-                                                      color: Colors.grey[500],  // Different color for the text
+                                                      color: Colors.grey[
+                                                          500], // Different color for the text
                                                     ),
                                                   ),
                                                 ],
@@ -747,18 +833,22 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                           ),
                                           //SizedBox(width: 10,),
                                           IconButton(
-                                            icon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.white),  // Reduced icon size
+                                            icon: Icon(Icons.arrow_forward_ios,
+                                                size: 15,
+                                                color: Colors
+                                                    .white), // Reduced icon size
                                             onPressed: () {
                                               // Use Navigator to push WeightLogPage onto the navigation stack
                                               Navigator.of(context).push(
-                                                MaterialPageRoute(builder: (context) => StepCounterPage()),
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        StepCounterPage()),
                                               );
                                             },
                                           ),
                                         ],
                                       ),
                                     )
-
                                   ],
                                 ),
                               ),
@@ -774,7 +864,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               ),
                               color: Color.fromRGBO(31, 31, 31, 1),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 19.0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 19.0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -794,35 +885,44 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                         color: Colors.grey[400],
                                       ),
                                     ),
-                                    MyHeatMap2(),
+                                    JournalHeatMap(),
                                     SizedBox(height: 8),
                                     Divider(
                                       color: Colors.white70,
-                                      height: 1,  // Set minimal height to reduce space
-                                      thickness: .75,  // Minimal visual thickness
+                                      height:
+                                          1, // Set minimal height to reduce space
+                                      thickness:
+                                          .75, // Minimal visual thickness
                                     ),
                                     Container(
-                                      padding: EdgeInsets.zero,  // Ensures no extra padding
+                                      padding: EdgeInsets
+                                          .zero, // Ensures no extra padding
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensures spacing between the text and the icon
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .spaceBetween, // Ensures spacing between the text and the icon
                                         children: [
-                                          Flexible(  // Allows the text to resize dynamically
+                                          Flexible(
+                                            // Allows the text to resize dynamically
                                             child: RichText(
-                                              overflow: TextOverflow.ellipsis,  // Prevents text overflow by using ellipsis
+                                              overflow: TextOverflow
+                                                  .ellipsis, // Prevents text overflow by using ellipsis
                                               text: TextSpan(
                                                 children: [
                                                   TextSpan(
-                                                    text: '$workoutsThisWeek/7 ',
+                                                    text:
+                                                        '$workoutsThisWeek/7 ',
                                                     style: TextStyle(
                                                       fontSize: 17,
-                                                      color: Colors.grey[300],  // Color for the numbers
+                                                      color: Colors.grey[
+                                                          300], // Color for the numbers
                                                     ),
                                                   ),
                                                   TextSpan(
                                                     text: 'this week',
                                                     style: TextStyle(
                                                       fontSize: 12,
-                                                      color: Colors.grey[500],  // Different color for the text
+                                                      color: Colors.grey[
+                                                          500], // Different color for the text
                                                     ),
                                                   ),
                                                 ],
@@ -831,19 +931,22 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                           ),
                                           //SizedBox(width: 10,),
                                           IconButton(
-                                            icon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.white),  // Reduced icon size
+                                            icon: Icon(Icons.arrow_forward_ios,
+                                                size: 15,
+                                                color: Colors
+                                                    .white), // Reduced icon size
                                             onPressed: () {
                                               Navigator.push(
                                                 context,
-                                                MaterialPageRoute(builder: (context) => Jounral2()),
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        Jounral2()),
                                               );
                                             },
                                           ),
                                         ],
                                       ),
                                     )
-
-
                                   ],
                                 ),
                               ),
@@ -852,10 +955,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                         ],
                       ),
                       SizedBox(height: 120),
-
-
                     ],
-
                   ),
                 ),
               ),
@@ -870,9 +970,13 @@ class _UpdatedHomeState extends State<UpdatedHome> {
               left: 0,
               right: 0,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 0, vertical: 9), // Adjust vertical padding to control the height above and below the search bar
+                padding: EdgeInsets.symmetric(
+                    horizontal: 0,
+                    vertical:
+                        9), // Adjust vertical padding to control the height above and below the search bar
                 decoration: BoxDecoration(
-                  color: Color.fromRGBO(25, 25, 25, 1), // Black background for the outer container
+                  color: Color.fromRGBO(25, 25, 25,
+                      1), // Black background for the outer container
                 ),
                 child: Padding(
                   padding: const EdgeInsets.only(left: 8.0, right: 8),
@@ -881,7 +985,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                     child: Container(
                       padding: EdgeInsets.all(7),
                       decoration: BoxDecoration(
-                        color: Color.fromRGBO(40, 40, 40, 1), // Original search bar color
+                        color: Color.fromRGBO(
+                            40, 40, 40, 1), // Original search bar color
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
@@ -893,9 +998,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               'Search for an exercise',
                               style: TextStyle(color: Colors.grey[500]),
                             ),
-
                           ),
-
                         ],
                       ),
                     ),
@@ -903,13 +1006,11 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                 ),
               ),
             ),
-
         ],
-
       ),
     );
-
   }
+
   @override
   void dispose() {
     _scrollController.dispose();

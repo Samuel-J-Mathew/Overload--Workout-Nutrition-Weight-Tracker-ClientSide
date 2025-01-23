@@ -26,10 +26,12 @@ import 'models/weight_log.dart';
 import 'package:gymapp/data/FoodData.dart';
 import 'package:gymapp/data/FoodItemDatabase.dart';
 import 'pages/FoodLogPage.dart';
+import 'models/JournalProvider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  Hive.registerAdapter(WeightLogAdapter());  // Register adapter
+  Hive.registerAdapter(WeightLogAdapter()); // Register adapter
   Hive.registerAdapter(StepLogAdapter());
   Hive.registerAdapter(FoodItemDatabaseAdapter()); // Registering the adapter
   Hive.registerAdapter(NutritionalInfoAdapter());
@@ -38,6 +40,7 @@ void main() async {
   await Hive.openBox<StepLog>('stepLogs');
   await Hive.openBox<FoodItemDatabase>('food_items');
   await Hive.openBox<NutritionalInfo>('nutritionBox');
+  await Hive.openBox<Map>('journalBox'); // Open the journalBox
 
   runApp(MyApp());
 }
@@ -52,13 +55,16 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => WorkoutData()),
         ChangeNotifierProvider(create: (context) => FoodData(HiveDatabase())),
         Provider(create: (context) => HiveDatabase()),
-        ChangeNotifierProvider(create: (context) => NutritionProvider()..loadNutritionalInfo()),  // Changed to ChangeNotifierProvider
+        ChangeNotifierProvider(
+            create: (context) => NutritionProvider()..loadNutritionalInfo()),
+        ChangeNotifierProvider(
+            create: (context) => JournalProvider()
+              ..fetchJournalEntries()), // Add JournalProvider
       ],
-
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         home: ExerciseLogPage(),
-       //home:CalorieTrackerPage(),
+        //home:CalorieTrackerPage(),
       ),
     );
   }
