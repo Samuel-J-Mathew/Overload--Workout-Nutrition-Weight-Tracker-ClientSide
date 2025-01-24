@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:gymapp/models/journalHeatMap.dart';
@@ -62,7 +63,9 @@ class _UpdatedHomeState extends State<UpdatedHome> {
       });
     }
   }
-
+  void signUserOut() {
+    FirebaseAuth.instance.signOut();
+  }
   @override
   void initState() {
     super.initState();
@@ -955,8 +958,15 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                         ],
                       ),
                       SizedBox(height: 120),
+                      IconButton(
+                        //sign out button
+                        onPressed: signUserOut,
+                        icon: Icon(Icons.logout),
+                      )
                     ],
+
                   ),
+
                 ),
               ),
 

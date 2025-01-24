@@ -24,9 +24,10 @@ class _RegisterPageState extends State<RegisterPage> {
   String givenMessage = "";
   // sign user in method
   void signUserUp() async {
-    // show loading circle
+    // Show loading circle
     showDialog(
       context: context,
+      barrierDismissible: false, // prevent dismiss by tapping outside the dialog
       builder: (context) {
         return const Center(
           child: CircularProgressIndicator(),
@@ -34,35 +35,45 @@ class _RegisterPageState extends State<RegisterPage> {
       },
     );
 
-    // try creating the user
-    try {
-     if(passwordController == ConfirmpasswordController){
-       await FirebaseAuth.instance.createUserWithEmailAndPassword(
-         email: emailController.text,
-         password: passwordController.text,
-       );
-     } else{
-       //show error mesage,passwords dont match
-       NonMatchingPasswordMessage();
-     }
-      // pop the loading circle
-      Navigator.pop(context);
-    } on FirebaseAuthException catch (e) {
-      // pop the loading circle
-      Navigator.pop(context);
-      // WRONG EMAIL
-      if (e.code == 'user-not-found') {
-        // show error to user
-        wrongEmailMessage();
+    // Check if passwords match
+    if (passwordController.text == ConfirmpasswordController.text) {
+      try {
+        // Try creating the user
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: emailController.text,
+          password: passwordController.text,
+        );
+        // Optionally, navigate to a new page upon successful signup
+        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
+      } on FirebaseAuthException catch (e) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            String errorMessage = 'An error occurred';
+            if (e.code == 'email-already-in-use') {
+              errorMessage = 'The email address is already in use by another account.';
+            } else if (e.code == 'invalid-email') {
+              errorMessage = 'The email address is not valid.';
+            } else if (e.code == 'weak-password') {
+              errorMessage = 'The password provided is too weak.';
+            }
+            return AlertDialog(
+              backgroundColor: Colors.deepPurple,
+              title: const Text('Registration Failed', style: TextStyle(color: Colors.white)),
+              content: Text(errorMessage, style: const TextStyle(color: Colors.white)),
+            );
+          },
+        );
       }
-
-      // WRONG PASSWORD
-      else if (e.code == 'wrong-password') {
-        // show error to user
-        wrongPasswordMessage();
-      }
+    } else {
+      // If passwords do not match, show error message
+      NonMatchingPasswordMessage();
     }
+
+    // Pop the loading circle in all cases
+    Navigator.pop(context);
   }
+
 
   // wrong email message popup
   void wrongEmailMessage() {
