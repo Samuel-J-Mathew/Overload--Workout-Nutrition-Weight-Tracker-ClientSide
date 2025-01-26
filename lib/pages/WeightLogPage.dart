@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../data/hive_database.dart';
@@ -85,6 +87,7 @@ class _WeightLogPageState extends State<WeightLogPage> {
     if (pickedDate != null) {
       final String? weight = await _showWeightInputDialog();
       if (weight != null && weight.isNotEmpty) {
+
         final db = Provider.of<HiveDatabase>(context, listen: false);
         final log = WeightLog(date: pickedDate, weight: double.parse(weight));
         db.saveWeightLog(log);
@@ -93,6 +96,7 @@ class _WeightLogPageState extends State<WeightLogPage> {
       }
     }
   }
+
 
   Future<String?> _showWeightInputDialog() async {
     TextEditingController controller = TextEditingController();

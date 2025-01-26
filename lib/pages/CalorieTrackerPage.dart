@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:gymapp/data/FoodData.dart';
 import '../data/hive_database.dart';
@@ -701,8 +704,41 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       selectedFood!['Fats'],
       widget.selectedDate,
     );
+    final User? user = FirebaseAuth.instance.currentUser;
+    addFood(
+        user!.uid,
+        widget.selectedDate,
+        selectedFoodName!,
+        selectedFood!['Calories'],
+        selectedFood!['Protein'],
+        selectedFood!['Carbs'],
+        selectedFood!['Fats'],
+    );
 
     Navigator.pop(context);
+  }
+  Future<void> addFood(String userId, DateTime date, String name, String calories, String protein, String carbs, String fats) async {
+    var dateFormatted = DateFormat('yyyyMMdd').format(date);
+    var foodsCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('foods')
+        .doc(dateFormatted)
+        .collection('entries');
+
+    try {
+      await foodsCollection.add({
+        'name': name,
+        'calories': calories,
+        'protein': protein,
+        'carbs': carbs,
+        'fats': fats,
+        'timestamp': Timestamp.fromDate(date)
+      });
+      print("Food added successfully!");
+    } catch (e) {
+      print("Failed to add food: $e");
+    }
   }
 
   void showErrorDialog() {

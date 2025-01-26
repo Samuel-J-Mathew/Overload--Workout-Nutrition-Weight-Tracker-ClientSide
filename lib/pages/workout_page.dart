@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gymapp/components/exercise_tile.dart';
 import 'package:gymapp/data/workout_data.dart';
 import 'package:gymapp/data/exercise_list.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -106,6 +109,20 @@ class _MyWidgetState extends State<WorkoutPage>{
   }
   // save workout
   void save() {
+    // Validate that all fields are filled
+    if (exerciseNameController.text.isEmpty ||
+        setsController.text.isEmpty ||
+        repsController.text.isEmpty ||
+        weightController.text.isEmpty) {
+      // Show a snackbar or alert dialog to inform the user to fill all fields
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please fill in all fields before saving.'),
+            backgroundColor: Colors.red,
+          )
+      );
+      return; // Stop the function if validation fails
+    }
     // get exercise name from text controller
     String newExerciseName = exerciseNameController.text;
     String weight = weightController.text;
@@ -121,6 +138,16 @@ class _MyWidgetState extends State<WorkoutPage>{
       sets,
       musclegroup,);
 
+   final User? user = FirebaseAuth.instance.currentUser;
+    DateTime workoutDate = DateFormat('yyyy-MM-dd').parse(widget.workoutId);
+    addExercise(
+        user!.uid,
+        workoutDate, // Or use a specific workout date if applicable
+        newExerciseName,
+        sets,
+        reps,
+        weight
+    );
     //pop dialog box
     Navigator.pop(context);
     clear();
@@ -131,6 +158,22 @@ class _MyWidgetState extends State<WorkoutPage>{
     //pop diolog box
     Navigator.pop(context);
     clear();
+  }
+  Future<void> addExercise(String userId, DateTime workoutDate, String exerciseName, String sets, String reps, String weight) async {
+    var workoutFormattedDate = DateFormat('yyyyMMdd').format(workoutDate);
+    var exerciseCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('workouts')
+        .doc(workoutFormattedDate)
+        .collection('exercises');
+
+    await exerciseCollection.add({
+      'name': exerciseName,
+      'sets': sets,
+      'reps': reps,
+      'weight': weight
+    });
   }
 
   //clear controllers

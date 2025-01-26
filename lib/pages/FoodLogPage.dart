@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gymapp/data/FoodItemDatabase.dart';
 import 'package:gymapp/data/FoodData.dart';
@@ -176,6 +178,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
     // Use the FoodData provider to add the food item
     Provider.of<FoodData>(context, listen: false)
         .addFood(name, calories, protein, carbs, fats, date);
+
 
     // Clear the text fields after adding
     _foodNameController.clear();

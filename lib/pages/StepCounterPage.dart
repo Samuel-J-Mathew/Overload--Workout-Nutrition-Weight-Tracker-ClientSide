@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../data/hive_database.dart';
@@ -214,6 +216,13 @@ class _StepCounterPageState extends State<StepCounterPage> {
   Future<void> _addStepLog() async {
     final Map<String, dynamic>? result = await _showStepOrDistanceInputDialog(DateTime.now());
     if (result != null && result['steps'] != null && result['date'] != null) {
+      final FirebaseAuth auth = FirebaseAuth.instance;
+      final User? user = auth.currentUser;
+      final String userId = user?.uid ?? ''; // Ensure the user is not null, handle cases where it might be
+
+      if (userId.isNotEmpty) {
+        await addSteps(userId, result['date'], result['steps']);
+      }
       final db = Provider.of<HiveDatabase>(context, listen: false);
       final log = StepLog(date: result['date'], steps: result['steps']);
       db.saveStepLog(log);
@@ -431,7 +440,17 @@ class _StepCounterPageState extends State<StepCounterPage> {
     }
     return StepCounterPage.buildStepChart(context, logs);
   }
+  Future<void> addSteps(String userId, DateTime date, int stepCount) async {
+    var stepsCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('steps');
 
+    await stepsCollection.doc(DateFormat('yyyyMMdd').format(date)).set({
+      'date': date,
+      'count': stepCount,
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

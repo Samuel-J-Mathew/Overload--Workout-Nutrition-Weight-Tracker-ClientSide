@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -22,6 +23,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final ConfirmpasswordController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController= TextEditingController();
+
   String givenMessage = "";
   // sign user in method
   void signUserUp() async {
@@ -66,7 +70,17 @@ class _RegisterPageState extends State<RegisterPage> {
           },
         );
       }
-    } else {
+
+      // add user details
+      final User? user = FirebaseAuth.instance.currentUser;
+      addUserDetails(
+          user!.uid,
+          _firstNameController.text.trim(),
+          _lastNameController.text.trim(),
+          emailController.text.trim()
+      );
+    }
+    else {
       // If passwords do not match, show error message
       NonMatchingPasswordMessage();
     }
@@ -75,6 +89,13 @@ class _RegisterPageState extends State<RegisterPage> {
     Navigator.pop(context);
   }
 
+  Future<void> addUserDetails(String uid, String firstName, String lastName, String email) async {
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      'first name': firstName,
+      'last name': lastName,
+      'email': email,
+    });
+  }
 
   // wrong email message popup
   void wrongEmailMessage() {
@@ -137,7 +158,7 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 25),
+                const SizedBox(height: 0),
 
                 // logo
                 const Icon(
@@ -145,7 +166,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   size: 100,
                 ),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 15),
 
                 // welcome back, you've been missed!
                 Text(
@@ -159,6 +180,16 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 25),
 
                 // email textfield
+
+                MyTextField(
+                  controller: _firstNameController,
+                  hintText: 'First Name',
+                  obscureText: false,
+                ), MyTextField(
+                  controller: _lastNameController,
+                  hintText: 'Last Name',
+                  obscureText: false,
+                ),
                 MyTextField(
                   controller: emailController,
                   hintText: 'Email',
@@ -198,7 +229,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   onTap: signUserUp,
                 ),
 
-                const SizedBox(height: 50),
+                const SizedBox(height: 25),
 
                 // or continue with
                 Padding(
@@ -228,7 +259,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
 
-                const SizedBox(height: 50),
+                const SizedBox(height: 5),
 
                 // google + apple sign in buttons
                 Row(

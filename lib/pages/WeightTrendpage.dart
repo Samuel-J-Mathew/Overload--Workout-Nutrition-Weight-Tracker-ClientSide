@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../data/hive_database.dart';
@@ -280,8 +282,21 @@ class _WeightTrendPageState extends State<WeightTrendPage> {
     // Initialize with today's date, but let user change it in the dialog
     DateTime selectedDate = DateTime.now();
     final result = await _showWeightInputDialog(selectedDate);
-
+    final User? user = FirebaseAuth.instance.currentUser;
     if (result != null && result['weight'].isNotEmpty) {
+      final User? user = FirebaseAuth.instance.currentUser;
+      String formattedDate = DateFormat('yyyyMMdd').format(result['date']);
+
+      // Save to Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user?.uid)
+          .collection('weightLogs')
+          .doc(formattedDate)  // Use formatted date as the document ID
+          .set({
+        'date': result['date'],
+        'weight': double.parse(result['weight'])
+      });
       final db = Provider.of<HiveDatabase>(context, listen: false);
       final log = WeightLog(date: result['date'], weight: double.parse(result['weight']));
       db.saveWeightLog(log);
