@@ -269,7 +269,7 @@ class _HomePageState extends State<HomePage> {
       case 1:
         return const MySplitPage();  // Assume this is another widget for "My Split"
       case 2:
-        return const DataAnalysisPage();      // Assume this is another widget for "Log"
+        return DataAnalysisPage();      // Assume this is another widget for "Log"
       default:
         return buildHomePageBody();
     }

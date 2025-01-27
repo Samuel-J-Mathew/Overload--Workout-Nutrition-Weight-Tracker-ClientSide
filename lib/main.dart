@@ -79,8 +79,8 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: AuthPage(),
-        //home:CalorieTrackerPage(),
+        //home: AuthPage(),
+        home:DataAnalysisPage(),
       ),
     );
   }
