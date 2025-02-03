@@ -44,16 +44,19 @@ class _HomePageState extends State<HomePage> {
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
   List<Map<String, dynamic>> clients = [];
-  final String coachId = FirebaseAuth.instance.currentUser?.uid ?? ""; // Assumes coach is logged in
+  final String coachId = FirebaseAuth.instance.currentUser?.uid ??
+      ""; // Assumes coach is logged in
 
   @override
   void initState() {
     super.initState();
     fetchClients();
   }
+
   void signUserOut() {
     FirebaseAuth.instance.signOut();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,26 +73,28 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.logout),
           )
         ],
-
       ),
       body: ListView(
-        children: clients.map((client) => ListTile(
-          title: Text(client['first name'] + " " + client['last name']),
-          subtitle: Text(client['email']),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ClientOverviewPage(
-                clientId: client['uid'],
-                clientName: client['first name'] + " " + client['last name'],
-                clientEmail: client['email'],
-              )),
-            );
-          },
-        )).toList(),
-
+        children: clients
+            .map((client) => ListTile(
+                  title: Text(client['first name'] + " " + client['last name']),
+                  subtitle: Text(client['email']),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ClientOverviewPage(
+                                clientId: client['uid'],
+                                clientName: client['first name'] +
+                                    " " +
+                                    client['last name'],
+                                clientEmail: client['email'],
+                              )),
+                    );
+                  },
+                ))
+            .toList(),
       ),
-
     );
   }
 
@@ -135,9 +140,11 @@ class _HomePageState extends State<HomePage> {
     Navigator.of(context).pop(); // Close the dialog
 
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text,
-        password: "defaultPassword123", // You should consider implementing a more secure way to handle client passwords
+        password:
+            "defaultPassword123", // You should consider implementing a more secure way to handle client passwords
       );
 
       // Prepare client data
@@ -149,11 +156,18 @@ class _HomePageState extends State<HomePage> {
       };
 
       // Save the new client's details in Firestore under the coach's clients sub-collection
-      DocumentReference coachRef = FirebaseFirestore.instance.collection('coaches').doc(coachId);
-      await coachRef.collection('clients').doc(userCredential.user!.uid).set(clientData);
+      DocumentReference coachRef =
+          FirebaseFirestore.instance.collection('coaches').doc(coachId);
+      await coachRef
+          .collection('clients')
+          .doc(userCredential.user!.uid)
+          .set(clientData);
 
       // Also save the client's details in the general users collection
-      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set(clientData);
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set(clientData);
 
       // Add to local list to update UI
       setState(() {
@@ -181,9 +195,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchClients() async {
-    DocumentReference coachRef = FirebaseFirestore.instance.collection('coaches').doc(coachId);
+    DocumentReference coachRef =
+        FirebaseFirestore.instance.collection('coaches').doc(coachId);
     QuerySnapshot snapshot = await coachRef.collection('clients').get();
-    List<Map<String, dynamic>> fetchedClients = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+    List<Map<String, dynamic>> fetchedClients =
+        snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
     setState(() {
       clients = fetchedClients;
     });
