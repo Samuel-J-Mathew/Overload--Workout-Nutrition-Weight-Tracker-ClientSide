@@ -146,6 +146,7 @@ class _ClientManagementAppState extends State<ClientManagementApp> {
             onPressed: () => FirebaseAuth.instance.signOut(),
           ),
         ],
+        backgroundColor: Colors.white,
       ),
       body: Row(
         children: [
@@ -241,23 +242,26 @@ class _ClientManagementAppState extends State<ClientManagementApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: clients.map((client) => ListTile(
-        title: Text(client['first name'] + " " + client['last name']),
-        subtitle: Text(client['email']),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => ClientOverviewPage(
-                  clientId: client['uid'],
-                  clientName: client['first name'] + " " + client['last name'],
-                  clientEmail: client['email'],
-                )
-            ),
-          );
-        },
-      )).toList(),
+    return Container(
+      color: Colors.white,
+      child: ListView(
+        children: clients.map((client) => ListTile(
+          title: Text(client['first name'] + " " + client['last name']),
+          subtitle: Text(client['email']),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => ClientOverviewPage(
+                    clientId: client['uid'],
+                    clientName: client['first name'] + " " + client['last name'],
+                    clientEmail: client['email'],
+                  )
+              ),
+            );
+          },
+        )).toList(),
+      ),
     );
   }
 }
