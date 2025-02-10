@@ -36,7 +36,7 @@ class ClientOverviewPage extends StatelessWidget {
           children: [
             _buildOverviewTab(),
             TrainingPage(),
-            NutritionPage(),
+            NutritionPage(uid: clientId ,),
             MetricsPage(),
           ],
         ),

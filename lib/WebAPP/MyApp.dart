@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+
+import 'package:gymapp/WebAPP/DashboardPage.dart';
+import 'package:gymapp/WebAPP/MessagesPage.dart';
 import '../firebase_options.dart'; // Ensure you import the Firebase options
 import '../pages/LoginOrRegisterPage.dart';
 import 'ClientOverviewPage.dart';
@@ -43,6 +46,20 @@ class _HomePageState extends State<HomePage> {
   final emailController = TextEditingController();
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
+  int _selectedIndex = 0;
+
+  static List<Widget> _pages = <Widget>[
+    //ClientsPage(),
+    DashboardPage(),
+    MessagesPage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   List<Map<String, dynamic>> clients = [];
   final String coachId = FirebaseAuth.instance.currentUser?.uid ??
       ""; // Assumes coach is logged in

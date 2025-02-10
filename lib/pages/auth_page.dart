@@ -1,7 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gymapp/WebAPP/ClientManagementApp.dart';
+import 'package:gymapp/WebAPP/WebappHomePage.dart';
 import 'package:gymapp/pages/webAppDataAnalysis.dart';
-import '../WebAPP/MyApp.dart';
+
+import 'package:gymapp/WebAPP/MyApp.dart' as homeApp;
+
 import 'ExerciseLogPage.dart';
 import 'LoginOrRegisterPage.dart';
 import 'login_page.dart';
@@ -18,7 +22,7 @@ class AuthPage extends StatelessWidget {
         builder: (context, snapshot) {
           // user is logged in
           if (snapshot.hasData) {
-            return MyApp();
+            return ClientManagementApp();
           }
 
           // user is NOT logged in

@@ -1,1 +1,41 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"gymapp-2d58a","appId":"1:644555737003:android:29fc86ae335dec4d84b4ee","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"gymapp-2d58a","configurations":{"android":"1:644555737003:android:29fc86ae335dec4d84b4ee","ios":"1:644555737003:ios:b7b3463a99cebebe84b4ee","macos":"1:644555737003:ios:b7b3463a99cebebe84b4ee","web":"1:644555737003:web:4c7f00852d3b3fcb84b4ee","windows":"1:644555737003:web:c8d3811f92f3580084b4ee"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "gymapp-2d58a",
+          "appId": "1:644555737003:android:29fc86ae335dec4d84b4ee",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "gymapp-2d58a",
+          "configurations": {
+            "android": "1:644555737003:android:29fc86ae335dec4d84b4ee",
+            "ios": "1:644555737003:ios:b7b3463a99cebebe84b4ee",
+            "macos": "1:644555737003:ios:b7b3463a99cebebe84b4ee",
+            "web": "1:644555737003:web:4c7f00852d3b3fcb84b4ee",
+            "windows": "1:644555737003:web:c8d3811f92f3580084b4ee"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
+}

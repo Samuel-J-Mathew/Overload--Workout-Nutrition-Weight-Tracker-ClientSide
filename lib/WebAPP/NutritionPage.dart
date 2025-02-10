@@ -8,6 +8,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class NutritionPage extends StatefulWidget {
+  final String uid;
+
+  NutritionPage({required this.uid});
+
   @override
   _NutritionPageState createState() => _NutritionPageState();
 }
@@ -32,7 +36,7 @@ class _NutritionPageState extends State<NutritionPage> {
     var startOfWeek = DateTime(focusedDay.year, focusedDay.month,
         focusedDay.day - (focusedDay.weekday - 1));
     var endOfWeek = startOfWeek.add(Duration(days: 6));
-    var uid = '5OhDAb13Yxa6nyI0qcUjjMjQvCu1';
+    var uid = widget.uid;
 
     if (uid == null) {
       setState(() {
