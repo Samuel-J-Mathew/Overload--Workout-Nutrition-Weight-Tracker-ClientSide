@@ -161,12 +161,18 @@ class _MyWidgetState extends State<WorkoutPage>{
   }
   Future<void> addExercise(String userId, DateTime workoutDate, String exerciseName, String sets, String reps, String weight) async {
     var workoutFormattedDate = DateFormat('yyyyMMdd').format(workoutDate);
-    var exerciseCollection = FirebaseFirestore.instance
+    var workoutDocRef = FirebaseFirestore.instance
         .collection('users')
         .doc(userId)
         .collection('workouts')
-        .doc(workoutFormattedDate)
-        .collection('exercises');
+        .doc(workoutFormattedDate);
+
+    // Ensure the workout document is initialized
+    await workoutDocRef.set({
+      'date': workoutFormattedDate  // Setting a field to ensure the document exists
+    }, SetOptions(merge: true));
+
+    var exerciseCollection = workoutDocRef.collection('exercises');
 
     await exerciseCollection.add({
       'name': exerciseName,
@@ -175,6 +181,7 @@ class _MyWidgetState extends State<WorkoutPage>{
       'weight': weight
     });
   }
+
 
   //clear controllers
   void clear(){

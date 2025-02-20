@@ -23,6 +23,7 @@ class AuthPage extends StatelessWidget {
           // user is logged in
           if (snapshot.hasData) {
             return ClientManagementApp();
+            //return ExerciseLogPage();
           }
 
           // user is NOT logged in
