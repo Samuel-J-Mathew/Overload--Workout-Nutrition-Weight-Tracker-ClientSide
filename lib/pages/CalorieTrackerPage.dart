@@ -646,7 +646,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                           },
                         ),
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: 8),
                       Center(
                         child: ToggleButtons(
                           isSelected: [_isUsingGrams, !_isUsingGrams],
@@ -657,6 +657,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
 
                           children: <Widget>[
                             Container(
+                              margin: EdgeInsets.only(right: 12),
                               padding: EdgeInsets.symmetric(horizontal: 16),
                               decoration: BoxDecoration(
                                   color: _isUsingGrams ? Colors.white : Color.fromRGBO(20, 20, 20, 1), // Darker when selected, lighter when not
