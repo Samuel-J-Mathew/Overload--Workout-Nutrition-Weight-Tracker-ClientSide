@@ -450,19 +450,38 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       return;
     }
 
-    const apiUrl = 'https://trackapi.nutritionix.com/v2/search/instant';
+    final String apiUrl = 'https://api.nal.usda.gov/fdc/v1/foods/search';
+    final String apiKey = '24V4GrHFYLOgDagrASb3VTRg8CrbzQVAu4Ew42wD';
+
     final response = await http.get(
-      Uri.parse('$apiUrl?query=$query'),
-      headers: {
-        'x-app-id': '818d2279',
-        'x-app-key': 'baf378585b8375b3ea09b50f3a226104',
-      },
+      Uri.parse('$apiUrl?api_key=$apiKey&query=$query'),
     );
 
-    List<dynamic> apiFoods = [];
+    List<Map<String, dynamic>> apiFoods = [];
+
     if (response.statusCode == 200) {
-      final results = jsonDecode(response.body);
-      apiFoods = results['common'];
+      final data = jsonDecode(response.body);
+      List<dynamic> foodsList = data['foods'] ?? [];
+
+      // Ensure correct parsing of API food items
+      apiFoods = foodsList.map<Map<String, dynamic>>((food) {
+        return {
+          'food_name': (food['description'] as String? ?? 'Unknown').toLowerCase(),
+          'calories': food['foodNutrients'].firstWhere(
+                  (nutrient) => nutrient['nutrientName'] == 'Energy',
+              orElse: () => {'value': 0})['value'].toString(),
+          'protein': food['foodNutrients'].firstWhere(
+                  (nutrient) => nutrient['nutrientName'] == 'Protein',
+              orElse: () => {'value': 0})['value'].toString(),
+          'fats': food['foodNutrients'].firstWhere(
+                  (nutrient) => nutrient['nutrientName'] == 'Total lipid (fat)',
+              orElse: () => {'value': 0})['value'].toString(),
+          'carbs': food['foodNutrients'].firstWhere(
+                  (nutrient) => nutrient['nutrientName'] == 'Carbohydrate, by difference',
+              orElse: () => {'value': 0})['value'].toString(),
+          'is_local': false,
+        };
+      }).toList();
     }
 
     // Combine API and local foods into one list
@@ -487,7 +506,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     }
 
     // Deduplicate foods by their name (local foods take precedence)
-    final Map<String, dynamic> uniqueFoods = {};
+    final Map<String, Map<String, dynamic>> uniqueFoods = {};
     for (var food in combinedFoods) {
       final foodNameKey = food['food_name'].toLowerCase();
       if (!uniqueFoods.containsKey(foodNameKey) || !food['is_local']) {
@@ -498,7 +517,10 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     // Sort by match score (descending) and prioritize API results for ties
     final sortedFoods = uniqueFoods.values.toList()
       ..sort((a, b) {
-        final scoreComparison = b['match_score'].compareTo(a['match_score']);
+        final int scoreA = a['match_score'] ?? 0;
+        final int scoreB = b['match_score'] ?? 0;
+        final int scoreComparison = scoreB.compareTo(scoreA);
+
         if (scoreComparison != 0) return scoreComparison;
         return (a['is_local'] ? 1 : 0).compareTo(b['is_local'] ? 1 : 0);
       });
@@ -508,8 +530,11 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     });
   }
 
+
 // Helper function to calculate match score
-  int _calculateMatchScore(String query, String foodName) {
+  int _calculateMatchScore(String query, String? foodName) {
+    if (foodName == null) return 0;
+
     final lowerQuery = query.toLowerCase();
     final lowerFoodName = foodName.toLowerCase();
 
@@ -522,6 +547,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   }
 
 
+
   void fetchNutritionDetails(Map<String, dynamic> food) {
     if (food['is_local'] == true) {
       setState(() {
@@ -532,7 +558,9 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         originalCarbs = double.parse(food['carbs']);
         // If local food doesn't have serving size info, default to 100g
         originalServingSize = food.containsKey('serving_size') ? double.parse(food['serving_size']) : 100.0;
+        _isUsingGrams = true;
         _gramController.text = originalServingSize.toString();
+
         updateNutrition(originalServingSize!, _isUsingGrams);
         showNutritionSheet();
       });
@@ -544,34 +572,46 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
 
   void fetchNutritionDetailsFromApi(String foodName) async {
     selectedFoodName = foodName;
-    const apiUrl = 'https://trackapi.nutritionix.com/v2/natural/nutrients';
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-app-id': '818d2279',
-        'x-app-key': 'baf378585b8375b3ea09b50f3a226104',
-        'x-remote-user-id': '0'
-      },
-      body: jsonEncode({'query': foodName}),
+    const String apiUrl = 'https://api.nal.usda.gov/fdc/v1/foods/search';
+    const String apiKey = '24V4GrHFYLOgDagrASb3VTRg8CrbzQVAu4Ew42wD';
+
+    final response = await http.get(
+      Uri.parse('$apiUrl?api_key=$apiKey&query=$foodName'),
     );
 
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
-      setState(() {
-        originalCalories = (data['foods'][0]['nf_calories'] as num).toDouble();
-        originalProtein = (data['foods'][0]['nf_protein'] as num).toDouble();
-        originalFats = (data['foods'][0]['nf_total_fat'] as num).toDouble();
-        originalCarbs = (data['foods'][0]['nf_total_carbohydrate'] as num).toDouble();
-        originalServingSize = (data['foods'][0]['serving_weight_grams'] as num).toDouble();
-        _gramController.text = originalServingSize.toString();
-        updateNutrition(originalServingSize!, _isUsingGrams);
-        showNutritionSheet();
-      });
+      if (data['foods'] != null && data['foods'].isNotEmpty) {
+        var foodItem = data['foods'][0]; // Take the first result as the best match
+
+        setState(() {
+          originalCalories = foodItem['foodNutrients'].firstWhere(
+                  (nutrient) => nutrient['nutrientName'] == 'Energy',
+              orElse: () => {'value': 0})['value'].toDouble();
+          originalProtein = foodItem['foodNutrients'].firstWhere(
+                  (nutrient) => nutrient['nutrientName'] == 'Protein',
+              orElse: () => {'value': 0})['value'].toDouble();
+          originalFats = foodItem['foodNutrients'].firstWhere(
+                  (nutrient) => nutrient['nutrientName'] == 'Total lipid (fat)',
+              orElse: () => {'value': 0})['value'].toDouble();
+          originalCarbs = foodItem['foodNutrients'].firstWhere(
+                  (nutrient) => nutrient['nutrientName'] == 'Carbohydrate, by difference',
+              orElse: () => {'value': 0})['value'].toDouble();
+
+          originalServingSize = 100; // Default serving size in grams
+          _gramController.text = originalServingSize.toString();
+          _isUsingGrams = true;
+          updateNutrition(originalServingSize!, _isUsingGrams);
+          showNutritionSheet();
+        });
+      } else {
+        showErrorDialog();
+      }
     } else {
       showErrorDialog();
     }
   }
+
 
 
   void updateNutrition(double amount, bool isGrams) {
@@ -657,7 +697,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                         child: TextField(
                           controller: _gramController,
                           decoration: InputDecoration(
-                            labelText: _isUsingGrams ? 'Servings' : 'Grams',
+                            labelText: _isUsingGrams ? 'Grams' : 'Servings',
                             labelStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(color: Colors.white),
