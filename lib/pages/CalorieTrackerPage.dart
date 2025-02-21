@@ -566,16 +566,22 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     }
   }
 
-  void updateNutrition(double grams) {
-    if (originalCalories != null && originalProtein != null &&
-        originalFats != null && originalCarbs != null && grams > 0) {
-      selectedFood = {
-        'Calories': ((originalCalories! / originalServingSize!) * grams).toStringAsFixed(0),
-        'Protein': ((originalProtein! / originalServingSize!) * grams).toStringAsFixed(2),
-        'Fats': ((originalFats! / originalServingSize!) * grams).toStringAsFixed(2),
-        'Carbs': ((originalCarbs! / originalServingSize!) * grams).toStringAsFixed(2),
-      };
-    }
+  void updateNutrition(double amount) {
+    double factor = _isUsingGrams ? 100.0 / originalServingSize! : originalServingSize!;
+    selectedFood = {
+      'Calories': ((originalCalories! * amount) / factor).toStringAsFixed(0),
+      'Protein': ((originalProtein! * amount) / factor).toStringAsFixed(2),
+      'Fats': ((originalFats! * amount) / factor).toStringAsFixed(2),
+      'Carbs': ((originalCarbs! * amount) / factor).toStringAsFixed(2),
+    };
+  }
+
+  bool _isUsingGrams = false;  // Default to grams
+
+  void setMeasurementMode(bool usingGrams) {
+    setState(() {
+      _isUsingGrams = usingGrams;
+    });
   }
 
 
@@ -604,76 +610,119 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   child: ListView(
                     controller: scrollController,
                     children: [
-                      SizedBox(height: 50),
-                      if (selectedFood != null) ...[
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: TextField(
-                            controller: _gramController,
-                            decoration: InputDecoration(
-                              labelText: 'grams',
-                              labelStyle: TextStyle(color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Colors.white, width: 2.0),
-                              ),
-                              fillColor: Colors.transparent,
-                              filled: true,
+
+
+                      SizedBox(height: 10),
+                      Center(
+                        child: Text(
+                          "${selectedFoodName ?? 'Selected Food'} ",
+                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: TextField(
+                          controller: _gramController,
+                          decoration: InputDecoration(
+                            labelText: _isUsingGrams ? 'Servings' : 'Grams',
+                            labelStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
                             ),
-                            style: TextStyle(color: Colors.white),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              double grams = double.tryParse(value) ?? originalServingSize!;
-                              setModalState(() {
-                                updateNutrition(grams);
-                              });
-                            },
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white, width: 2.0),
+                            ),
+                            fillColor: Colors.transparent,
+                            filled: true,
+                          ),
+                          style: TextStyle(color: Colors.white),
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) {
+                            double input = double.tryParse(value) ?? 0;
+                            setModalState(() {
+                              updateNutrition(input);
+                            });
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Center(
+                        child: ToggleButtons(
+                          isSelected: [_isUsingGrams, !_isUsingGrams],
+                          renderBorder: false,
+                          fillColor: Colors.transparent,
+                          splashColor: Colors.transparent,  // Removes the splash effect
+                          highlightColor: Colors.transparent,  // Removes the highlight effect
+
+                          children: <Widget>[
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                  color: _isUsingGrams ? Colors.white : Color.fromRGBO(20, 20, 20, 1), // Darker when selected, lighter when not
+                                  borderRadius: BorderRadius.circular(30)
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'servings',
+                                  style: TextStyle(color: _isUsingGrams ? Colors.black : Colors.white),
+                                ),
+                              ),
+                            ),
+
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                  color: !_isUsingGrams ? Colors.white : Color.fromRGBO(20, 20, 20, 1), // Darker when selected, lighter when not
+                                  borderRadius: BorderRadius.circular(30)
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'grams',
+                                  style: TextStyle(color: !_isUsingGrams ? Colors.black : Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                          onPressed: (int index) {
+                            setModalState(() {
+                              _isUsingGrams = index == 0;
+                              updateNutrition(double.tryParse(_gramController.text) ?? 0);
+                            });
+                          },
+                        ),
+                      ),
+                      if (selectedFood != null) ...[
+                        SizedBox(height: 10),
+                        Center(
+                          child: Text(
+                            'Calories: ${selectedFood!['Calories']}',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                         ),
                         Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(height: 10),
-                              Text(
-                                "${selectedFoodName ??
-                                    'Selected Food'} - ${_gramController
-                                    .text}g",
-                                style: TextStyle(color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                'Calories: ${selectedFood!['Calories']}',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 16),
-                              ),
-                              Text(
-                                'Protein: ${selectedFood!['Protein']}g',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 16),
-                              ),
-                              Text(
-                                'Fats: ${selectedFood!['Fats']}g',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 16),
-                              ),
-                              Text(
-                                'Carbs: ${selectedFood!['Carbs']}g',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 16),
-                              ),
-                              SizedBox(height: 20),
-                              ElevatedButton(
-                                onPressed: () => logFood(),
-                                child: Text("Log Food"),
-                              ),
-                            ],
+                          child: Text(
+                            'Protein: ${selectedFood!['Protein']}g',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
+                        ),
+                        Center(
+                          child: Text(
+                            'Fats: ${selectedFood!['Fats']}g',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
+                        Center(
+                          child: Text(
+                            'Carbs: ${selectedFood!['Carbs']}g',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () => logFood(),
+                          child: Text("Log Food",
+                            style: TextStyle(color: Colors.black),),
                         ),
                       ]
                     ],
@@ -686,6 +735,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       },
     );
   }
+
 
   void logFood() {
     if (selectedFood == null) {
