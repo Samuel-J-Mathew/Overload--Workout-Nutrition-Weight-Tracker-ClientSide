@@ -1,190 +1,104 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class webAppDataAnalysisPage extends StatefulWidget {
-  const webAppDataAnalysisPage({super.key});
-
+class WebAppDataAnalysis extends StatefulWidget {
   @override
-  _webAppDataAnalysisPageState createState() => _webAppDataAnalysisPageState();
+  _WebAppDataAnalysisState createState() => _WebAppDataAnalysisState();
 }
 
-class _webAppDataAnalysisPageState extends State<webAppDataAnalysisPage> {
-  String? selectedExercise;
-  List<String> exerciseNames = [];
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class _WebAppDataAnalysisState extends State<WebAppDataAnalysis> {
+  final TextEditingController _foodController = TextEditingController();
+  final TextEditingController _gramsController = TextEditingController();
+  List<dynamic> _foods = [];
+  String _result = '';
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      loadExerciseNames();
-    });
-  }
+  Future<void> fetchNutrients(String foodName) async {
+    const apiUrl = 'https://trackapi.nutritionix.com/v2/natural/nutrients';
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-app-id': '818d2279',
+          'x-app-key': 'baf378585b8375b3ea09b50f3a226104',
+          'x-remote-user-id': '0'
+        },
+        body: jsonEncode({'query': foodName}),
+      );
 
-  void loadExerciseNames() async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      var snapshot = await _firestore.collection('workouts').doc(user.uid).get();
-      if (snapshot.exists) {
-        var data = snapshot.data() as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         setState(() {
-          exerciseNames = List<String>.from(data['exerciseNames']);
-          if (exerciseNames.isNotEmpty) {
-            selectedExercise = exerciseNames.first;
-          }
+          _foods = data['foods'];
+          updateCalories();
         });
       } else {
-        print("No document found for user ${user.uid}");
+        setState(() {
+          _result = 'Error fetching nutrition data: ${response.body}';
+        });
       }
+    } catch (e) {
+      setState(() {
+        _result = 'Failed to load nutrition data: $e';
+      });
     }
   }
+
+  void updateCalories() {
+    if (_foods.isNotEmpty && _gramsController.text.isNotEmpty) {
+      // Parsing the grams input safely, ensuring it is treated as a double.
+      double grams = double.tryParse(_gramsController.text) ?? 100.0; // Ensuring default is also a double.
+
+      setState(() {
+        _result = _foods.map((food) {
+          // Ensure all numeric values are treated as double for consistent arithmetic operations.
+          double originalGrams = (food['serving_weight_grams'] as num).toDouble() ?? 100.0;
+          double caloriesPerGram = (food['nf_calories'] as num).toDouble() / originalGrams;
+          double adjustedCalories = caloriesPerGram * grams;
+
+          return "${food['food_name']} - ${adjustedCalories.toStringAsFixed(2)} calories for $grams g";
+        }).join("\n");
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    User? user = _auth.currentUser;
-    if (user == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text("Exercise Data Analysis"),
-        ),
-        body: const Center(
-          child: Text("Please log in to view your data."),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Exercise Data Analysis"),
+        title: Text('Calorie Tracker'),
       ),
       body: Column(
         children: [
-          if (exerciseNames.isNotEmpty)
-            DropdownButton<String>(
-              value: selectedExercise,
-              onChanged: (value) {
-                setState(() {
-                  selectedExercise = value;
-                });
-              },
-              items: exerciseNames.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _foodController,
+              decoration: InputDecoration(
+                labelText: 'Enter a food item',
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () => fetchNutrients(_foodController.text),
+                ),
+              ),
             ),
-          Expanded(
-            child: StreamBuilder<DocumentSnapshot>(
-              stream: _firestore.collection('workouts').doc(user.uid).snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.data!.exists) {
-                  return const Center(child: Text("No data available."));
-                }
-
-                var data = snapshot.data!.data() as Map<String, dynamic>?;
-                if (data == null || selectedExercise == null || !data.containsKey(selectedExercise!)) {
-                  return const Center(child: Text("No data available for this exercise."));
-                }
-
-                List<Map<String, dynamic>> weightData = List<Map<String, dynamic>>.from(data[selectedExercise!]);
-                print("Weight Data for $selectedExercise: $weightData");
-                List<FlSpot> spots = weightData.asMap().entries.map((entry) {
-                  double x = entry.key.toDouble();
-                  double y = (entry.value['weight'] as num).toDouble();
-                  return FlSpot(x, y);
-                }).toList();
-
-                return spots.isNotEmpty
-                    ? LineChart(
-                  LineChartData(
-                    gridData: FlGridData(
-                      show: true,
-                      getDrawingHorizontalLine: (value) {
-                        return const FlLine(
-                          color: Color(0xff37434d),
-                          strokeWidth: 1,
-                        );
-                      },
-                      drawVerticalLine: true,
-                      getDrawingVerticalLine: (value) {
-                        return const FlLine(
-                          color: Color(0xff37434d),
-                          strokeWidth: 1,
-                        );
-                      },
-                    ),
-                    borderData: FlBorderData(
-                      show: true,
-                      border: Border.all(color: const Color(0xff37434d), width: 1),
-                    ),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: spots,
-                        isCurved: true,
-                        barWidth: 5,
-                        belowBarData: BarAreaData(
-                          show: false,
-                        ),
-                      ),
-                    ],
-                    titlesData: const FlTitlesData(
-                      show: true,
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: false,
-                        ),
-                      ),
-                      topTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: false,
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-                    : const Center(child: Text("No data available for this exercise"));
-              },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _gramsController,
+              decoration: InputDecoration(
+                labelText: 'Enter grams',
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (value) => updateCalories(),
             ),
           ),
           Expanded(
-            child: StreamBuilder<DocumentSnapshot>(
-              stream: _firestore.collection('workouts').doc(user.uid).snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.data!.exists) {
-                  return const Center(child: Text("No data available."));
-                }
-
-                var data = snapshot.data!.data() as Map<String, dynamic>?;
-                if (data == null || selectedExercise == null || !data.containsKey(selectedExercise!)) {
-                  return const Center(child: Text("No data available for this exercise."));
-                }
-
-                List<Map<String, dynamic>> exerciseDetails = List<Map<String, dynamic>>.from(data[selectedExercise!]);
-                print("Exercise Details for $selectedExercise: $exerciseDetails");
-
-                return ListView(
-                  children: exerciseDetails.map((detail) {
-                    return ListTile(
-                      title: Text(detail['name']),
-                      subtitle: Text('Sets: ${detail['sets']}, Reps: ${detail['reps']}, Weight: ${detail['weight']}'),
-                      trailing: Text(DateFormat('yyyy-MM-dd').format(detail['date'].toDate())), // Display the date of the exercise
-                    );
-                  }).toList(),
-                );
-              },
+            child: Center(
+              child: Text(_result.isEmpty ? 'Enter a food item and grams to get started.' : _result),
             ),
           ),
         ],

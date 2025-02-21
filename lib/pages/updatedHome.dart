@@ -392,6 +392,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
 
     return Scaffold(
       backgroundColor: Color.fromRGBO(31, 31, 31, 1),
+
       body: Stack(
         children: [
           ListView(
@@ -957,12 +958,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 120),
-                      IconButton(
-                        //sign out button
-                        onPressed: signUserOut,
-                        icon: Icon(Icons.logout),
-                      )
+
+
                     ],
 
                   ),
@@ -973,6 +970,14 @@ class _UpdatedHomeState extends State<UpdatedHome> {
               // Your existing widgets...
               // Add other widgets that form the content of your page.
             ],
+          ),
+          Positioned(
+            top: 40, // Adjust the positioning based on your UI design
+            right: 16, // Distance from the right edge
+            child: IconButton(
+              icon: Icon(Icons.logout, color: Colors.white),
+              onPressed: signUserOut,
+            ),
           ),
           if (_showSearchBar)
             Positioned(

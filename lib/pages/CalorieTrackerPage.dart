@@ -54,6 +54,11 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         _searchFocusNode.requestFocus();
       }
     });
+    _gramController.addListener(() {
+      double input = double.tryParse(_gramController.text) ?? 0;
+      updateNutrition(input, _isUsingGrams);
+    });
+
   }
 
   @override
@@ -254,7 +259,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
           originalFats = ((data['product']['nutriments']['fat_100g'] ?? 0) / 100 * originalServingSize).toDouble();
           originalCarbs = ((data['product']['nutriments']['carbohydrates_100g'] ?? 0) / 100 * originalServingSize).toDouble();
           _gramController.text = originalServingSize.toString();
-          updateNutrition(originalServingSize!);
+          _isUsingGrams = true;
+          updateNutrition(originalServingSize!, _isUsingGrams);
           print(originalServingSize);// Updates the UI with the default values calculated for 100 grams
           showNutritionSheet();
         });
@@ -524,15 +530,17 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         originalProtein = double.parse(food['protein']);
         originalFats = double.parse(food['fats']);
         originalCarbs = double.parse(food['carbs']);
-        originalServingSize = 100;
-        _gramController.text = '100';
-        updateNutrition(100);
+        // If local food doesn't have serving size info, default to 100g
+        originalServingSize = food.containsKey('serving_size') ? double.parse(food['serving_size']) : 100.0;
+        _gramController.text = originalServingSize.toString();
+        updateNutrition(originalServingSize!, _isUsingGrams);
         showNutritionSheet();
       });
     } else {
       fetchNutritionDetailsFromApi(food['food_name']);
     }
   }
+
 
   void fetchNutritionDetailsFromApi(String foodName) async {
     selectedFoodName = foodName;
@@ -554,11 +562,10 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         originalCalories = (data['foods'][0]['nf_calories'] as num).toDouble();
         originalProtein = (data['foods'][0]['nf_protein'] as num).toDouble();
         originalFats = (data['foods'][0]['nf_total_fat'] as num).toDouble();
-        originalCarbs =
-            (data['foods'][0]['nf_total_carbohydrate'] as num).toDouble();
-        originalServingSize = 100;
-        _gramController.text = '100';
-        updateNutrition(100);
+        originalCarbs = (data['foods'][0]['nf_total_carbohydrate'] as num).toDouble();
+        originalServingSize = (data['foods'][0]['serving_weight_grams'] as num).toDouble();
+        _gramController.text = originalServingSize.toString();
+        updateNutrition(originalServingSize!, _isUsingGrams);
         showNutritionSheet();
       });
     } else {
@@ -566,15 +573,40 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     }
   }
 
-  void updateNutrition(double amount) {
-    double factor = _isUsingGrams ? 100.0 / originalServingSize! : originalServingSize!;
+
+  void updateNutrition(double amount, bool isGrams) {
+    double factor;
+    if (isGrams) {
+      // If input is in grams, calculate factor based on original serving size
+      factor = amount / originalServingSize!;
+    } else {
+      // If input is in servings, one serving is exactly the original serving size
+      factor = amount;  // 1 serving equals the nutrient content of originalServingSize grams
+    }
+
     selectedFood = {
-      'Calories': ((originalCalories! * amount) / factor).toStringAsFixed(0),
-      'Protein': ((originalProtein! * amount) / factor).toStringAsFixed(2),
-      'Fats': ((originalFats! * amount) / factor).toStringAsFixed(2),
-      'Carbs': ((originalCarbs! * amount) / factor).toStringAsFixed(2),
+      'Calories': (originalCalories! * factor).toStringAsFixed(0),
+      'Protein': (originalProtein! * factor).toStringAsFixed(2),
+      'Fats': (originalFats! * factor).toStringAsFixed(2),
+      'Carbs': (originalCarbs! * factor).toStringAsFixed(2),
     };
   }
+
+  void toggleMeasurementMode(bool usingGrams) {
+    setState(() {
+      _isUsingGrams = usingGrams;
+      if (!usingGrams) {
+        // When switching to servings, set gram controller to '1' meaning 1 serving
+        _gramController.text = '1';
+        updateNutrition(1, false);  // Update assuming '1' serving
+      } else {
+        // When switching to grams, reset to original serving size in grams
+        _gramController.text = originalServingSize.toString();
+        updateNutrition(originalServingSize!, true);
+      }
+    });
+  }
+
 
   bool _isUsingGrams = false;  // Default to grams
 
@@ -641,7 +673,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                           onChanged: (value) {
                             double input = double.tryParse(value) ?? 0;
                             setModalState(() {
-                              updateNutrition(input);
+                              updateNutrition(input, _isUsingGrams);
                             });
                           },
                         ),
@@ -660,13 +692,13 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                               margin: EdgeInsets.only(right: 12),
                               padding: EdgeInsets.symmetric(horizontal: 16),
                               decoration: BoxDecoration(
-                                  color: _isUsingGrams ? Colors.white : Color.fromRGBO(20, 20, 20, 1), // Darker when selected, lighter when not
+                                  color: _isUsingGrams ? Color.fromRGBO(20, 20, 20, 1) : Colors.white, // Darker when selected, lighter when not
                                   borderRadius: BorderRadius.circular(30)
                               ),
                               child: Center(
                                 child: Text(
                                   'servings',
-                                  style: TextStyle(color: _isUsingGrams ? Colors.black : Colors.white),
+                                  style: TextStyle(color: _isUsingGrams ? Colors.white : Colors.black),
                                 ),
                               ),
                             ),
@@ -674,21 +706,20 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 16),
                               decoration: BoxDecoration(
-                                  color: !_isUsingGrams ? Colors.white : Color.fromRGBO(20, 20, 20, 1), // Darker when selected, lighter when not
+                                  color: !_isUsingGrams ? Color.fromRGBO(20, 20, 20, 1) : Colors.white, // Darker when selected, lighter when not
                                   borderRadius: BorderRadius.circular(30)
                               ),
                               child: Center(
                                 child: Text(
                                   'grams',
-                                  style: TextStyle(color: !_isUsingGrams ? Colors.black : Colors.white),
+                                  style: TextStyle(color: !_isUsingGrams ? Colors.white : Colors.black),
                                 ),
                               ),
                             ),
                           ],
                           onPressed: (int index) {
                             setModalState(() {
-                              _isUsingGrams = index == 0;
-                              updateNutrition(double.tryParse(_gramController.text) ?? 0);
+                              toggleMeasurementMode(index == 1);
                             });
                           },
                         ),
