@@ -447,7 +447,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                             if (index == 1) {
                               // If the second page is visible
                               _workoutCardHeight =
-                                  220; // Set height to 220 when on the second page
+                                  260; // Set height to 220 when on the second page
                             } else {
                               // Fetch the today's split again to determine muscle group count
                               final todaysSplit = Provider.of<WorkoutData>(

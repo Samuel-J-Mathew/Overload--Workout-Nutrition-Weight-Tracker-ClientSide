@@ -16,7 +16,14 @@ class _CalorieTileState extends State<CalorieTile> {
   final HiveDatabase hiveDatabase = HiveDatabase();
   double _caloriesLeft = 0;
   double _caloriesConsumedToday = 0;
+  double _proteinConsumedToday = 0;
+  double _carbsConsumedToday = 0;
+  double _fatsConsumedToday = 0;
   double _dailyGoal = 0;
+  double _dailyGoalfats = 0;
+  double _dailyGoalprotein = 0;
+  double _dailyGoalcarbs = 0;
+
 
   @override
   void initState() {
@@ -29,7 +36,11 @@ class _CalorieTileState extends State<CalorieTile> {
     NutritionalInfo? info = box.get('nutrition');
     if (info != null) {
       _dailyGoal = double.tryParse(info.calories ?? "0") ?? 0;
+      _dailyGoalprotein = double.tryParse(info.protein ?? "0") ?? 0;
+      _dailyGoalcarbs = double.tryParse(info.carbs ?? "0") ?? 0;
+      _dailyGoalfats = double.tryParse(info.fats ?? "0") ?? 0;
       calculateCalories();
+      calculateMacros();
     }
   }
 
@@ -44,6 +55,41 @@ class _CalorieTileState extends State<CalorieTile> {
       _caloriesLeft = max(0, _dailyGoal - _caloriesConsumedToday);
     });
   }
+  void calculateMacros() {
+    DateTime today = DateTime.now();
+    var foodItems = hiveDatabase.getFoodForDate(today);
+    foodItems.forEach((item) {
+      _proteinConsumedToday += double.tryParse(item.protein) ?? 0;
+      _carbsConsumedToday += double.tryParse(item.carbs) ?? 0;
+      _fatsConsumedToday += double.tryParse(item.fats) ?? 0;
+    });
+
+    setState(() {});
+  }
+  Widget _buildMacroProgressBar(double consumed, double goal, Color color, String label) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            "$label ${goal - consumed} left",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 4), // Add some space between the label and the progress bar
+          LinearProgressIndicator(
+            value: consumed / goal,
+            backgroundColor: Colors.grey[500],
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 8, // Specify the height of the progress bar if needed
+          ),
+          SizedBox(height: 10), // Space after the bar, before the next element
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,31 +100,44 @@ class _CalorieTileState extends State<CalorieTile> {
       margin: const EdgeInsets.all(0),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Daily Nutrition",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+        child: SingleChildScrollView( // Wrap with SingleChildScrollView
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Daily Nutrition",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildNutritionData("${_caloriesLeft.toStringAsFixed(0)}", "Remaining"),
-                _buildPieChart(),
-                _buildNutritionData("${_dailyGoal.toStringAsFixed(0)}", "Target"),
-              ],
-            ),
-          ],
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildNutritionData("${_caloriesLeft.toStringAsFixed(0)}", "Remaining"),
+                  _buildPieChart(),
+                  _buildNutritionData("${_dailyGoal.toStringAsFixed(0)}", "Target"),
+                ],
+              ),
+              SizedBox(height:5),
+              Row(
+                children: [
+                  _buildMacroProgressBar(_proteinConsumedToday, _dailyGoalprotein, Colors.red, "P"), // Protein
+                  SizedBox(width: 10), // Spacing between bars
+                  _buildMacroProgressBar(_carbsConsumedToday, _dailyGoalcarbs, Colors.green, "C"), // Carbs
+                  SizedBox(width: 10), // Spacing between bars
+                  _buildMacroProgressBar(_fatsConsumedToday, _dailyGoalfats, Colors.blue, "F"), // Fats
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
 
   Widget _buildNutritionData(String value, String label) {
     return Column(
