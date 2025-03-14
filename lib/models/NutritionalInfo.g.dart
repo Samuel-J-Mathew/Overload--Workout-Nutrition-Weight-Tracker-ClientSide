@@ -17,19 +17,25 @@ class NutritionalInfoAdapter extends TypeAdapter<NutritionalInfo> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return NutritionalInfo(
-      calories: fields[0] as String,
-      protein: fields[1] as String,
+      calories: fields[0] as String?,
+      protein: fields[1] as String?,
+      carbs: fields[2] as String?,
+      fats: fields[3] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, NutritionalInfo obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.calories)
       ..writeByte(1)
-      ..write(obj.protein);
+      ..write(obj.protein)
+      ..writeByte(2)
+      ..write(obj.carbs)
+      ..writeByte(3)
+      ..write(obj.fats);
   }
 
   @override

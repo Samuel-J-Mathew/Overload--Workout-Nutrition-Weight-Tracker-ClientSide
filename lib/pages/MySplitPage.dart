@@ -24,6 +24,8 @@ class _MySplitPageState extends State<MySplitPage>  {
   HiveDatabase db = HiveDatabase();
 String _averageCals = "0";
 String _averageProtein = "0";
+String _averageCarbs = "0";
+String _averageFats = "0";
   final List<String> daysOfWeek = [
     'Monday',
     'Tuesday',
@@ -75,8 +77,8 @@ String _averageProtein = "0";
     }
     loadNutritionalInfo();
   }
-  void saveNutritionalInfo(String calories, String protein) {
-    final nutritionalInfo = NutritionalInfo(calories: calories, protein: protein);
+  void saveNutritionalInfo(String calories, String protein, String carbs, String fats) {
+    final nutritionalInfo = NutritionalInfo(calories: calories, protein: protein, carbs: carbs, fats: fats);
     final box = Hive.box<NutritionalInfo>('nutritionBox');
     box.put('nutrition', nutritionalInfo);
     loadNutritionalInfo(); // Reload to update the UI
@@ -88,11 +90,10 @@ String _averageProtein = "0";
 
     if (info != null) {
       setState(() {
-        _averageCals = info.calories;
-        _averageProtein = info.protein;
-
-        // Update the global state
-        GlobalState().averageCals = _averageCals;
+        _averageCals = info.calories ?? "0";
+        _averageProtein = info.protein ?? "0";
+        _averageCarbs = info.carbs ?? "0";
+        _averageFats = info.fats ?? "0";
       });
     }
   }
@@ -102,6 +103,8 @@ String _averageProtein = "0";
       builder: (BuildContext context) {
         final TextEditingController calorieController = TextEditingController(text: _averageCals);
         final TextEditingController proteinController = TextEditingController(text: _averageProtein);
+        final TextEditingController carbsController = TextEditingController(text: _averageCarbs);
+        final TextEditingController fatsController = TextEditingController(text: _averageFats);
 
         return AlertDialog(
           title: Text('Edit Nutrition'),
@@ -118,6 +121,16 @@ String _averageProtein = "0";
                 decoration: InputDecoration(labelText: 'Protein (g)'),
                 keyboardType: TextInputType.number,
               ),
+              TextField(
+                controller: carbsController,
+                decoration: InputDecoration(labelText: 'Carbs (g)'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: fatsController,
+                decoration: InputDecoration(labelText: 'Fats (g)'),
+                keyboardType: TextInputType.number,
+              ),
             ],
           ),
           actions: <Widget>[
@@ -128,7 +141,7 @@ String _averageProtein = "0";
             TextButton(
               child: Text('Save'),
               onPressed: () {
-                saveNutritionalInfo(calorieController.text, proteinController.text);
+                saveNutritionalInfo(calorieController.text, proteinController.text,carbsController.text, fatsController.text );
                 Navigator.of(context).pop();
                 loadNutritionalInfo();
               },
@@ -289,7 +302,7 @@ String _averageProtein = "0";
                             Text(" Total Calories", style: TextStyle(color: Colors.grey, fontSize: 18)),
                           ],
                         ),
-                        SizedBox(width: 30,),
+                        SizedBox(width: 20,),
                         Column(
                           children: [
                             RichText(
@@ -299,7 +312,7 @@ String _averageProtein = "0";
                                     text: "${(_averageProtein)} ", // Step count
                                     style: TextStyle(
                                       color: Colors.white, // Color for the step count
-                                      fontSize: 28, // Larger font size for the step count
+                                      fontSize: 24, // Larger font size for the step count
                                       fontWeight: FontWeight.bold, // Optional: Make it bold
                                     ),
                                   ),
@@ -307,7 +320,7 @@ String _averageProtein = "0";
                                     text: "g", // "steps" label
                                     style: TextStyle(
                                       color: Colors.grey, // Different color for the "steps" text
-                                      fontSize: 15, // Smaller font size for the "steps" text
+                                      fontSize: 11, // Smaller font size for the "steps" text
                                     ),
                                   ),
                                 ],
@@ -315,6 +328,64 @@ String _averageProtein = "0";
 
                             ),
                             Text(" Protein", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                          ],
+
+                        ),
+                        SizedBox(width: 20,),
+                        Column(
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: "${(_averageCarbs)} ", // Step count
+                                    style: TextStyle(
+                                      color: Colors.white, // Color for the step count
+                                      fontSize: 24, // Larger font size for the step count
+                                      fontWeight: FontWeight.bold, // Optional: Make it bold
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: "g", // "steps" label
+                                    style: TextStyle(
+                                      color: Colors.grey, // Different color for the "steps" text
+                                      fontSize: 11, // Smaller font size for the "steps" text
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                            ),
+                            Text(" Carbs", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                          ],
+
+                        ),
+                        SizedBox(width: 20,),
+                        Column(
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: "${(_averageFats)} ", // Step count
+                                    style: TextStyle(
+                                      color: Colors.white, // Color for the step count
+                                      fontSize: 24, // Larger font size for the step count
+                                      fontWeight: FontWeight.bold, // Optional: Make it bold
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: "g", // "steps" label
+                                    style: TextStyle(
+                                      color: Colors.grey, // Different color for the "steps" text
+                                      fontSize: 11, // Smaller font size for the "steps" text
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                            ),
+                            Text(" Fats", style: TextStyle(color: Colors.grey, fontSize: 18)),
                           ],
 
                         )

@@ -28,7 +28,7 @@ class _CalorieTileState extends State<CalorieTile> {
     var box = await Hive.openBox<NutritionalInfo>('nutritionBox');
     NutritionalInfo? info = box.get('nutrition');
     if (info != null) {
-      _dailyGoal = double.tryParse(info.calories) ?? 0;
+      _dailyGoal = double.tryParse(info.calories ?? "0") ?? 0;
       calculateCalories();
     }
   }
