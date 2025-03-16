@@ -11,6 +11,8 @@ import '../models/NutritionalInfo.dart';
 import '../models/SingleExercise.dart';
 import '../data/exercise_list.dart'; // Import the exercise_list.dart file\
 import 'package:collection/collection.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 class MySplitPage extends StatefulWidget {
   const MySplitPage({super.key});
 
@@ -19,13 +21,14 @@ class MySplitPage extends StatefulWidget {
 }
 
 class _MySplitPageState extends State<MySplitPage>  {
-
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<WorkoutSplit> weeklySplits = [];
   HiveDatabase db = HiveDatabase();
-String _averageCals = "0";
-String _averageProtein = "0";
-String _averageCarbs = "0";
-String _averageFats = "0";
+  String _averageCals = "0";
+  String _averageProtein = "0";
+  String _averageCarbs = "0";
+  String _averageFats = "0";
   final List<String> daysOfWeek = [
     'Monday',
     'Tuesday',
@@ -66,6 +69,85 @@ String _averageFats = "0";
         for (var mg in split.muscleGroups)
           mg.muscleGroupName: mg.exercises,
       };
+    }
+
+    saveWorkoutSplitToFirestore();
+    loadWorkoutSplitsFromFirestore();
+    loadMacrosFromFirestore();
+  }
+  void saveWorkoutSplitToFirestore() {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      // Save workout program
+      List<Map<String, dynamic>> workoutProgram = weeklySplits.map((split) {
+        return {
+          "day": split.day,
+          "muscleGroups": split.muscleGroups.map((mg) {
+            return {
+              "muscleGroupName": mg.muscleGroupName,
+              "exercises": mg.exercises.map((exercise) {
+                return {
+                  "name": exercise.name,
+                  "sets": exercise.sets,
+                  "reps": exercise.reps,
+                  "weight": exercise.weight
+                };
+              }).toList()
+            };
+          }).toList()
+        };
+      }).toList();
+
+      _firestore.collection('users').doc(user.uid).collection('split').doc('workoutProgram')
+          .set({"splits": workoutProgram})
+          .then((value) => print("Workout Program Saved"))
+          .catchError((error) => print("Failed to save workout program: $error"));
+
+      // Save macros
+      Map<String, dynamic> macros = {
+        "calories": _averageCals,
+        "protein": _averageProtein,
+        "carbs": _averageCarbs,
+        "fats": _averageFats
+      };
+
+      _firestore.collection('users').doc(user.uid).collection('macros').doc('dailyMacros')
+          .set(macros)
+          .then((value) => print("Macros Saved"))
+          .catchError((error) => print("Failed to save macros: $error"));
+    }
+  }
+  void loadWorkoutSplitsFromFirestore() {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      _firestore.collection('users').doc(user.uid).collection('split').doc('workoutProgram')
+          .snapshots().listen((snapshot) {
+        if (snapshot.exists) {
+          List<dynamic> splits = snapshot.data()?['splits'];
+          setState(() {
+            weeklySplits = List<WorkoutSplit>.from(splits.map((model) => WorkoutSplit.fromMap(model)));
+          });
+          db.saveWorkoutSplits(weeklySplits); // Update Hive with the latest data from Firestore
+        }
+      });
+    }
+  }
+  void loadMacrosFromFirestore() {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      _firestore.collection('users').doc(user.uid).collection('macros').doc('dailyMacros')
+          .snapshots().listen((snapshot) {
+        if (snapshot.exists) {
+          Map<String, dynamic> macros = snapshot.data()!;
+          setState(() {
+            _averageCals = macros['calories'] ?? "0";
+            _averageProtein = macros['protein'] ?? "0";
+            _averageCarbs = macros['carbs'] ?? "0";
+            _averageFats = macros['fats'] ?? "0";
+          });
+          saveNutritionalInfo(_averageCals, _averageProtein, _averageCarbs, _averageFats);
+        }
+      });
     }
   }
   void initHive() async {
@@ -143,6 +225,7 @@ String _averageFats = "0";
               onPressed: () {
                 saveNutritionalInfo(calorieController.text, proteinController.text,carbsController.text, fatsController.text );
                 Navigator.of(context).pop();
+                saveWorkoutSplitToFirestore();
                 loadNutritionalInfo();
               },
             ),
@@ -267,7 +350,7 @@ String _averageFats = "0";
               ),
               color: Color.fromRGBO(31, 31, 31, 1),
               child: Padding(
-                  padding:  const EdgeInsets.symmetric(horizontal: 19.0, vertical: 18),
+                padding:  const EdgeInsets.symmetric(horizontal: 19.0, vertical: 18),
                 child: Column(
                   children: [
                     Align(
@@ -490,44 +573,44 @@ String _averageFats = "0";
                   ),
                   // Muscle Group Selector
                   DropdownButtonHideUnderline(
-                  child: DropdownButton2<String>(
-                    isExpanded: true,
-                    hint: const Text('Add Muscle Groups', style: TextStyle(color: Colors.white)),
-                    items: allMuscleGroups.map((item) {
-                      return DropdownMenuItem<String>(
-                        value: item,
-                        child: StatefulBuilder(
-                        builder: (BuildContext context, StateSetter localSetState) {
-                          return Row(
-                            children: [
-                              Checkbox(
-                                value: selectedMuscleGroups.contains(item),
-                                onChanged: (bool? value) {
-                                  localSetState(() {  // This will only rebuild the checkbox and not the entire list
-                                    if (value == true) {
-                                    selectedMuscleGroups.add(item);
-                                    daySplitData[selectedDay]![item] ??= [];
-                                    } else {
-                                    selectedMuscleGroups.remove(item);
-                                    daySplitData[selectedDay]!.remove(item);
-                                    }
-                                  });
-                                  setState(() { // Use this if changes need to be reflected elsewhere in the UI
-                                  // Empty here as setState is needed to rebuild the whole widget if necessary.
-                                  });
-                                },
-                                checkColor: Colors.white, // Color of the tick
-                                activeColor: Colors.blue, // Background color of the checkbox
-                              ),
-                              Text(item),
-                            ],
-                          );
-                        },
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (_) {}, // This is here in case you need to handle changes at the dropdown level
-                  ),
+                    child: DropdownButton2<String>(
+                      isExpanded: true,
+                      hint: const Text('Add Muscle Groups', style: TextStyle(color: Colors.white)),
+                      items: allMuscleGroups.map((item) {
+                        return DropdownMenuItem<String>(
+                          value: item,
+                          child: StatefulBuilder(
+                            builder: (BuildContext context, StateSetter localSetState) {
+                              return Row(
+                                children: [
+                                  Checkbox(
+                                    value: selectedMuscleGroups.contains(item),
+                                    onChanged: (bool? value) {
+                                      localSetState(() {  // This will only rebuild the checkbox and not the entire list
+                                        if (value == true) {
+                                          selectedMuscleGroups.add(item);
+                                          daySplitData[selectedDay]![item] ??= [];
+                                        } else {
+                                          selectedMuscleGroups.remove(item);
+                                          daySplitData[selectedDay]!.remove(item);
+                                        }
+                                      });
+                                      setState(() { // Use this if changes need to be reflected elsewhere in the UI
+                                        // Empty here as setState is needed to rebuild the whole widget if necessary.
+                                      });
+                                    },
+                                    checkColor: Colors.white, // Color of the tick
+                                    activeColor: Colors.blue, // Background color of the checkbox
+                                  ),
+                                  Text(item),
+                                ],
+                              );
+                            },
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (_) {}, // This is here in case you need to handle changes at the dropdown level
+                    ),
                   ),
 
                   // Exercise Inputs
@@ -552,6 +635,7 @@ String _averageFats = "0";
             ElevatedButton(
               onPressed: () {
                 _saveAllSplits();
+                saveWorkoutSplitToFirestore();
                 Navigator.pop(context);
               },
               child: const Text('Save Split',style: TextStyle(color: Colors.black),),

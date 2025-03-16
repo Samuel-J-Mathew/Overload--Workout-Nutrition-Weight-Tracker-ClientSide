@@ -93,6 +93,13 @@ class _UpdatedHomeState extends State<UpdatedHome> {
           } else {
             _workoutCardHeight = 120; // Default for no muscle groups
           }
+          if (todaysSplit.muscleGroups.isEmpty) {
+            _pageController.animateToPage(
+              1,
+              duration: Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          }
         });
       }
     });
@@ -186,7 +193,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
     if (todaysSplit == null || todaysSplit.muscleGroups.isEmpty) {
       return Center(
         child: Text(
-          'No workout data available.',
+          'No workout scheduled for today',
           style: TextStyle(color: Colors.grey[400]),
         ),
       );
@@ -532,7 +539,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Insights & Analytics',
+                            'Metrics & Trends',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 22,
@@ -705,7 +712,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                               text: TextSpan(
                                                 children: [
                                                   TextSpan(
-                                                    text: '$mostRecentWeight ',
+                                                    text: '${mostRecentWeight ?? 0} ',
                                                     style: TextStyle(
                                                       fontSize: 17,
                                                       color: Colors.grey[

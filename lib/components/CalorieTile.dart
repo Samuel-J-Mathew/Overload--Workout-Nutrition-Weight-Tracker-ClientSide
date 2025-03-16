@@ -67,6 +67,11 @@ class _CalorieTileState extends State<CalorieTile> {
     setState(() {});
   }
   Widget _buildMacroProgressBar(double consumed, double goal, Color color, String label) {
+    double progressValue = 0;
+    if (goal > 0) {
+      progressValue = consumed / goal;
+    }
+
     return Expanded(
       child: Column(
         children: [
@@ -80,7 +85,7 @@ class _CalorieTileState extends State<CalorieTile> {
           ),
           SizedBox(height: 4), // Add some space between the label and the progress bar
           LinearProgressIndicator(
-            value: consumed / goal,
+            value: progressValue,
             backgroundColor: Colors.grey[500],
             valueColor: AlwaysStoppedAnimation<Color>(color),
             minHeight: 8, // Specify the height of the progress bar if needed
@@ -90,6 +95,7 @@ class _CalorieTileState extends State<CalorieTile> {
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

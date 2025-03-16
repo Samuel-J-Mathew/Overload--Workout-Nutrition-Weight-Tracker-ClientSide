@@ -436,7 +436,7 @@ class _StepCounterPageState extends State<StepCounterPage> {
 
   Widget _buildChart() {
     if (logs.isEmpty) {
-      return Center(child: Text("No step data available"));
+      return Center(child: Text("Log data below"));
     }
     return StepCounterPage.buildStepChart(context, logs);
   }
