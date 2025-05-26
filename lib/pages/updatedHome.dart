@@ -426,7 +426,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                       ),
                     ),
                     Text(
-                      'Dashboard',
+                      'My Hub',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 30,
@@ -986,48 +986,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
               onPressed: signUserOut,
             ),
           ),
-          if (_showSearchBar)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                    horizontal: 0,
-                    vertical:
-                        9), // Adjust vertical padding to control the height above and below the search bar
-                decoration: BoxDecoration(
-                  color: Color.fromRGBO(25, 25, 25,
-                      1), // Black background for the outer container
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 8.0, right: 8),
-                  child: InkWell(
-                    onTap: () => _openSearchSheet(context),
-                    child: Container(
-                      padding: EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        color: Color.fromRGBO(
-                            40, 40, 40, 1), // Original search bar color
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.search, color: Colors.white),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              'Search for an exercise',
-                              style: TextStyle(color: Colors.grey[500]),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+
         ],
       ),
     );

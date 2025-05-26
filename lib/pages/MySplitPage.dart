@@ -321,7 +321,7 @@ class _MySplitPageState extends State<MySplitPage>  {
                                 ElevatedButton.icon(
                                   onPressed: () => _showEditSplitDialog(context),
                                   icon: Icon(Icons.edit, color: Colors.white,),  // Icon for editing
-                                  label: Text("Edit Program"),  // Text label
+                                  label: Text("Edit Split"),  // Text label
                                   style: ElevatedButton.styleFrom(
                                     foregroundColor: Colors.white, backgroundColor: Colors.grey[800],  // Text and icon color
                                   ),
@@ -531,63 +531,70 @@ class _MySplitPageState extends State<MySplitPage>  {
   }
 
   void _showEditSplitDialog(BuildContext context) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.grey[900],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[850], // Set the background color here
-          title: const Text('Edit Split', style: TextStyle(color: Colors.white) ,),
-          content: StatefulBuilder(
-            builder: (context, setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Day Selector
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: daysOfWeek.map((day) {
-                        return ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                            selectedDay == day ? Colors.white : Colors.grey[900],
-                            foregroundColor: selectedDay == day ? Colors.black : Colors.white, // Text color
-                            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                            fixedSize: Size(50, 30), // Fixed size of the button
-                            elevation: 2, // Elevation for shadow
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              selectedDay = day;
-                              if (!daySplitData.containsKey(day)) {
-                                daySplitData[day] = {};
-                              }
-                              selectedMuscleGroups =
-                                  daySplitData[selectedDay]?.keys.toList() ?? [];
-                            });
-                          },
-                          child: Text(day),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  // Muscle Group Selector
-                  DropdownButtonHideUnderline(
-                    child: DropdownButton2<String>(
-                      isExpanded: true,
-                      hint: const Text('Add Muscle Groups', style: TextStyle(color: Colors.white)),
-                      items: allMuscleGroups.map((item) {
-                        return DropdownMenuItem<String>(
-                          value: item,
-                          child: StatefulBuilder(
-                            builder: (BuildContext context, StateSetter localSetState) {
-                              return Row(
-                                children: [
-                                  Checkbox(
-                                    value: selectedMuscleGroups.contains(item),
-                                    onChanged: (bool? value) {
-                                      localSetState(() {  // This will only rebuild the checkbox and not the entire list
-                                        if (value == true) {
+        return DraggableScrollableSheet(
+          expand: false,
+          builder: (_, controller) {
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 5,
+                        width: 50,
+                        margin: EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[700],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      Text("Edit Split", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 10),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          controller: controller,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                spacing: 8.0,
+                                children: daysOfWeek.map((day) {
+                                  return ChoiceChip(
+                                    label: Text(day),
+                                    selected: selectedDay == day,
+                                    onSelected: (bool selected) {
+                                      setState(() {
+                                        selectedDay = day;
+                                        selectedMuscleGroups = daySplitData[day]?.keys.toList() ?? [];
+                                      });
+                                    },
+                                    selectedColor: Colors.blue,
+                                    labelStyle: TextStyle(color: Colors.white),
+                                    backgroundColor: Colors.grey[800],
+                                  );
+                                }).toList(),
+                              ),
+                              SizedBox(height: 10),
+                              Text("Muscle Groups", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              Wrap(
+                                spacing: 10.0,
+                                children: allMuscleGroups.map((item) {
+                                  final isSelected = selectedMuscleGroups.contains(item);
+                                  return FilterChip(
+                                    label: Text(item),
+                                    selected: isSelected,
+                                    onSelected: (bool value) {
+                                      setState(() {
+                                        if (value) {
                                           selectedMuscleGroups.add(item);
                                           daySplitData[selectedDay]![item] ??= [];
                                         } else {
@@ -595,56 +602,50 @@ class _MySplitPageState extends State<MySplitPage>  {
                                           daySplitData[selectedDay]!.remove(item);
                                         }
                                       });
-                                      setState(() { // Use this if changes need to be reflected elsewhere in the UI
-                                        // Empty here as setState is needed to rebuild the whole widget if necessary.
-                                      });
                                     },
-                                    checkColor: Colors.white, // Color of the tick
-                                    activeColor: Colors.blue, // Background color of the checkbox
-                                  ),
-                                  Text(item),
-                                ],
-                              );
-                            },
+                                    selectedColor: Colors.blue,
+                                    backgroundColor: Colors.grey[800],
+                                    labelStyle: TextStyle(color: Colors.white),
+                                  );
+                                }).toList(),
+                              ),
+                              SizedBox(height: 20),
+                              ...selectedMuscleGroups.map((mg) => _buildMuscleGroupSection(mg, setState)).toList(),
+                            ],
                           ),
-                        );
-                      }).toList(),
-                      onChanged: (_) {}, // This is here in case you need to handle changes at the dropdown level
-                    ),
-                  ),
-
-                  // Exercise Inputs
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: selectedMuscleGroups.map((muscleGroup) {
-                          return _buildMuscleGroupSection(muscleGroup, setState);
-                        }).toList(),
+                        ),
                       ),
-                    ),
+                      SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('Cancel', style: TextStyle(color: Colors.white)),
+                          ),
+                          SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              _saveAllSplits();
+                              saveWorkoutSplitToFirestore();
+                              Navigator.pop(context);
+                            },
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                            child: Text('Save Split'),
+                          )
+                        ],
+                      )
+                    ],
                   ),
-                ],
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white),),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _saveAllSplits();
-                saveWorkoutSplitToFirestore();
-                Navigator.pop(context);
+                );
               },
-              child: const Text('Save Split',style: TextStyle(color: Colors.black),),
-            ),
-          ],
+            );
+          },
         );
       },
     );
   }
+
   Widget buildDaySplit(String day) {
     WorkoutSplit? split = weeklySplits.firstWhereOrNull((s) => s.day == day);
     List<int> muscleWorkloads = List.generate(allMuscleGroups.length, (index) => 0); // Initialize with zeros
