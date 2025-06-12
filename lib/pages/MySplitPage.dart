@@ -736,24 +736,42 @@ class _MySplitPageState extends State<MySplitPage>  {
           ),
           const SizedBox(height: 8.0),
           ...daySplitData[selectedDay]![muscleGroup]!.map((exercise) {
-            return ListTile(
-              title: Text(
-                exercise.name,
-                style: const TextStyle(color: Colors.white),
+            return Dismissible(
+              key: ValueKey(exercise.name + exercise.sets.toString() + exercise.reps.toString() + exercise.weight.toString()),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                color: Colors.red,
+                child: Icon(Icons.delete, color: Colors.white),
               ),
-              subtitle: Text(
-                '${exercise.sets} sets x ${exercise.reps} reps at ${exercise.weight} lbs',
-                style: const TextStyle(color: Colors.grey),
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  setState(() {
-                    daySplitData[selectedDay]![muscleGroup]!.remove(exercise);
-                  });
-                },
+              onDismissed: (_) {
+                setState(() {
+                  daySplitData[selectedDay]![muscleGroup]!.remove(exercise);
+                });
+              },
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text(
+                      exercise.name,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      '${exercise.sets} sets x ${exercise.reps} reps at ${exercise.weight} lbs',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                  Divider(
+                    color: Colors.grey[700],
+                    thickness: 0.8,
+                    height: 1,
+                  ),
+                ],
               ),
             );
+
+
           }).toList(),
           const SizedBox(height: 8.0),
           DropdownSearch<SingleExercise>(
@@ -768,7 +786,7 @@ class _MySplitPageState extends State<MySplitPage>  {
             items: exerciseList,
             dropdownDecoratorProps: DropDownDecoratorProps(
               dropdownSearchDecoration: InputDecoration(
-                labelText: 'Exercise',
+                labelText: 'Add an Exercise',
                 labelStyle: TextStyle(color: Colors.white), // This is for the label
                 filled: true, // Optional: adds a fill color to the dropdown
                 fillColor: Colors.grey[900], // Optional: sets the fill color
@@ -797,23 +815,16 @@ class _MySplitPageState extends State<MySplitPage>  {
             itemAsString: (item) => item.name,
             compareFn: (item1, item2) => item1.name == item2.name && item1.muscleGroup == item2.muscleGroup,
           ),
-          TextField(
-            controller: setsController,
-            decoration: const InputDecoration(labelText: 'Sets', labelStyle: TextStyle(color: Colors.white)),
-            keyboardType: TextInputType.number,
-            style: const TextStyle(color: Colors.white), // Input text color
-          ),
-          TextField(
-            controller: repsController,
-            decoration: const InputDecoration(labelText: 'Reps', labelStyle: TextStyle(color: Colors.white)),
-            keyboardType: TextInputType.number,
-            style: const TextStyle(color: Colors.white), // Input text color
-          ),
-          TextField(
-            controller: weightController,
-            decoration: const InputDecoration(labelText: 'Weight (lbs)', labelStyle: TextStyle(color: Colors.white)),
-            keyboardType: TextInputType.number,
-            style: const TextStyle(color: Colors.white), // Input text color
+          const SizedBox(height: 8.0),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                buildTextField('Sets', setsController, width: 90),
+                buildTextField('Reps', repsController, width: 90),
+                buildTextField('Weight', weightController, width: 110),
+              ],
+            ),
           ),
           const SizedBox(height: 8.0),
           ElevatedButton(
@@ -854,6 +865,31 @@ class _MySplitPageState extends State<MySplitPage>  {
   }
 
 
+  Container buildTextField(String label, TextEditingController controller, {double width = 85}) {
+    return Container(
+      width: width,
+      margin: EdgeInsets.only(right: 10),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.white),
+          filled: true,
+          fillColor: Colors.grey[850],
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.grey[700]!),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.blue),
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        keyboardType: TextInputType.number,
+        style: TextStyle(color: Colors.white, fontSize: 12),
+      ),
+    );
+  }
 
   void _saveSplit(String day, List<String> muscleGroups,
       Map<String, List<ExerciseDetail>> exercises) {
