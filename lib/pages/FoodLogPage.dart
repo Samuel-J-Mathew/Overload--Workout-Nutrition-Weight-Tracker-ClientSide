@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../components/food_tile.dart';
+import '../components/NutritionSummaryTile.dart';
 import '../data/hive_database.dart';
 import '../models/NutritionalInfo.dart';
 import 'CalorieTrackerPage.dart';
@@ -241,10 +242,12 @@ class _FoodLogPageState extends State<FoodLogPage> {
             ),
           ),
           SizedBox(height: 6,),
+          NutritionSummaryTile(selectedDate: _selectedDay ?? DateTime.now()),
+          SizedBox(height: 6,),
           Expanded(
             child: Container(
               color: Color.fromRGBO(20, 20, 20, 1),
-              padding: EdgeInsets.only(left: 40, right: 14,),
+              padding: EdgeInsets.only(left: 24, right: 24,),
               child: _selectedDayFoods == null || _selectedDayFoods!.isEmpty
                   ? Center(
                 child: Text(
