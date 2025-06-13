@@ -14,6 +14,8 @@ import '../data/hive_database.dart';
 import '../models/NutritionalInfo.dart';
 import 'CalorieTrackerPage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import '../data/DatabaseService.dart';
+
 class FoodLogPage extends StatefulWidget {
   @override
   _FoodLogPageState createState() => _FoodLogPageState();
@@ -30,6 +32,9 @@ class _FoodLogPageState extends State<FoodLogPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   List<FoodItemDatabase>? _selectedDayFoods;
+  Set<String> _selectedFoodIds = {};
+  DatabaseService? _dbService;
+  String? _pendingAction; // 'copy', 'move', or null
 
   final TextEditingController _foodNameController = TextEditingController();
   final TextEditingController _caloriesController = TextEditingController();
@@ -46,6 +51,16 @@ class _FoodLogPageState extends State<FoodLogPage> {
       _loadFoodsForSelectedDay(_selectedDay!);
     });
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _dbService = DatabaseService(uid: user.uid);
+    }
+  }
+
   void loadNutritionalInfo() async {
     var box = await Hive.openBox<NutritionalInfo>('nutritionBox');
     NutritionalInfo? info = box.get('nutrition');
@@ -74,6 +89,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
       _caloriesLeft = max(0, _dailyGoal - _caloriesConsumedToday);
     });
   }
+
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     setState(() {
       _selectedDay = selectedDay;
@@ -89,8 +105,6 @@ class _FoodLogPageState extends State<FoodLogPage> {
     _selectedDayFoods = foodData.getFoodForDate(date).where((food) {
       return food.date != DateTime(2000, 1, 1); // Exclude placeholder date
     }).toList();
-
-
 
     if (_selectedDayFoods != null && _selectedDayFoods!.isNotEmpty) {
       print("Foods on ${DateFormat('yyyy-MM-dd').format(date)}:");
@@ -153,7 +167,6 @@ class _FoodLogPageState extends State<FoodLogPage> {
     );
   }
 
-
   void _addFoodItem() {
     // Check if all fields are filled
     if (_foodNameController.text.isEmpty ||
@@ -180,7 +193,6 @@ class _FoodLogPageState extends State<FoodLogPage> {
     Provider.of<FoodData>(context, listen: false)
         .addFood(name, calories, protein, carbs, fats, date);
 
-
     // Clear the text fields after adding
     _foodNameController.clear();
     _caloriesController.clear();
@@ -192,11 +204,52 @@ class _FoodLogPageState extends State<FoodLogPage> {
     _loadFoodsForSelectedDay(date);
   }
 
-
   void refreshFoodLog() {
     _loadFoodsForSelectedDay(_selectedDay!);
     calculateCalories();
   }
+
+  Future<void> _handleCopyMoveAction(DateTime targetDate, {required bool isMove}) async {
+    await _copyOrMoveSelected(targetDate, isMove: isMove);
+    setState(() {
+      _pendingAction = null;
+    });
+  }
+
+  Future<void> _copyOrMoveSelected(DateTime targetDate, {required bool isMove}) async {
+    if (_selectedDayFoods == null) return;
+    final selectedFoods = _selectedDayFoods!.where((f) => _selectedFoodIds.contains(f.id)).toList();
+    final foodData = Provider.of<FoodData>(context, listen: false);
+    for (var food in selectedFoods) {
+      // Add to Hive
+      foodData.addFood(food.name, food.calories, food.protein, food.carbs, food.fats, targetDate);
+      // Add to Firebase
+      if (_dbService != null) {
+        await _dbService!.addFoodLog({
+          'name': food.name,
+          'calories': food.calories,
+          'protein': food.protein,
+          'carbs': food.carbs,
+          'fats': food.fats,
+          'date': targetDate.toIso8601String(),
+        });
+      }
+    }
+    if (isMove) {
+      // Remove from original date in Hive and Firebase
+      for (var food in selectedFoods) {
+        foodData.deleteFood(food.id);
+        // Optionally, remove from Firebase if you store IDs
+        // (Not implemented here, as your addFoodLog does not return an ID)
+      }
+    }
+    setState(() {
+      _selectedFoodIds.clear();
+    });
+    _loadFoodsForSelectedDay(_selectedDay!);
+    calculateCalories();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -255,174 +308,266 @@ class _FoodLogPageState extends State<FoodLogPage> {
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               )
-                  : ListView.builder(
-                itemCount: (_selectedDayFoods?.isEmpty ?? true) ? 1 : _selectedDayFoods!.length + 1, // Adjust the count to include the header text
-                itemBuilder: (context, index) {
-                  if (index == 0 && (_selectedDayFoods?.isEmpty ?? true)) {
-                    // This is the header or message when no food items are available
-                    return Center(
-                      child: Text(
-                        'No foods logged for this day. Tap to add.',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    );
-                  } else if (index == 0) {
-                    // This is the header when items are available
-                    return Padding(
-                      padding: EdgeInsets.symmetric( vertical: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-
-                        children: [
-                          RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: "${(_caloriesConsumedToday.toInt())} ",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.normal, // Optional: Make it bold
-                                  ),
-                                ),
-                                WidgetSpan(
-                                  child: Icon(Icons.local_fire_department, color: Colors.white, size: 18), // Fire icon with adjustable color and size
-                                ),
-                              ],
-                            ),
-                          ),
-                          RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: "${(_proteinConsumedToday.toInt())} ",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.normal, // Optional: Make it bold
-                                  ),
-                                ),
-                                WidgetSpan(
-                                  child: Icon(MdiIcons.alphaPCircle, color: Colors.white, size: 18), // Fire icon with adjustable color and size
-                                ),
-                              ],
-                            ),
-                          ),
-                          RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: "${(_fatsConsumedToday.toInt())} ",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.normal, // Optional: Make it bold
-                                  ),
-                                ),
-                                WidgetSpan(
-                                  child: Icon(MdiIcons.alphaFCircle, color: Colors.white, size: 18), // Fire icon with adjustable color and size
-                                ),
-                              ],
-                            ),
-                          ),
-                          RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: "${(_carbsConsumedToday.toInt())} ",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.normal, // Optional: Make it bold
-                                  ),
-                                ),
-                                WidgetSpan(
-                                  child: Icon(MdiIcons.alphaCCircle, color: Colors.white, size: 18), // Fire icon with adjustable color and size
-                                ),
-                              ],
-                            ),
-                          ),
-
-                        ],
-
-                      ),
-                    );
-                  } else {
-                    // Return FoodTile
-                    var food = _selectedDayFoods![index - 1]; // Adjust index because of the added header
-                    return FoodTile(
-                      foodName: food.name,
-                      calories: double.parse(food.calories).toInt().toString(),
-                      protein: double.parse(food.protein.replaceAll("g", "")).toInt().toString(),
-                      carbs: double.parse(food.carbs.replaceAll("g", "")).toInt().toString(),
-                      fats: double.parse(food.fats.replaceAll("g", "")).toInt().toString(),
-                      isCompleted: false, // Replace with actual logic if needed
-                      onDelete: () {
-                        // Pass the correct identifier (e.g., 'id') to deleteFood
-                        Provider.of<FoodData>(context, listen: false).deleteFood(food.id);
-                        calculateCalories();
-                        _loadFoodsForSelectedDay(_selectedDay!); // Refresh the list
-                      },
-                    );
-                  }
-                },
+                  : ListView(
+                children: _buildGroupedFoodList(),
               ),
             ),
           ),
-          Container(
-
-            constraints: BoxConstraints(
-              maxHeight: 55, // Maximum height
-            ),
-            color: Color.fromRGBO(25, 25, 25, 1),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now(), onReturn: refreshFoodLog, )),
-                  );  // The action you want to perform on tap
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(40, 40, 40, 1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.search, color: Colors.white),
+          // Replace search bar with action bar if items are selected
+          if (_selectedFoodIds.isNotEmpty)
+            Container(
+              constraints: BoxConstraints(maxHeight: 55),
+              color: Color.fromRGBO(25, 25, 25, 1),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Text(
+                      '${_selectedFoodIds.length} foods selected',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    Spacer(),
+                    if (_pendingAction == null) ...[
+                      ElevatedButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => CalorieTrackerPage(
-                                selectedDate: _selectedDay ?? DateTime.now(),
-                                onReturn: refreshFoodLog,
-                              ),
-                            ),
-                          );
+                          setState(() { _pendingAction = 'copy'; });
                         },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[900],
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: Text('Copy'),
                       ),
-
-                      SizedBox(width: 9),
-                      Text(
-                        'Search for a food',
-                        style: TextStyle(color: Colors.grey[500]),
+                      SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() { _pendingAction = 'move'; });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[900],
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: Text('Move'),
+                      ),
+                    ] else ...[
+                      ElevatedButton(
+                        onPressed: () async {
+                          await _handleCopyMoveAction(DateTime.now(), isMove: _pendingAction == 'move');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[900],
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: Text('To Now'),
+                      ),
+                      SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final now = DateTime.now();
+                          final today = DateTime(now.year, now.month, now.day);
+                          await _handleCopyMoveAction(today, isMove: _pendingAction == 'move');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[900],
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: Text('To Today'),
+                      ),
+                      SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () async {
+                          DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                            builder: (context, child) {
+                              return Theme(
+                                data: ThemeData.dark(),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (picked != null) {
+                            await _handleCopyMoveAction(picked, isMove: _pendingAction == 'move');
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[900],
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: Text('To Date'),
+                      ),
+                      SizedBox(width: 10),
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.white),
+                        onPressed: () {
+                          setState(() { _pendingAction = null; });
+                        },
+                        tooltip: 'Cancel',
                       ),
                     ],
+                  ],
+                ),
+              ),
+            )
+          else
+            Container(
+              constraints: BoxConstraints(
+                maxHeight: 55, // Maximum height
+              ),
+              color: Color.fromRGBO(25, 25, 25, 1),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now(), onReturn: refreshFoodLog, )),
+                    );  // The action you want to perform on tap
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Color.fromRGBO(40, 40, 40, 1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.search, color: Colors.white),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CalorieTrackerPage(
+                                  selectedDate: _selectedDay ?? DateTime.now(),
+                                  onReturn: refreshFoodLog,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        SizedBox(width: 9),
+                        Text(
+                          'Search for a food',
+                          style: TextStyle(color: Colors.grey[500]),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
 
       ),
 
 
 
+    );
+  }
+
+  // Helper to group foods by hour and build the grouped list
+  List<Widget> _buildGroupedFoodList() {
+    if (_selectedDayFoods == null) return [];
+    // Group foods by hour
+    Map<int, List<FoodItemDatabase>> hourGroups = {};
+    for (var food in _selectedDayFoods!) {
+      int hour = food.date.hour;
+      hourGroups.putIfAbsent(hour, () => []).add(food);
+    }
+    // Sort hours ascending
+    List<int> sortedHours = hourGroups.keys.toList()..sort();
+    List<Widget> widgets = [];
+    for (var hour in sortedHours) {
+      final foods = hourGroups[hour]!;
+      // Calculate sums for this hour
+      double hourCals = 0, hourProtein = 0, hourFats = 0, hourCarbs = 0;
+      for (var food in foods) {
+        hourCals += double.tryParse(food.calories) ?? 0;
+        hourProtein += double.tryParse(food.protein) ?? 0;
+        hourFats += double.tryParse(food.fats) ?? 0;
+        hourCarbs += double.tryParse(food.carbs) ?? 0;
+      }
+      // Format hour label
+      final hourLabel = TimeOfDay(hour: hour, minute: 0).format(context);
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 60,
+                child: Text(
+                  hourLabel,
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _macroSummary(hourCals.toInt(), Icons.local_fire_department, ''),
+                    _macroSummary(hourProtein.toInt(), MdiIcons.alphaPCircle, ''),
+                    _macroSummary(hourFats.toInt(), MdiIcons.alphaFCircle, ''),
+                    _macroSummary(hourCarbs.toInt(), MdiIcons.alphaCCircle, ''),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      // Add all foods for this hour
+      for (var food in foods) {
+        widgets.add(
+          FoodTile(
+            foodName: food.name,
+            calories: double.parse(food.calories).toInt().toString(),
+            protein: double.parse(food.protein.replaceAll("g", "")).toInt().toString(),
+            carbs: double.parse(food.carbs.replaceAll("g", "")).toInt().toString(),
+            fats: double.parse(food.fats.replaceAll("g", "")).toInt().toString(),
+            isCompleted: false,
+            onDelete: () {
+              Provider.of<FoodData>(context, listen: false).deleteFood(food.id);
+              calculateCalories();
+              _loadFoodsForSelectedDay(_selectedDay!);
+            },
+            isSelected: _selectedFoodIds.contains(food.id),
+            onTap: () {
+              setState(() {
+                if (_selectedFoodIds.contains(food.id)) {
+                  _selectedFoodIds.remove(food.id);
+                } else {
+                  _selectedFoodIds.add(food.id);
+                }
+              });
+            },
+          ),
+        );
+      }
+    }
+    return widgets;
+  }
+
+  Widget _macroSummary(int value, IconData icon, String label) {
+    return Row(
+      children: [
+        Text(
+          value.toString(),
+          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(width: 2),
+        Icon(icon, color: Colors.white, size: 16),
+        SizedBox(width: 2),
+        Text(
+          label,
+          style: TextStyle(color: Colors.grey[400], fontSize: 14),
+        ),
+      ],
     );
   }
 }

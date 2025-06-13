@@ -11,16 +11,16 @@ class ExerciseLogSummaryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Workout> workouts = Provider.of<WorkoutData>(context, listen: false).getWorkoutsForDate(selectedDate);
     int totalSets = 0;
-    int totalVolume = 0;
+    double totalVolume = 0;
     Set<String> uniqueExercises = {};
 
     for (var workout in workouts) {
       for (var exercise in workout.exercises) {
         int sets = int.tryParse(exercise.sets) ?? 0;
         int reps = int.tryParse(exercise.reps) ?? 0;
-        int weight = int.tryParse(exercise.weight) ?? 0;
+        double weight = double.tryParse(exercise.weight) ?? 0;
         totalSets += sets;
-        totalVolume += reps * weight * sets;
+        totalVolume += sets * weight;
         uniqueExercises.add(exercise.name);
       }
     }
@@ -35,9 +35,9 @@ class ExerciseLogSummaryTile extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _statColumn(Icons.show_chart, totalSets, 'sets', Colors.blue),
-          _statColumn(Icons.trending_up, uniqueExercises.length, 'exercises', Colors.greenAccent),
-          _statColumn(Icons.bar_chart, totalVolume, 'volume', Colors.purpleAccent),
+          _statColumn(Icons.view_module, totalSets, 'sets', Colors.blue),
+          _statColumn(Icons.fitness_center, uniqueExercises.length, 'exercises', Colors.greenAccent),
+          _statColumnDouble(Icons.bar_chart, totalVolume, 'volume', Colors.purpleAccent),
         ],
       ),
     );
@@ -51,6 +51,32 @@ class ExerciseLogSummaryTile extends StatelessWidget {
         SizedBox(height: 6),
         Text(
           value.toString(),
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+        SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[400],
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statColumnDouble(IconData icon, double value, String label, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 32),
+        SizedBox(height: 6),
+        Text(
+          value % 1 == 0 ? value.toInt().toString() : value.toStringAsFixed(1),
           style: TextStyle(
             color: color,
             fontWeight: FontWeight.bold,
