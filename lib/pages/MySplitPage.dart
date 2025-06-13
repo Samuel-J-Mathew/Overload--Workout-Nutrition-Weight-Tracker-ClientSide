@@ -21,6 +21,7 @@ class MySplitPage extends StatefulWidget {
 }
 
 class _MySplitPageState extends State<MySplitPage>  {
+  Map<String, SingleExercise?> selectedExercises = {};
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<WorkoutSplit> weeklySplits = [];
@@ -51,6 +52,7 @@ class _MySplitPageState extends State<MySplitPage>  {
 
   Map<String, Map<String, List<ExerciseDetail>>> daySplitData = {};
   List<String> selectedMuscleGroups = [];
+
 
   @override
   void initState() {
@@ -674,15 +676,15 @@ class _MySplitPageState extends State<MySplitPage>  {
   }
 
   Widget _buildMuscleGroupSection(String muscleGroup, StateSetter setState) {
-    // Controllers for the text fields
     final TextEditingController setsController = TextEditingController();
     final TextEditingController repsController = TextEditingController();
     final TextEditingController weightController = TextEditingController();
-    SingleExercise? selectedExercise;
 
-    // Check if the muscle group still exists in the data structure
+    // Ensure there's an entry for this muscle group in the map
+    selectedExercises.putIfAbsent(muscleGroup, () => null);
+
     if (!daySplitData[selectedDay]!.containsKey(muscleGroup)) {
-      return Container();  // Return an empty container if the muscle group has been deleted
+      return Container(); // Return empty if deleted
     }
 
     return Container(
@@ -698,103 +700,85 @@ class _MySplitPageState extends State<MySplitPage>  {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                muscleGroup,
-                style: const TextStyle(color: Colors.white, fontSize: 18),
-              ),
+              Text(muscleGroup, style: const TextStyle(color: Colors.white, fontSize: 18)),
               IconButton(
                 icon: Icon(Icons.delete, color: Colors.red),
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text("Confirm Deletion"),
-                        content: Text("Are you sure you want to delete the muscle group '$muscleGroup'?"),
-                        actions: <Widget>[
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text("Cancel"),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                daySplitData[selectedDay]!.remove(muscleGroup);
-                                selectedMuscleGroups.remove(muscleGroup);
-                                Navigator.of(context).pop();
-                              });
-                            },
-                            child: const Text("Delete"),
-                          ),
-                        ],
-                      );
-                    },
+                    builder: (_) => AlertDialog(
+                      title: Text("Confirm Deletion"),
+                      content: Text("Delete the muscle group '$muscleGroup'?"),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancel")),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              daySplitData[selectedDay]!.remove(muscleGroup);
+                              selectedMuscleGroups.remove(muscleGroup);
+                              selectedExercises.remove(muscleGroup);
+                              Navigator.of(context).pop();
+                            });
+                          },
+                          child: const Text("Delete"),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
             ],
           ),
           const SizedBox(height: 8.0),
-          ...daySplitData[selectedDay]![muscleGroup]!.map((exercise) {
-            return Dismissible(
-              key: ValueKey(exercise.name + exercise.sets.toString() + exercise.reps.toString() + exercise.weight.toString()),
-              direction: DismissDirection.endToStart,
-              background: Container(
-                alignment: Alignment.centerRight,
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                color: Colors.red,
-                child: Icon(Icons.delete, color: Colors.white),
-              ),
-              onDismissed: (_) {
-                setState(() {
-                  daySplitData[selectedDay]![muscleGroup]!.remove(exercise);
-                });
-              },
-              child: Column(
-                children: [
-                  ListTile(
-                    title: Text(
-                      exercise.name,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    subtitle: Text(
-                      '${exercise.sets} sets x ${exercise.reps} reps at ${exercise.weight} lbs',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                  Divider(
-                    color: Colors.grey[700],
-                    thickness: 0.8,
-                    height: 1,
-                  ),
-                ],
-              ),
-            );
 
+          // Existing list of exercises
+          ...daySplitData[selectedDay]![muscleGroup]!.map((exercise) => Dismissible(
+            key: ValueKey(exercise.name + exercise.sets.toString() + exercise.reps.toString() + exercise.weight.toString()),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              color: Colors.red,
+              child: Icon(Icons.delete, color: Colors.white),
+            ),
+            onDismissed: (_) {
+              setState(() => daySplitData[selectedDay]![muscleGroup]!.remove(exercise));
+            },
+            child: Column(
+              children: [
+                ListTile(
+                  title: Text(exercise.name, style: const TextStyle(color: Colors.white)),
+                  subtitle: Text('${exercise.sets} sets x ${exercise.reps} reps at ${exercise.weight} lbs', style: const TextStyle(color: Colors.grey)),
+                ),
+                Divider(color: Colors.grey[700], thickness: 0.8, height: 1),
+              ],
+            ),
+          )),
 
-          }).toList(),
           const SizedBox(height: 8.0),
+
+          // Dropdown to pick new exercise
           DropdownSearch<SingleExercise>(
             popupProps: PopupProps.menu(
               showSelectedItems: true,
-              showSearchBox: true, // Enables search
+              showSearchBox: true,
               itemBuilder: (context, item, isSelected) => ListTile(
                 title: Text(item.name),
                 subtitle: Text(item.muscleGroup),
               ),
             ),
             items: exerciseList,
+            selectedItem: selectedExercises[muscleGroup],
+            onChanged: (SingleExercise? selected) {
+              setState(() => selectedExercises[muscleGroup] = selected);
+            },
             dropdownDecoratorProps: DropDownDecoratorProps(
               dropdownSearchDecoration: InputDecoration(
                 labelText: 'Add an Exercise',
-                labelStyle: TextStyle(color: Colors.white), // This is for the label
-                filled: true, // Optional: adds a fill color to the dropdown
-                fillColor: Colors.grey[900], // Optional: sets the fill color
-                hintStyle: TextStyle(color: Colors.grey), // Optional: style for hint text if you have it
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10), // Optional: border styling
-                  borderSide: BorderSide(color: Colors.white),
-                ),
+                labelStyle: TextStyle(color: Colors.white),
+                filled: true,
+                fillColor: Colors.grey[900],
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(color: Colors.grey.shade800),
@@ -804,18 +788,15 @@ class _MySplitPageState extends State<MySplitPage>  {
                   borderSide: BorderSide(color: Colors.blue),
                 ),
               ),
-              baseStyle: TextStyle(color: Colors.white, fontSize: 16), // Style for text inside dropdown
+              baseStyle: TextStyle(color: Colors.white, fontSize: 16),
             ),
-            selectedItem: selectedExercise,
-            onChanged: (SingleExercise? selected) {
-              if (selected != null) {
-                selectedExercise = selected;
-              }
-            },
             itemAsString: (item) => item.name,
-            compareFn: (item1, item2) => item1.name == item2.name && item1.muscleGroup == item2.muscleGroup,
+            compareFn: (a, b) => a.name == b.name && a.muscleGroup == b.muscleGroup,
           ),
+
           const SizedBox(height: 8.0),
+
+          // Input fields for sets/reps/weight
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -827,9 +808,11 @@ class _MySplitPageState extends State<MySplitPage>  {
             ),
           ),
           const SizedBox(height: 8.0),
+
           ElevatedButton(
             onPressed: () {
-              if (selectedExercise != null &&
+              final selected = selectedExercises[muscleGroup];
+              if (selected != null &&
                   setsController.text.isNotEmpty &&
                   repsController.text.isNotEmpty &&
                   weightController.text.isNotEmpty) {
@@ -840,19 +823,14 @@ class _MySplitPageState extends State<MySplitPage>  {
                 if (sets > 0 && reps > 0 && weight > 0) {
                   setState(() {
                     daySplitData[selectedDay]![muscleGroup]!.add(
-                      ExerciseDetail(
-                        name: selectedExercise!.name,
-                        sets: sets,
-                        reps: reps,
-                        weight: weight,
-                      ),
+                      ExerciseDetail(name: selected.name, sets: sets, reps: reps, weight: weight),
                     );
 
-                    // Reset the input fields
-                    selectedExercise = null;
+                    // Clear input
                     setsController.clear();
                     repsController.clear();
                     weightController.clear();
+                    selectedExercises[muscleGroup] = null;
                   });
                 }
               }
@@ -863,6 +841,7 @@ class _MySplitPageState extends State<MySplitPage>  {
       ),
     );
   }
+
 
 
   Container buildTextField(String label, TextEditingController controller, {double width = 85}) {

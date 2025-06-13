@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../models/SingleExercise.dart';
 import '../models/workout.dart';
+import '../components/ExerciseLogSummaryTile.dart';
 
 class SearchPage extends StatefulWidget {
   final String workoutName;
@@ -213,6 +214,7 @@ class _SearchPageState extends State<SearchPage> {
               weekendStyle: TextStyle(color: Colors.white),
             ),
           ),
+          ExerciseLogSummaryTile(selectedDate: _selectedDay ?? DateTime.now()),
           SizedBox(height: 6),
           Expanded(
             child: Container(
