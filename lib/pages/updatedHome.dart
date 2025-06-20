@@ -10,11 +10,15 @@ import 'package:provider/provider.dart'; // For WorkoutData
 import '../components/CalorieTile.dart';
 import '../data/GlobalState.dart';
 import '../data/NutritionProvider.dart';
+import '../data/WorkoutAnalyzer.dart';
 import '../data/hive_database.dart';
+import '../data/_LineChartPainterDown.dart';
+import '../data/_LineChartPainterUp.dart';
 import '../data/workout_data.dart'; // Import your WorkoutData class
 import '../models/heat_map.dart';
 import '../models/heat_map_2.dart';
 import '../models/step_log.dart';
+import '../models/weight_log.dart';
 import '../models/workout.dart';
 import 'BuildBodyHome.dart';
 import 'MySplitPage.dart';
@@ -39,9 +43,13 @@ class _UpdatedHomeState extends State<UpdatedHome> {
   IconData testicon = Icons.add;
   bool iconBool = true;
   bool click = true;
+  double? overallStrengthChange;
   double? mostRecentWeight;
+  double? _weeklyWeightTrend;
   double? getAverageSteps;
   Map<String, bool> exerciseClickStatus = {};
+  String? mostImprovedGroup;
+  double? mostImprovedPercent;
   final ScrollController _scrollController = ScrollController();
   double _workoutCardHeight = 320; // Default height
   bool _showSearchBar =
@@ -53,7 +61,57 @@ class _UpdatedHomeState extends State<UpdatedHome> {
         .getStepLogs(); // Adjust this method according to your actual data fetching logic
     setState(() {});
   }
+  Future<void> _loadImprovementData() async {
+    final db = Provider.of<HiveDatabase>(context, listen: false);
+    final analyzer = WorkoutAnalyzer(db);
+    final result = await analyzer.getMostImprovedMuscleGroup();
 
+    if (result != null && mounted) {
+      setState(() {
+        mostImprovedGroup = result.key;
+        mostImprovedPercent = result.value;
+      });
+    }
+  }
+  Future<void> _calculateWeightTrend() async {
+    final db = Provider.of<HiveDatabase>(context, listen: false);
+    final List<WeightLog> logs = db.getWeightLogs();
+
+    final cutoff = DateTime.now().subtract(Duration(days: 30));
+    final filteredLogs = logs
+        .where((log) => log.date.isAfter(cutoff))
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    if (filteredLogs.length < 2) return;
+
+    final startWeight = filteredLogs.first.weight;
+    final endWeight = filteredLogs.last.weight;
+
+    final durationDays =
+        filteredLogs.last.date.difference(filteredLogs.first.date).inDays;
+
+    if (durationDays == 0) return;
+
+    final double weightChange = endWeight - startWeight;
+    final double lbsPerWeek = weightChange / (durationDays / 7);
+
+    setState(() {
+      _weeklyWeightTrend = lbsPerWeek;
+    });
+  }
+
+  Future<void> _loadStrengthData() async {
+    final db = Provider.of<HiveDatabase>(context, listen: false);
+    final analyzer = WorkoutAnalyzer(db);
+    final change = await analyzer.getOverallStrengthChange();
+
+    if (mounted) {
+      setState(() {
+        overallStrengthChange = change;
+      });
+    }
+  }
   void _fetchAverageSteps() async {
     double averageSteps =
     await StepCounterPage.fetchAndCalculateAverageSteps(context);
@@ -69,6 +127,9 @@ class _UpdatedHomeState extends State<UpdatedHome> {
   @override
   void initState() {
     super.initState();
+    _loadImprovementData();
+    _loadStrengthData();
+    _calculateWeightTrend();
     _fetchStepLogs();
     _fetchAverageSteps();
     Provider.of<NutritionProvider>(context, listen: false)
@@ -558,26 +619,56 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                   Expanded(
                                     flex: 1,
                                     child: _improvementTile(
-                                      title: "Biceps",
-                                      child: Stack(
-                                        alignment: Alignment.center,
+                                      title: mostImprovedGroup ?? "Loading...",
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          SizedBox(
-                                            width: 90,
-                                            height: 90,
-                                            child: CircularProgressIndicator(
-                                              value: 0.6,
-                                              backgroundColor: Colors.grey[800],
-                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
-                                              strokeWidth: 8,
-                                            ),
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              SizedBox(
+                                                width: 90,
+                                                height: 90,
+                                                child: CircularProgressIndicator(
+                                                  value: ((mostImprovedPercent ?? 0) / 100).clamp(0.0, 1.0),
+                                                  backgroundColor: Colors.grey[800],
+                                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
+                                                  strokeWidth: 8,
+                                                ),
+                                              ),
+                                              Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    "${(mostImprovedPercent ?? 0).toStringAsFixed(0)}%",
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 22,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    "Increase",
+                                                    style: TextStyle(
+                                                      color: Colors.white60,
+                                                      fontSize: 10,
+                                                      fontStyle: FontStyle.italic,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+
+                                            ],
                                           ),
+                                          SizedBox(height: 12),
+                                          Divider(color: Colors.white70, thickness: 0.75, height: 1),
+                                          SizedBox(height: 6),
                                           Text(
-                                            "60%",
+                                            "Past Month",
                                             style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 22,
+                                              color: Colors.white60,
+                                              fontSize: 12,
+                                              fontStyle: FontStyle.italic,
                                             ),
                                           ),
                                         ],
@@ -585,6 +676,9 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                       big: true,
                                       doubleHeight: true,
                                     ),
+
+
+
                                   ),
                                   SizedBox(width: 12),
                                   // Right column: Strength and Weight stacked
@@ -593,36 +687,94 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                     child: Column(
                                       children: [
                                         _improvementTile(
-                                          title: "Strength",
-                                          child: SizedBox(
-                                            height: 48,
-                                            child: CustomPaint(
-                                              size: Size(60, 40),
-                                              painter: _LineChartPainter(),
-                                            ),
-                                          ),
-                                          halfHeight: true,
-                                        ),
-                                        SizedBox(height: 12),
-                                        _improvementTile(
-                                          title: "Weight (lbs)",
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                          title: "Overall Strength",
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min, // ← This prevents overflow
                                             children: [
-                                              Icon(Icons.arrow_downward, color: Colors.green, size: 20),
-                                              SizedBox(width: 4),
-                                              Text(
-                                                "-1.1 lbs/week",
-                                                style: TextStyle(
-                                                  color: Colors.green,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 15,
+                                              SizedBox(height: 2),
+                                              SizedBox(
+                                                height: 20, // reduced from 24
+                                                child: CustomPaint(
+                                                  size: Size(60, 20),
+                                                  painter: overallStrengthChange == null
+                                                      ? null
+                                                      : overallStrengthChange! >= 0
+                                                      ? LineChartPainterUp()
+                                                      : LineChartPainterDown(),
                                                 ),
+                                              ),
+                                              SizedBox(height: 2),
+                                              Divider(
+                                                color: Colors.white70,
+                                                height: 2,
+                                                thickness: 0.75,
+                                              ),
+                                              Text(
+                                                overallStrengthChange == null
+                                                    ? "Loading..."
+                                                    : "${overallStrengthChange! >= 0 ? '+' : ''}${overallStrengthChange!.toStringAsFixed(1)}% ${overallStrengthChange! >= 0 ? 'increase' : 'decrease'} in the past month",
+                                                style: TextStyle(
+                                                  color: Colors.white60,
+                                                  fontSize: 10,
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                                textAlign: TextAlign.center,
                                               ),
                                             ],
                                           ),
                                           halfHeight: true,
                                         ),
+
+
+
+                                        SizedBox(height: 12),
+                                        _improvementTile(
+                                          title: "Weight (lbs)",
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Divider(
+                                                color: Colors.white70,
+                                                height: 8,
+                                                thickness: 0.75,
+                                              ),
+                                              _weeklyWeightTrend == null
+                                                  ? Text(
+                                                "Loading...",
+                                                style: TextStyle(
+                                                  color: Colors.white60,
+                                                  fontStyle: FontStyle.italic,
+                                                  fontSize: 13,
+                                                ),
+                                              )
+                                                  : Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    _weeklyWeightTrend! < 0
+                                                        ? Icons.arrow_downward
+                                                        : Icons.arrow_upward,
+                                                    color: _weeklyWeightTrend! < 0 ? Colors.green : Colors.red,
+                                                    size: 20,
+                                                  ),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    "${_weeklyWeightTrend! > 0 ? '+' : ''}${_weeklyWeightTrend!.toStringAsFixed(1)} lbs/week",
+                                                    style: TextStyle(
+                                                      color: _weeklyWeightTrend! < 0
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 15,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          halfHeight: true,
+                                        ),
+
                                       ],
                                     ),
                                   ),
