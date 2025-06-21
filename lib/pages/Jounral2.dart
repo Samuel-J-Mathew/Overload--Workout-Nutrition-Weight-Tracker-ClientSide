@@ -61,7 +61,6 @@ class _Jounral2AppState extends State<Jounral2> {
 
   static List<Widget> _widgetOptions = <Widget>[
     JournalPage(),
-    JourneyPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -73,28 +72,7 @@ class _Jounral2AppState extends State<Jounral2> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _widgetOptions,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: 'Journal',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.travel_explore),
-            label: 'Journey',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color.fromARGB(255, 45, 89, 185),
-        unselectedItemColor: const Color.fromARGB(255, 255, 255, 255),
-        backgroundColor:
-            Color.fromRGBO(31, 31, 31, 1), // Set the background color here
-        onTap: _onItemTapped,
-      ),
+      body: JournalPage(),
     );
   }
 }

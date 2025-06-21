@@ -1131,7 +1131,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                     children: [
                                       SizedBox(height: 10),
                                       Text(
-                                        'Journal Entries',
+                                        'Check-In Entries',
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
