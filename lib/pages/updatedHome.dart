@@ -754,7 +754,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                                     _weeklyWeightTrend! < 0
                                                         ? Icons.arrow_downward
                                                         : Icons.arrow_upward,
-                                                    color: _weeklyWeightTrend! < 0 ? Colors.green : Colors.red,
+                                                    color: _weeklyWeightTrend! < 0 ? Colors.blue : Colors.blue,
                                                     size: 20,
                                                   ),
                                                   SizedBox(width: 4),
@@ -762,8 +762,8 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                                     "${_weeklyWeightTrend! > 0 ? '+' : ''}${_weeklyWeightTrend!.toStringAsFixed(1)} lbs/week",
                                                     style: TextStyle(
                                                       color: _weeklyWeightTrend! < 0
-                                                          ? Colors.green
-                                                          : Colors.red,
+                                                          ? Colors.white
+                                                          : Colors.white,
                                                       fontWeight: FontWeight.bold,
                                                       fontSize: 15,
                                                     ),

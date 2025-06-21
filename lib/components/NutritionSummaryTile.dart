@@ -102,48 +102,51 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
           margin: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
           child: Column(
             children: [
-              SizedBox(
-                width: 140,
-                height: 140,
-                child: PieChart(
-                  dataMap: {
-                    "Consumed": _caloriesConsumedToday.clamp(0, _dailyGoal),
-                    "Remaining": (_dailyGoal - _caloriesConsumedToday).clamp(0, _dailyGoal),
-                  },
-                  chartType: ChartType.ring,
-                  ringStrokeWidth: 16,
-                  colorList: [blue, Colors.grey[900]!],
-                  chartRadius: 120,
-                  centerWidget: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _caloriesConsumedToday.toStringAsFixed(0),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32,
-                        ),
-                      ),
-                      Text(
-                        "consumed",
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                  legendOptions: LegendOptions(showLegends: false),
-                  chartValuesOptions: ChartValuesOptions(showChartValues: false),
-                ),
-              ),
-              SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  // Remaining section on the left
                   _statTile("Remaining", _caloriesLeft, Colors.white, darkTileColor),
-                  _statTile("Consumed", _caloriesConsumedToday, blue, darkTileColor),
+
+                  // Pie chart in the center
+                  SizedBox(
+                    width: 140,
+                    height: 140,
+                    child: PieChart(
+                      dataMap: {
+                        "Consumed": _caloriesConsumedToday.clamp(0, _dailyGoal),
+                        "Remaining": (_dailyGoal - _caloriesConsumedToday).clamp(0, _dailyGoal),
+                      },
+                      chartType: ChartType.ring,
+                      ringStrokeWidth: 16,
+                      colorList: [blue, Colors.grey[900]!],
+                      chartRadius: 120,
+                      centerWidget: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _caloriesConsumedToday.toStringAsFixed(0),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 32,
+                            ),
+                          ),
+                          Text(
+                            "consumed",
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                      legendOptions: LegendOptions(showLegends: false),
+                      chartValuesOptions: ChartValuesOptions(showChartValues: false),
+                    ),
+                  ),
+
+                  // Target section on the right
                   _statTile("Target", _dailyGoal, Colors.white, darkTileColor),
                 ],
               ),

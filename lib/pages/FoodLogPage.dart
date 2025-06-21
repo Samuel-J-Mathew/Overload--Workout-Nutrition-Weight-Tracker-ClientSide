@@ -309,6 +309,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
                 ),
               )
                   : ListView(
+                padding: EdgeInsets.zero,
                 children: _buildGroupedFoodList(),
               ),
             ),
@@ -493,7 +494,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
       final hourLabel = TimeOfDay(hour: hour, minute: 0).format(context);
       widgets.add(
         Padding(
-          padding: const EdgeInsets.only(top: 16, bottom: 4),
+          padding: const EdgeInsets.only(top: 20, bottom: 4),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
