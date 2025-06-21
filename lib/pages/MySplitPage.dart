@@ -52,7 +52,13 @@ class _MySplitPageState extends State<MySplitPage>  {
 
   Map<String, Map<String, List<ExerciseDetail>>> daySplitData = {};
   List<String> selectedMuscleGroups = [];
+  int _currentMuscleGroupIndex = 0;
+  late PageController _muscleGroupPageController;
 
+  // Persistent text field controllers for each muscle group
+  Map<String, TextEditingController> _setsControllers = {};
+  Map<String, TextEditingController> _repsControllers = {};
+  Map<String, TextEditingController> _weightControllers = {};
 
   @override
   void initState() {
@@ -76,6 +82,7 @@ class _MySplitPageState extends State<MySplitPage>  {
     saveWorkoutSplitToFirestore();
     loadWorkoutSplitsFromFirestore();
     loadMacrosFromFirestore();
+    _muscleGroupPageController = PageController();
   }
   void saveWorkoutSplitToFirestore() {
     User? user = _auth.currentUser;
@@ -536,108 +543,346 @@ class _MySplitPageState extends State<MySplitPage>  {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
       ),
       builder: (context) {
         return DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          maxChildSize: 0.95,
+          minChildSize: 0.5,
           expand: false,
           builder: (_, controller) {
             return StatefulBuilder(
               builder: (context, setState) {
-                return Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 5,
-                        width: 50,
-                        margin: EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[700],
-                          borderRadius: BorderRadius.circular(10),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(20, 20, 20, 1),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+                  ),
+                  child: SafeArea(
+                    child: Column(
+                      children: [
+                        // Handle bar
+                        Container(
+                          height: 5,
+                          width: 50,
+                          margin: EdgeInsets.only(top: 12, bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[700],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
-                      ),
-                      Text("Edit Split", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 10),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          controller: controller,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+
+                        // Header
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Wrap(
-                                spacing: 8.0,
-                                children: daysOfWeek.map((day) {
-                                  return ChoiceChip(
-                                    label: Text(day),
-                                    selected: selectedDay == day,
-                                    onSelected: (bool selected) {
-                                      setState(() {
-                                        selectedDay = day;
-                                        selectedMuscleGroups = daySplitData[day]?.keys.toList() ?? [];
-                                      });
-                                    },
-                                    selectedColor: Colors.blue,
-                                    labelStyle: TextStyle(color: Colors.white),
-                                    backgroundColor: Colors.grey[800],
-                                  );
-                                }).toList(),
+                              Text(
+                                "Edit Workout Split",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              SizedBox(height: 10),
-                              Text("Muscle Groups", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                              Wrap(
-                                spacing: 10.0,
-                                children: allMuscleGroups.map((item) {
-                                  final isSelected = selectedMuscleGroups.contains(item);
-                                  return FilterChip(
-                                    label: Text(item),
-                                    selected: isSelected,
-                                    onSelected: (bool value) {
-                                      setState(() {
-                                        if (value) {
-                                          selectedMuscleGroups.add(item);
-                                          daySplitData[selectedDay]![item] ??= [];
-                                        } else {
-                                          selectedMuscleGroups.remove(item);
-                                          daySplitData[selectedDay]!.remove(item);
-                                        }
-                                      });
-                                    },
-                                    selectedColor: Colors.blue,
-                                    backgroundColor: Colors.grey[800],
-                                    labelStyle: TextStyle(color: Colors.white),
-                                  );
-                                }).toList(),
+                              IconButton(
+                                onPressed: () => Navigator.pop(context),
+                                icon: Icon(Icons.close, color: Colors.white, size: 24),
                               ),
-                              SizedBox(height: 20),
-                              ...selectedMuscleGroups.map((mg) => _buildMuscleGroupSection(mg, setState)).toList(),
                             ],
                           ),
                         ),
-                      ),
-                      SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text('Cancel', style: TextStyle(color: Colors.white)),
+
+                        SizedBox(height: 20),
+
+                        // Day selector
+                        Container(
+                          margin: EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              'M', 'T', 'W', 'T', 'F', 'S', 'S'
+                            ].asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final dayAbbr = entry.value;
+                              final day = daysOfWeek[index];
+                              final isSelected = selectedDay == day;
+
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    selectedDay = day;
+                                    selectedMuscleGroups = daySplitData[day]?.keys.toList() ?? [];
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: Duration(milliseconds: 200),
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? Colors.blue : Colors.grey[800],
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: isSelected ? [
+                                      BoxShadow(
+                                        color: Colors.blue.withOpacity(0.3),
+                                        blurRadius: 6,
+                                        offset: Offset(0, 2),
+                                      )
+                                    ] : null,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      dayAbbr,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                           ),
-                          SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: () {
-                              _saveAllSplits();
-                              saveWorkoutSplitToFirestore();
-                              Navigator.pop(context);
-                            },
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                            child: Text('Save Split'),
-                          )
-                        ],
-                      )
-                    ],
+                        ),
+
+                        SizedBox(height: 20),
+
+                        // Muscle groups section
+                        Expanded(
+                          child: Column(
+                            children: [
+                              // Muscle group selector
+                              Container(
+                                margin: EdgeInsets.symmetric(horizontal: 20),
+                                padding: EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[900],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "Muscle Groups",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          "${selectedMuscleGroups.length}/7",
+                                          style: TextStyle(
+                                            color: Colors.grey[400],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    // Compact muscle group grid
+                                    Wrap(
+                                      spacing: 6.0,
+                                      runSpacing: 6.0,
+                                      children: allMuscleGroups.map((item) {
+                                        final isSelected = selectedMuscleGroups.contains(item);
+                                        return GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              if (isSelected) {
+                                                selectedMuscleGroups.remove(item);
+                                                daySplitData[selectedDay]!.remove(item);
+                                              } else {
+                                                selectedMuscleGroups.add(item);
+                                                daySplitData[selectedDay]![item] ??= [];
+                                              }
+                                            });
+                                          },
+                                          child: AnimatedContainer(
+                                            duration: Duration(milliseconds: 200),
+                                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: isSelected ? Colors.blue : Colors.grey[800],
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: isSelected ? Border.all(color: Colors.blue[300]!, width: 1) : null,
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (isSelected) ...[
+                                                  Icon(
+                                                    Icons.check_circle,
+                                                    color: Colors.white,
+                                                    size: 12,
+                                                  ),
+                                                  SizedBox(width: 4),
+                                                ],
+                                                Text(
+                                                  item,
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                    fontSize: 11,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              SizedBox(height: 20),
+
+                              // Muscle group tabs and content
+                              if (selectedMuscleGroups.isNotEmpty) ...[
+                                // Tab indicators
+                                Container(
+                                  margin: EdgeInsets.symmetric(horizontal: 20),
+                                  child: Row(
+                                    children: selectedMuscleGroups.asMap().entries.map((entry) {
+                                      final index = entry.key;
+                                      final muscleGroup = entry.value;
+                                      final isSelected = index == _currentMuscleGroupIndex;
+
+                                      return Expanded(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _currentMuscleGroupIndex = index;
+                                            });
+                                            _muscleGroupPageController.animateToPage(
+                                              index,
+                                              duration: Duration(milliseconds: 300),
+                                              curve: Curves.easeInOut,
+                                            );
+                                          },
+                                          child: Container(
+                                            height: 32,
+                                            margin: EdgeInsets.symmetric(horizontal: 1),
+                                            decoration: BoxDecoration(
+                                              color: isSelected ? Colors.blue : Colors.grey[800],
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                muscleGroup,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                  fontSize: 10,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+
+                                SizedBox(height: 16),
+
+                                // Swipeable muscle group content
+                                Expanded(
+                                  child: PageView.builder(
+                                    controller: _muscleGroupPageController,
+                                    onPageChanged: (index) {
+                                      setState(() {
+                                        _currentMuscleGroupIndex = index;
+                                      });
+                                    },
+                                    itemCount: selectedMuscleGroups.length,
+                                    itemBuilder: (context, index) {
+                                      final muscleGroup = selectedMuscleGroups[index];
+                                      return _buildModernMuscleGroupSection(muscleGroup, setState, controller);
+                                    },
+                                  ),
+                                ),
+                              ] else ...[
+                                // Empty state
+                                Expanded(
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.fitness_center,
+                                          color: Colors.grey[600],
+                                          size: 64,
+                                        ),
+                                        SizedBox(height: 16),
+                                        Text(
+                                          "Select muscle groups above",
+                                          style: TextStyle(
+                                            color: Colors.grey[400],
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          "Then swipe between them to add exercises",
+                                          style: TextStyle(
+                                            color: Colors.grey[500],
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+
+                        // Save button
+                        Container(
+                          padding: EdgeInsets.all(20),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    _saveAllSplits();
+                                    saveWorkoutSplitToFirestore();
+                                    Navigator.pop(context);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Save Split',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -675,11 +920,7 @@ class _MySplitPageState extends State<MySplitPage>  {
     );
   }
 
-  Widget _buildMuscleGroupSection(String muscleGroup, StateSetter setState) {
-    final TextEditingController setsController = TextEditingController();
-    final TextEditingController repsController = TextEditingController();
-    final TextEditingController weightController = TextEditingController();
-
+  Widget _buildModernMuscleGroupSection(String muscleGroup, StateSetter setState, ScrollController controller) {
     // Ensure there's an entry for this muscle group in the map
     selectedExercises.putIfAbsent(muscleGroup, () => null);
 
@@ -688,184 +929,392 @@ class _MySplitPageState extends State<MySplitPage>  {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      padding: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with muscle group name and delete button
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[850],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.fitness_center,
+                        color: Colors.blue[400],
+                        size: 16,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        muscleGroup,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          "${daySplitData[selectedDay]![muscleGroup]!.length} exercises",
+                          style: TextStyle(
+                            color: Colors.blue[300],
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete_outline, color: Colors.red[400], size: 18),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(minWidth: 32, minHeight: 32),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          backgroundColor: Colors.grey[900],
+                          title: Text(
+                            "Remove $muscleGroup?",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          content: Text(
+                            "This will remove all exercises for this muscle group.",
+                            style: TextStyle(color: Colors.grey[300]),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text('Cancel', style: TextStyle(color: Colors.grey[400])),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  daySplitData[selectedDay]!.remove(muscleGroup);
+                                  selectedMuscleGroups.remove(muscleGroup);
+                                  selectedExercises.remove(muscleGroup);
+                                });
+                                Navigator.of(context).pop();
+                              },
+                              child: Text('Remove', style: TextStyle(color: Colors.red[400])),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 16),
+
+            // Existing exercises list
+            if (daySplitData[selectedDay]![muscleGroup]!.isNotEmpty) ...[
+              ...daySplitData[selectedDay]![muscleGroup]!.map((exercise) => Dismissible(
+                key: ValueKey(exercise.name + exercise.sets.toString() + exercise.reps.toString() + exercise.weight.toString()),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.red[400],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (_) {
+                  setState(() => daySplitData[selectedDay]![muscleGroup]!.remove(exercise));
+                },
+                child: Container(
+                  margin: EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[850],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              exercise.name,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              '${exercise.sets} sets × ${exercise.reps} reps @ ${exercise.weight} lbs',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.fitness_center, color: Colors.blue[400], size: 20),
+                    ],
+                  ),
+                ),
+              )).toList(),
+
+              SizedBox(height: 16),
+            ],
+
+            // Add new exercise section
+            _buildExerciseInputCard(muscleGroup, setState, controller),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExerciseInputCard(String muscleGroup, StateSetter setState, ScrollController controller) {
+    // Get or create persistent controllers for this muscle group
+    _setsControllers[muscleGroup] ??= TextEditingController();
+    _repsControllers[muscleGroup] ??= TextEditingController();
+    _weightControllers[muscleGroup] ??= TextEditingController();
+
+    return Container(
       decoration: BoxDecoration(
         color: Colors.grey[850],
-        borderRadius: BorderRadius.circular(8.0),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[700]!, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(muscleGroup, style: const TextStyle(color: Colors.white, fontSize: 18)),
-              IconButton(
-                icon: Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: Text("Confirm Deletion"),
-                      content: Text("Delete the muscle group '$muscleGroup'?"),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancel")),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              daySplitData[selectedDay]!.remove(muscleGroup);
-                              selectedMuscleGroups.remove(muscleGroup);
-                              selectedExercises.remove(muscleGroup);
-                              Navigator.of(context).pop();
-                            });
-                          },
-                          child: const Text("Delete"),
-                        ),
-                      ],
+          // Exercise dropdown
+          Container(
+            padding: EdgeInsets.all(12),
+            child: DropdownSearch<SingleExercise>(
+              popupProps: PopupProps.menu(
+                showSelectedItems: true,
+                showSearchBox: true,
+                constraints: BoxConstraints(maxHeight: 300),
+                containerBuilder: (context, popupWidget) => Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900],
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: popupWidget,
+                ),
+                searchFieldProps: TextFieldProps(
+                  decoration: InputDecoration(
+                    hintText: "Search exercises...",
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                    filled: true,
+                    fillColor: Colors.grey[900],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 8.0),
-
-          // Existing list of exercises
-          ...daySplitData[selectedDay]![muscleGroup]!.map((exercise) => Dismissible(
-            key: ValueKey(exercise.name + exercise.sets.toString() + exercise.reps.toString() + exercise.weight.toString()),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              alignment: Alignment.centerRight,
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              color: Colors.red,
-              child: Icon(Icons.delete, color: Colors.white),
-            ),
-            onDismissed: (_) {
-              setState(() => daySplitData[selectedDay]![muscleGroup]!.remove(exercise));
-            },
-            child: Column(
-              children: [
-                ListTile(
-                  title: Text(exercise.name, style: const TextStyle(color: Colors.white)),
-                  subtitle: Text('${exercise.sets} sets x ${exercise.reps} reps at ${exercise.weight} lbs', style: const TextStyle(color: Colors.grey)),
+                  ),
+                  style: TextStyle(color: Colors.white),
                 ),
-                Divider(color: Colors.grey[700], thickness: 0.8, height: 1),
-              ],
-            ),
-          )),
-
-          const SizedBox(height: 8.0),
-
-          // Dropdown to pick new exercise
-          DropdownSearch<SingleExercise>(
-            popupProps: PopupProps.menu(
-              showSelectedItems: true,
-              showSearchBox: true,
-              itemBuilder: (context, item, isSelected) => ListTile(
-                title: Text(item.name),
-                subtitle: Text(item.muscleGroup),
-              ),
-            ),
-            items: exerciseList,
-            selectedItem: selectedExercises[muscleGroup],
-            onChanged: (SingleExercise? selected) {
-              setState(() => selectedExercises[muscleGroup] = selected);
-            },
-            dropdownDecoratorProps: DropDownDecoratorProps(
-              dropdownSearchDecoration: InputDecoration(
-                labelText: 'Add an Exercise',
-                labelStyle: TextStyle(color: Colors.white),
-                filled: true,
-                fillColor: Colors.grey[900],
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.grey.shade800),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.blue),
+                itemBuilder: (context, item, isSelected) => Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.grey[900],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.name,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        item.muscleGroup,
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              baseStyle: TextStyle(color: Colors.white, fontSize: 16),
+              items: exerciseList,
+              selectedItem: selectedExercises[muscleGroup],
+              onChanged: (SingleExercise? selected) {
+                setState(() {
+                  selectedExercises[muscleGroup] = selected;
+                });
+              },
+              dropdownDecoratorProps: DropDownDecoratorProps(
+                dropdownSearchDecoration: InputDecoration(
+                  labelText: 'Select Exercise',
+                  labelStyle: TextStyle(color: Colors.grey[400]),
+                  filled: true,
+                  fillColor: Colors.grey[900],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey[700]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                ),
+                baseStyle: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              itemAsString: (item) => item.name,
+              compareFn: (a, b) => a.name == b.name && a.muscleGroup == b.muscleGroup,
             ),
-            itemAsString: (item) => item.name,
-            compareFn: (a, b) => a.name == b.name && a.muscleGroup == b.muscleGroup,
           ),
 
-          const SizedBox(height: 8.0),
-
-          // Input fields for sets/reps/weight
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          // Sets, Reps, Weight inputs in a horizontal layout
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
-                buildTextField('Sets', setsController, width: 90),
-                buildTextField('Reps', repsController, width: 90),
-                buildTextField('Weight', weightController, width: 110),
+                Expanded(
+                  child: _buildModernTextField(
+                    'Sets',
+                    _setsControllers[muscleGroup]!,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: _buildModernTextField(
+                    'Reps',
+                    _repsControllers[muscleGroup]!,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: _buildModernTextField(
+                    'Weight',
+                    _weightControllers[muscleGroup]!,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 8.0),
 
-          ElevatedButton(
-            onPressed: () {
-              final selected = selectedExercises[muscleGroup];
-              if (selected != null &&
-                  setsController.text.isNotEmpty &&
-                  repsController.text.isNotEmpty &&
-                  weightController.text.isNotEmpty) {
-                final int sets = int.tryParse(setsController.text) ?? 0;
-                final int reps = int.tryParse(repsController.text) ?? 0;
-                final double weight = double.tryParse(weightController.text) ?? 0;
+          // Add button
+          Container(
+            padding: EdgeInsets.all(12),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  final selected = selectedExercises[muscleGroup];
+                  if (selected != null &&
+                      _setsControllers[muscleGroup]!.text.isNotEmpty &&
+                      _repsControllers[muscleGroup]!.text.isNotEmpty &&
+                      _weightControllers[muscleGroup]!.text.isNotEmpty) {
+                    final int sets = int.tryParse(_setsControllers[muscleGroup]!.text) ?? 0;
+                    final int reps = int.tryParse(_repsControllers[muscleGroup]!.text) ?? 0;
+                    final double weight = double.tryParse(_weightControllers[muscleGroup]!.text) ?? 0;
 
-                if (sets > 0 && reps > 0 && weight > 0) {
-                  setState(() {
-                    daySplitData[selectedDay]![muscleGroup]!.add(
-                      ExerciseDetail(name: selected.name, sets: sets, reps: reps, weight: weight),
-                    );
+                    if (sets > 0 && reps > 0 && weight > 0) {
+                      setState(() {
+                        daySplitData[selectedDay]![muscleGroup]!.add(
+                          ExerciseDetail(name: selected.name, sets: sets, reps: reps, weight: weight),
+                        );
 
-                    // Clear input
-                    setsController.clear();
-                    repsController.clear();
-                    weightController.clear();
-                    selectedExercises[muscleGroup] = null;
-                  });
-                }
-              }
-            },
-            child: const Text('Add Exercise', style: TextStyle(color: Colors.black)),
+                        // Clear input
+                        _setsControllers[muscleGroup]!.clear();
+                        _repsControllers[muscleGroup]!.clear();
+                        _weightControllers[muscleGroup]!.clear();
+                        selectedExercises[muscleGroup] = null;
+                      });
+                    }
+                  }
+                },
+                icon: Icon(Icons.add, color: Colors.white, size: 18),
+                label: Text(
+                  'Add Exercise',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-
-
-  Container buildTextField(String label, TextEditingController controller, {double width = 85}) {
+  Widget _buildModernTextField(String label, TextEditingController controller, {
+    TextInputType? keyboardType,
+  }) {
     return Container(
-      width: width,
-      margin: EdgeInsets.only(right: 10),
       child: TextField(
         controller: controller,
+        keyboardType: keyboardType,
+        autofocus: false,
+        enableInteractiveSelection: true,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white),
+          labelStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
           filled: true,
-          fillColor: Colors.grey[850],
+          fillColor: Colors.grey[900],
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(color: Colors.grey[700]!),
-            borderRadius: BorderRadius.circular(10),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.blue),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.blue, width: 2),
           ),
         ),
-        keyboardType: TextInputType.number,
-        style: TextStyle(color: Colors.white, fontSize: 12),
+        style: TextStyle(color: Colors.white, fontSize: 16),
       ),
     );
   }
@@ -895,5 +1344,15 @@ class _MySplitPageState extends State<MySplitPage>  {
       }
       db.saveWorkoutSplits(weeklySplits);
     });
+  }
+
+  @override
+  void dispose() {
+    // Dispose all text field controllers
+    _setsControllers.values.forEach((controller) => controller.dispose());
+    _repsControllers.values.forEach((controller) => controller.dispose());
+    _weightControllers.values.forEach((controller) => controller.dispose());
+    _muscleGroupPageController.dispose();
+    super.dispose();
   }
 }
