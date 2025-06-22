@@ -9,6 +9,7 @@ import 'package:gymapp/data/FoodData.dart';
 import '../data/hive_database.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
+
 class CalorieTrackerPage extends StatefulWidget {
   final DateTime selectedDate;
   final Function? onReturn;
@@ -34,6 +35,15 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   final TextEditingController proteinController = TextEditingController();
   final TextEditingController fatController = TextEditingController();
 
+  // FatSecret API credentials
+  static const String clientId = '8a6e7daf65c041cbb904ae833f29efdb';
+  static const String clientSecret = '584603b00aae4e0fb34fe4bc39389cd8';
+  static const String tokenUrl = 'https://oauth.fatsecret.com/connect/token';
+  static const String apiBaseUrl = 'https://platform.fatsecret.com/rest';
+
+  String? _accessToken;
+  DateTime? _tokenExpiry;
+
   List<dynamic> _suggestions = [];
   List<dynamic> _localFoods = [];
   Map<String, dynamic>? selectedFood;
@@ -49,6 +59,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     fetchLocalFoods();
+    _getAccessToken(); // Get initial access token
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_tabController.index == 0) {
         _searchFocusNode.requestFocus();
@@ -450,84 +461,119 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       return;
     }
 
-    final String apiUrl = 'https://api.nal.usda.gov/fdc/v1/foods/search';
-    final String apiKey = '24V4GrHFYLOgDagrASb3VTRg8CrbzQVAu4Ew42wD';
-
-    final response = await http.get(
-      Uri.parse('$apiUrl?api_key=$apiKey&query=$query'),
-    );
-
-    List<Map<String, dynamic>> apiFoods = [];
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      List<dynamic> foodsList = data['foods'] ?? [];
-
-      // Ensure correct parsing of API food items
-      apiFoods = foodsList.map<Map<String, dynamic>>((food) {
-        return {
-          'food_name': (food['description'] as String? ?? 'Unknown').toLowerCase(),
-          'calories': food['foodNutrients'].firstWhere(
-                  (nutrient) => nutrient['nutrientName'] == 'Energy',
-              orElse: () => {'value': 0})['value'].toString(),
-          'protein': food['foodNutrients'].firstWhere(
-                  (nutrient) => nutrient['nutrientName'] == 'Protein',
-              orElse: () => {'value': 0})['value'].toString(),
-          'fats': food['foodNutrients'].firstWhere(
-                  (nutrient) => nutrient['nutrientName'] == 'Total lipid (fat)',
-              orElse: () => {'value': 0})['value'].toString(),
-          'carbs': food['foodNutrients'].firstWhere(
-                  (nutrient) => nutrient['nutrientName'] == 'Carbohydrate, by difference',
-              orElse: () => {'value': 0})['value'].toString(),
-          'is_local': false,
-        };
-      }).toList();
+    // Ensure we have a valid token
+    if (!await _ensureValidToken()) {
+      print('Failed to get valid access token');
+      return;
     }
 
-    // Combine API and local foods into one list
-    final List<Map<String, dynamic>> combinedFoods = [];
+    try {
+      // Use FatSecret autocomplete API
+      final response = await http.post(
+        Uri.parse('$apiBaseUrl/server.api'),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Bearer $_accessToken',
+        },
+        body: Uri(queryParameters: {
+          'method': 'foods.autocomplete.v2',
+          'expression': query,
+          'max_results': '10',
+          'format': 'json',
+        }).query,
+      );
 
-    // Add local foods first
-    for (var food in _localFoods) {
-      combinedFoods.add({
-        ...food,
-        'match_score': _calculateMatchScore(query, food['food_name']),
-        'is_local': true,
-      });
-    }
+      print('FatSecret API Response Status: ${response.statusCode}');
+      print('FatSecret API Response Body: ${response.body}');
 
-    // Add API foods
-    for (var food in apiFoods) {
-      combinedFoods.add({
-        ...food,
-        'match_score': _calculateMatchScore(query, food['food_name']),
-        'is_local': false,
-      });
-    }
+      List<Map<String, dynamic>> apiFoods = [];
 
-    // Deduplicate foods by their name (local foods take precedence)
-    final Map<String, Map<String, dynamic>> uniqueFoods = {};
-    for (var food in combinedFoods) {
-      final foodNameKey = food['food_name'].toLowerCase();
-      if (!uniqueFoods.containsKey(foodNameKey) || !food['is_local']) {
-        uniqueFoods[foodNameKey] = food;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('Parsed JSON data: $data');
+
+        // Parse FatSecret autocomplete response
+        if (data['suggestions'] != null) {
+          var suggestionsData = data['suggestions'];
+          print('Suggestions data: $suggestionsData');
+
+          // Handle both single suggestion and multiple suggestions
+          List<dynamic> suggestions = [];
+          if (suggestionsData['suggestion'] is List) {
+            suggestions = suggestionsData['suggestion'];
+          } else if (suggestionsData['suggestion'] is String) {
+            suggestions = [suggestionsData['suggestion']];
+          }
+
+          print('Found ${suggestions.length} suggestions');
+
+          // For each suggestion, we need to get detailed nutrition info
+          for (var suggestion in suggestions) {
+            print('Processing suggestion: $suggestion');
+            String foodName = suggestion.toString();
+            if (foodName.isNotEmpty) {
+              apiFoods.add({
+                'food_name': foodName.toLowerCase(),
+                'food_id': null, // We'll need to get this from search
+                'is_local': false,
+              });
+            }
+          }
+        } else {
+          print('No suggestions found in response');
+        }
+      } else {
+        print('FatSecret API error: ${response.statusCode}');
+        print('Response: ${response.body}');
       }
-    }
 
-    // Sort by match score (descending) and prioritize API results for ties
-    final sortedFoods = uniqueFoods.values.toList()
-      ..sort((a, b) {
-        final int scoreA = a['match_score'] ?? 0;
-        final int scoreB = b['match_score'] ?? 0;
-        final int scoreComparison = scoreB.compareTo(scoreA);
+      // Combine API and local foods into one list
+      final List<Map<String, dynamic>> combinedFoods = [];
 
-        if (scoreComparison != 0) return scoreComparison;
-        return (a['is_local'] ? 1 : 0).compareTo(b['is_local'] ? 1 : 0);
+      // Add local foods first
+      for (var food in _localFoods) {
+        combinedFoods.add({
+          ...food,
+          'match_score': _calculateMatchScore(query, food['food_name']),
+          'is_local': true,
+        });
+      }
+
+      // Add API foods
+      for (var food in apiFoods) {
+        combinedFoods.add({
+          ...food,
+          'match_score': _calculateMatchScore(query, food['food_name']),
+          'is_local': false,
+        });
+      }
+
+      // Deduplicate foods by their name (local foods take precedence)
+      final Map<String, Map<String, dynamic>> uniqueFoods = {};
+      for (var food in combinedFoods) {
+        final foodNameKey = food['food_name'].toLowerCase();
+        if (!uniqueFoods.containsKey(foodNameKey) || !food['is_local']) {
+          uniqueFoods[foodNameKey] = food;
+        }
+      }
+
+      // Sort by match score (descending) and prioritize API results for ties
+      final sortedFoods = uniqueFoods.values.toList()
+        ..sort((a, b) {
+          final int scoreA = a['match_score'] ?? 0;
+          final int scoreB = b['match_score'] ?? 0;
+          final int scoreComparison = scoreB.compareTo(scoreA);
+
+          if (scoreComparison != 0) return scoreComparison;
+          return (a['is_local'] ? 1 : 0).compareTo(b['is_local'] ? 1 : 0);
+        });
+
+      setState(() {
+        _suggestions = sortedFoods;
       });
-
-    setState(() {
-      _suggestions = sortedFoods;
-    });
+    } catch (e) {
+      print('Error fetching food info: $e');
+    }
   }
 
 
@@ -572,42 +618,139 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
 
   void fetchNutritionDetailsFromApi(String foodName) async {
     selectedFoodName = foodName;
-    const String apiUrl = 'https://api.nal.usda.gov/fdc/v1/foods/search';
-    const String apiKey = '24V4GrHFYLOgDagrASb3VTRg8CrbzQVAu4Ew42wD';
 
-    final response = await http.get(
-      Uri.parse('$apiUrl?api_key=$apiKey&query=$foodName'),
-    );
+    // Ensure we have a valid token
+    if (!await _ensureValidToken()) {
+      showErrorDialog();
+      return;
+    }
 
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      if (data['foods'] != null && data['foods'].isNotEmpty) {
-        var foodItem = data['foods'][0]; // Take the first result as the best match
+    try {
+      // First, search for the food to get its ID
+      final searchResponse = await http.post(
+        Uri.parse('$apiBaseUrl/server.api'),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Bearer $_accessToken',
+        },
+        body: Uri(queryParameters: {
+          'method': 'foods.search',
+          'search_expression': foodName,
+          'max_results': '1',
+          'format': 'json',
+        }).query,
+      );
 
-        setState(() {
-          originalCalories = foodItem['foodNutrients'].firstWhere(
-                  (nutrient) => nutrient['nutrientName'] == 'Energy',
-              orElse: () => {'value': 0})['value'].toDouble();
-          originalProtein = foodItem['foodNutrients'].firstWhere(
-                  (nutrient) => nutrient['nutrientName'] == 'Protein',
-              orElse: () => {'value': 0})['value'].toDouble();
-          originalFats = foodItem['foodNutrients'].firstWhere(
-                  (nutrient) => nutrient['nutrientName'] == 'Total lipid (fat)',
-              orElse: () => {'value': 0})['value'].toDouble();
-          originalCarbs = foodItem['foodNutrients'].firstWhere(
-                  (nutrient) => nutrient['nutrientName'] == 'Carbohydrate, by difference',
-              orElse: () => {'value': 0})['value'].toDouble();
+      print('FatSecret Search Response Status: ${searchResponse.statusCode}');
+      print('FatSecret Search Response Body: ${searchResponse.body}');
 
-          originalServingSize = 100; // Default serving size in grams
-          _gramController.text = originalServingSize.toString();
-          _isUsingGrams = true;
-          updateNutrition(originalServingSize!, _isUsingGrams);
-          showNutritionSheet();
-        });
-      } else {
-        showErrorDialog();
+      if (searchResponse.statusCode == 200) {
+        var searchData = jsonDecode(searchResponse.body);
+        print('Parsed search data: $searchData');
+
+        // Check if the response contains an error
+        if (searchData['error'] != null) {
+          print('Search API error: ${searchData['error']}');
+          showErrorDialog('API Error', 'Failed to search for food: ${searchData['error']['message']}');
+          return;
+        }
+
+        if (searchData['foods'] != null && searchData['foods']['food'] != null) {
+          var foodItem = searchData['foods']['food'];
+          String? foodId = foodItem['food_id'];
+          print('Found food ID: $foodId');
+
+          if (foodId != null) {
+            // Now get detailed nutrition information
+            final nutritionResponse = await http.post(
+              Uri.parse('$apiBaseUrl/server.api'),
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Bearer $_accessToken',
+              },
+              body: Uri(queryParameters: {
+                'method': 'food.get.v2',
+                'food_id': foodId,
+                'format': 'json',
+              }).query,
+            );
+
+            print('FatSecret Nutrition Response Status: ${nutritionResponse.statusCode}');
+            print('FatSecret Nutrition Response Body: ${nutritionResponse.body}');
+
+            if (nutritionResponse.statusCode == 200) {
+              var nutritionData = jsonDecode(nutritionResponse.body);
+              print('Parsed nutrition data: $nutritionData');
+
+              // Check if the response contains an error
+              if (nutritionData['error'] != null) {
+                print('Nutrition API error: ${nutritionData['error']}');
+                showErrorDialog('API Error', 'Failed to get nutrition data: ${nutritionData['error']['message']}');
+                return;
+              }
+
+              if (nutritionData['food'] != null) {
+                var food = nutritionData['food'];
+                var servings = food['servings'];
+                print('Food servings: $servings');
+
+                if (servings != null && servings['serving'] != null) {
+                  var servingData = servings['serving'];
+                  print('Serving data: $servingData');
+
+                  // Handle both single serving (object) and multiple servings (array)
+                  Map<String, dynamic> serving;
+                  if (servingData is List) {
+                    // Multiple servings - prefer 100g serving or use first one
+                    List<Map<String, dynamic>> servingList = List<Map<String, dynamic>>.from(servingData);
+                    serving = servingList.firstWhere(
+                          (s) => s['metric_serving_amount'] == '100.000' || s['metric_serving_amount'] == 100.0,
+                      orElse: () => servingList.first,
+                    );
+                    print('Selected serving from multiple: $serving');
+                  } else {
+                    // Single serving
+                    serving = Map<String, dynamic>.from(servingData);
+                    print('Single serving: $serving');
+                  }
+
+                  setState(() {
+                    // Extract nutrition values per 100g (convert strings to numbers)
+                    var calories = double.tryParse(serving['calories'].toString()) ?? 0.0;
+                    var protein = double.tryParse(serving['protein'].toString()) ?? 0.0;
+                    var fat = double.tryParse(serving['fat'].toString()) ?? 0.0;
+                    var carbs = double.tryParse(serving['carbohydrate'].toString()) ?? 0.0;
+                    var servingSize = double.tryParse(serving['metric_serving_amount'].toString()) ?? 100.0;
+
+                    print('Raw nutrition values - Calories: $calories, Protein: $protein, Fat: $fat, Carbs: $carbs, Serving Size: $servingSize');
+
+                    // Convert to per 100g values
+                    double factor = 100 / servingSize;
+                    originalCalories = (calories * factor);
+                    originalProtein = (protein * factor);
+                    originalFats = (fat * factor);
+                    originalCarbs = (carbs * factor);
+                    originalServingSize = 100; // Default to 100g
+
+                    print('Converted to per 100g - Calories: $originalCalories, Protein: $originalProtein, Fat: $originalFats, Carbs: $originalCarbs');
+
+                    _gramController.text = originalServingSize.toString();
+                    _isUsingGrams = true;
+                    updateNutrition(originalServingSize!, _isUsingGrams);
+                    showNutritionSheet();
+                  });
+                  return;
+                }
+              }
+            }
+          }
+        }
       }
-    } else {
+
+      // If we get here, something went wrong
+      showErrorDialog();
+    } catch (e) {
+      print('Error fetching nutrition details: $e');
       showErrorDialog();
     }
   }
@@ -615,6 +758,9 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
 
 
   void updateNutrition(double amount, bool isGrams) {
+    print('updateNutrition called with amount: $amount, isGrams: $isGrams');
+    print('originalCalories: $originalCalories, originalProtein: $originalProtein, originalFats: $originalFats, originalCarbs: $originalCarbs');
+
     double factor;
     if (isGrams) {
       // If input is in grams, calculate factor based on original serving size
@@ -630,6 +776,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       'Fats': (originalFats! * factor).toStringAsFixed(2),
       'Carbs': (originalCarbs! * factor).toStringAsFixed(2),
     };
+
+    print('Updated selectedFood: $selectedFood');
   }
 
   void toggleMeasurementMode(bool usingGrams) {
@@ -658,6 +806,15 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
 
 
   void showNutritionSheet() {
+    print('showNutritionSheet called');
+    print('selectedFoodName: $selectedFoodName');
+    print('selectedFood: $selectedFood');
+    print('originalCalories: $originalCalories');
+    print('originalProtein: $originalProtein');
+    print('originalFats: $originalFats');
+    print('originalCarbs: $originalCarbs');
+    print('originalServingSize: $originalServingSize');
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -828,13 +985,13 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     );
     final User? user = FirebaseAuth.instance.currentUser;
     addFood(
-        user!.uid,
-        widget.selectedDate,
-        selectedFoodName!,
-        selectedFood!['Calories'],
-        selectedFood!['Protein'],
-        selectedFood!['Carbs'],
-        selectedFood!['Fats'],
+      user!.uid,
+      widget.selectedDate,
+      selectedFoodName!,
+      selectedFood!['Calories'],
+      selectedFood!['Protein'],
+      selectedFood!['Carbs'],
+      selectedFood!['Fats'],
     );
 
     Navigator.pop(context);
@@ -863,13 +1020,13 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     }
   }
 
-  void showErrorDialog() {
+  void showErrorDialog([String title = "Error", String message = "Failed to load nutrition data."]) {
     showDialog(
       context: context,
       builder: (ctx) =>
           AlertDialog(
-            title: Text("Error"),
-            content: Text("Failed to load nutrition data."),
+            title: Text(title),
+            content: Text(message),
             actions: <Widget>[
               TextButton(
                 child: Text('Okay'),
@@ -880,6 +1037,48 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
             ],
           ),
     );
+  }
+
+  // FatSecret OAuth 2.0 token management
+  Future<void> _getAccessToken() async {
+    try {
+      // Create Basic Auth header
+      String basicAuth = 'Basic ' + base64Encode(utf8.encode('$clientId:$clientSecret'));
+
+      final response = await http.post(
+        Uri.parse(tokenUrl),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': basicAuth,
+        },
+        body: Uri(queryParameters: {
+          'grant_type': 'client_credentials',
+          'scope': 'basic premier',
+        }).query,
+      );
+
+      print('Token Response Status: ${response.statusCode}');
+      print('Token Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _accessToken = data['access_token'];
+        _tokenExpiry = DateTime.now().add(Duration(seconds: data['expires_in']));
+        print('Access token obtained successfully: $_accessToken');
+      } else {
+        print('Failed to get access token: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
+    } catch (e) {
+      print('Error getting access token: $e');
+    }
+  }
+
+  Future<bool> _ensureValidToken() async {
+    if (_accessToken == null || _tokenExpiry == null || DateTime.now().isAfter(_tokenExpiry!)) {
+      await _getAccessToken();
+    }
+    return _accessToken != null;
   }
 
   @override
