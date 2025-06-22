@@ -23,7 +23,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _controller = TextEditingController();
-  final TextEditingController _gramController = TextEditingController();
+  final TextEditingController _servingsController = TextEditingController();
+  final TextEditingController _gramsController = TextEditingController();
   final HiveDatabase hiveDatabase = HiveDatabase();
   final FocusNode _searchFocusNode = FocusNode();  // Added FocusNode here
   bool _initialFocusRequested = false;
@@ -65,11 +66,10 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         _searchFocusNode.requestFocus();
       }
     });
-    _gramController.addListener(() {
-      double input = double.tryParse(_gramController.text) ?? 0;
-      updateNutrition(input, _isUsingGrams);
+    _gramsController.addListener(() {
+      double input = double.tryParse(_gramsController.text) ?? 0;
+      updateNutrition(input);
     });
-
   }
 
   @override
@@ -82,7 +82,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     proteinController.dispose();
     fatController.dispose();
     _controller.dispose();
-    _gramController.dispose();
+    _servingsController.dispose();
+    _gramsController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
@@ -269,10 +270,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
           originalProtein = ((data['product']['nutriments']['proteins_100g'] ?? 0) / 100 * originalServingSize).toDouble();
           originalFats = ((data['product']['nutriments']['fat_100g'] ?? 0) / 100 * originalServingSize).toDouble();
           originalCarbs = ((data['product']['nutriments']['carbohydrates_100g'] ?? 0) / 100 * originalServingSize).toDouble();
-          _gramController.text = originalServingSize.toString();
-          _isUsingGrams = true;
-          updateNutrition(originalServingSize!, _isUsingGrams);
-          print(originalServingSize);// Updates the UI with the default values calculated for 100 grams
+
+          updateNutrition(originalServingSize!);
           showNutritionSheet();
         });
       } else {
@@ -604,10 +603,8 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         originalCarbs = double.parse(food['carbs']);
         // If local food doesn't have serving size info, default to 100g
         originalServingSize = food.containsKey('serving_size') ? double.parse(food['serving_size']) : 100.0;
-        _isUsingGrams = true;
-        _gramController.text = originalServingSize.toString();
 
-        updateNutrition(originalServingSize!, _isUsingGrams);
+        updateNutrition(originalServingSize!);
         showNutritionSheet();
       });
     } else {
@@ -734,9 +731,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
 
                     print('Converted to per 100g - Calories: $originalCalories, Protein: $originalProtein, Fat: $originalFats, Carbs: $originalCarbs');
 
-                    _gramController.text = originalServingSize.toString();
-                    _isUsingGrams = true;
-                    updateNutrition(originalServingSize!, _isUsingGrams);
+                    updateNutrition(originalServingSize!);
                     showNutritionSheet();
                   });
                   return;
@@ -757,18 +752,11 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
 
 
 
-  void updateNutrition(double amount, bool isGrams) {
-    print('updateNutrition called with amount: $amount, isGrams: $isGrams');
+  void updateNutrition(double amount) {
+    print('updateNutrition called with amount: $amount');
     print('originalCalories: $originalCalories, originalProtein: $originalProtein, originalFats: $originalFats, originalCarbs: $originalCarbs');
 
-    double factor;
-    if (isGrams) {
-      // If input is in grams, calculate factor based on original serving size
-      factor = amount / originalServingSize!;
-    } else {
-      // If input is in servings, one serving is exactly the original serving size
-      factor = amount;  // 1 serving equals the nutrient content of originalServingSize grams
-    }
+    double factor = amount / originalServingSize!;
 
     selectedFood = {
       'Calories': (originalCalories! * factor).toStringAsFixed(0),
@@ -780,184 +768,116 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     print('Updated selectedFood: $selectedFood');
   }
 
-  void toggleMeasurementMode(bool usingGrams) {
-    setState(() {
-      _isUsingGrams = usingGrams;
-      if (!usingGrams) {
-        // When switching to servings, set gram controller to '1' meaning 1 serving
-        _gramController.text = '1';
-        updateNutrition(1, false);  // Update assuming '1' serving
-      } else {
-        // When switching to grams, reset to original serving size in grams
-        _gramController.text = originalServingSize.toString();
-        updateNutrition(originalServingSize!, true);
+  void showNutritionSheet() {
+    _servingsController.text = '1';
+    _gramsController.text = originalServingSize!.toStringAsFixed(0);
+
+    // Add listeners to sync servings and grams fields
+    _servingsController.addListener(() {
+      final servings = double.tryParse(_servingsController.text) ?? 0;
+      final newGrams = (servings * originalServingSize!).toStringAsFixed(0);
+      if (_gramsController.text != newGrams) {
+        _gramsController.text = newGrams;
+        updateNutrition(double.parse(newGrams));
       }
     });
-  }
 
-
-  bool _isUsingGrams = false;  // Default to grams
-
-  void setMeasurementMode(bool usingGrams) {
-    setState(() {
-      _isUsingGrams = usingGrams;
+    _gramsController.addListener(() {
+      final grams = double.tryParse(_gramsController.text) ?? 0;
+      final newServings = (grams / originalServingSize!).toStringAsFixed(1);
+      if (_servingsController.text != newServings) {
+        _servingsController.text = newServings;
+        updateNutrition(grams);
+      }
     });
-  }
-
-
-  void showNutritionSheet() {
-    print('showNutritionSheet called');
-    print('selectedFoodName: $selectedFoodName');
-    print('selectedFood: $selectedFood');
-    print('originalCalories: $originalCalories');
-    print('originalProtein: $originalProtein');
-    print('originalFats: $originalFats');
-    print('originalCarbs: $originalCarbs');
-    print('originalServingSize: $originalServingSize');
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          maxChildSize: 0.94,
-          minChildSize: 0.5,
-          expand: false,
-          builder: (BuildContext context, ScrollController scrollController) {
-            return StatefulBuilder(
-              builder: (BuildContext context, StateSetter setModalState) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900],
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                  ),
-                  padding: EdgeInsets.all(20),
-                  child: ListView(
-                    controller: scrollController,
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            final calories = double.tryParse(selectedFood?['Calories'] ?? '0') ?? 0;
+            final protein = double.tryParse(selectedFood?['Protein'] ?? '0') ?? 0;
+            final fats = double.tryParse(selectedFood?['Fats'] ?? '0') ?? 0;
+            final carbs = double.tryParse(selectedFood?['Carbs'] ?? '0') ?? 0;
+            final totalMacros = protein + fats + carbs;
+
+            return Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Color(0xFF1F1F1F),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-
-
-                      SizedBox(height: 10),
-                      Center(
-                        child: Text(
-                          "${selectedFoodName ?? 'Selected Food'} ",
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
+                      Text(
+                        selectedFoodName ?? 'Selected Food',
+                        style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 10),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: TextField(
-                          controller: _gramController,
-                          decoration: InputDecoration(
-                            labelText: _isUsingGrams ? 'Grams' : 'Servings',
-                            labelStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white, width: 2.0),
-                            ),
-                            fillColor: Colors.transparent,
-                            filled: true,
-                          ),
-                          style: TextStyle(color: Colors.white),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            double input = double.tryParse(value) ?? 0;
-                            setModalState(() {
-                              updateNutrition(input, _isUsingGrams);
-                            });
-                          },
-                        ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                      SizedBox(height: 8),
-                      Center(
-                        child: ToggleButtons(
-                          isSelected: [_isUsingGrams, !_isUsingGrams],
-                          renderBorder: false,
-                          fillColor: Colors.transparent,
-                          splashColor: Colors.transparent,  // Removes the splash effect
-                          highlightColor: Colors.transparent,  // Removes the highlight effect
-
-                          children: <Widget>[
-                            Container(
-                              margin: EdgeInsets.only(right: 12),
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              decoration: BoxDecoration(
-                                  color: _isUsingGrams ? Color.fromRGBO(20, 20, 20, 1) : Colors.white, // Darker when selected, lighter when not
-                                  borderRadius: BorderRadius.circular(30)
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'servings',
-                                  style: TextStyle(color: _isUsingGrams ? Colors.white : Colors.black),
-                                ),
-                              ),
-                            ),
-
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              decoration: BoxDecoration(
-                                  color: !_isUsingGrams ? Color.fromRGBO(20, 20, 20, 1) : Colors.white, // Darker when selected, lighter when not
-                                  borderRadius: BorderRadius.circular(30)
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'grams',
-                                  style: TextStyle(color: !_isUsingGrams ? Colors.white : Colors.black),
-                                ),
-                              ),
-                            ),
-                          ],
-                          onPressed: (int index) {
-                            setModalState(() {
-                              toggleMeasurementMode(index == 1);
-                            });
-                          },
-                        ),
-                      ),
-                      if (selectedFood != null) ...[
-                        SizedBox(height: 10),
-                        Center(
-                          child: Text(
-                            'Calories: ${selectedFood!['Calories']}',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                        Center(
-                          child: Text(
-                            'Protein: ${selectedFood!['Protein']}g',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                        Center(
-                          child: Text(
-                            'Fats: ${selectedFood!['Fats']}g',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                        Center(
-                          child: Text(
-                            'Carbs: ${selectedFood!['Carbs']}g',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                        SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () => logFood(),
-                          child: Text("Log Food",
-                            style: TextStyle(color: Colors.black),),
-                        ),
-                      ]
                     ],
                   ),
-                );
-              },
+                  SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField('Servings', _servingsController, () => setModalState(() {})),
+                      ),
+                      SizedBox(width: 20),
+                      Expanded(
+                        child: _buildTextField('Grams', _gramsController, () => setModalState(() {})),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Nutritional Information (per 100g)',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    childAspectRatio: 1.5,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    children: [
+                      _buildNutritionStatCircle('Calories', calories, 'kcal', Color(0xFFE91E63), calories / 2000),
+                      _buildNutritionStatCircle('Protein', protein, 'g', Color(0xFF3F51B5), totalMacros > 0 ? protein / totalMacros : 0),
+                      _buildNutritionStatCircle('Fats', fats, 'g', Color(0xFFFF9800), totalMacros > 0 ? fats / totalMacros : 0),
+                      _buildNutritionStatCircle('Carbs', carbs, 'g', Color(0xFF4CAF50), totalMacros > 0 ? carbs / totalMacros : 0),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => logFood(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF8A2BE2),
+                      minimumSize: Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    child: Text("Log Food", style: TextStyle(color: Colors.white, fontSize: 16)),
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -965,6 +885,71 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     );
   }
 
+  Widget _buildTextField(String label, TextEditingController controller, VoidCallback onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: Colors.grey, fontSize: 14)),
+        SizedBox(height: 5),
+        TextField(
+          controller: controller,
+          style: TextStyle(color: Colors.white, fontSize: 16),
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Color(0xFF333333),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+          ),
+          onChanged: (value) => onChanged(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNutritionStatCircle(String name, double value, String unit, Color color, double progress) {
+    return Container(
+      padding: EdgeInsets.all(8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 60,
+            height: 60,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 5,
+                    backgroundColor: Colors.grey.withOpacity(0.3),
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                  ),
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      value.toStringAsFixed(name == 'Calories' ? 0 : 1),
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 5),
+          Text('$name ($unit)', style: TextStyle(color: Colors.grey, fontSize: 12)),
+        ],
+      ),
+    );
+  }
 
   void logFood() {
     if (selectedFood == null) {
