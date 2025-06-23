@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'paywall_screen.dart';
 
 import '../components/my_button.dart';
 import '../components/my_textfield.dart';
@@ -8,7 +9,7 @@ import '../components/square_tile.dart';
 import '../services/auth_service.dart';
 import 'home_page.dart';
 import 'auth_page.dart';
-
+import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
@@ -29,64 +30,60 @@ class _RegisterPageState extends State<RegisterPage> {
   String givenMessage = "";
   // sign user in method
   void signUserUp() async {
-    // Show loading circle
     showDialog(
       context: context,
-      barrierDismissible: false, // prevent dismiss by tapping outside the dialog
-      builder: (context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
-    // Check if passwords match
-    if (passwordController.text == ConfirmpasswordController.text) {
-      try {
-        // Try creating the user
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: emailController.text,
-          password: passwordController.text,
-        );
-        // Optionally, navigate to a new page upon successful signup
-        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
-      } on FirebaseAuthException catch (e) {
-        showDialog(
-          context: context,
-          builder: (context) {
-            String errorMessage = 'An error occurred';
-            if (e.code == 'email-already-in-use') {
-              errorMessage = 'The email address is already in use by another account.';
-            } else if (e.code == 'invalid-email') {
-              errorMessage = 'The email address is not valid.';
-            } else if (e.code == 'weak-password') {
-              errorMessage = 'The password provided is too weak.';
-            }
-            return AlertDialog(
-              backgroundColor: Colors.deepPurple,
-              title: const Text('Registration Failed', style: TextStyle(color: Colors.white)),
-              content: Text(errorMessage, style: const TextStyle(color: Colors.white)),
-            );
-          },
-        );
+    try {
+      if (passwordController.text == ConfirmpasswordController.text) {
+        try {
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: emailController.text,
+            password: passwordController.text,
+          );
+          final User? user = FirebaseAuth.instance.currentUser;
+          await addUserDetails(
+            user!.uid,
+            _firstNameController.text.trim(),
+            _lastNameController.text.trim(),
+            emailController.text.trim(),
+          );
+          if (mounted) {
+            Navigator.pop(context); // pop loading
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => PaywallScreen()));
+          }
+        } on FirebaseAuthException catch (e) {
+          if (mounted) Navigator.pop(context);
+          // Show error dialog after closing loading
+          showDialog(
+            context: context,
+            builder: (context) {
+              String errorMessage = 'An error occurred';
+              if (e.code == 'email-already-in-use') {
+                errorMessage = 'The email address is already in use by another account.';
+              } else if (e.code == 'invalid-email') {
+                errorMessage = 'The email address is not valid.';
+              } else if (e.code == 'weak-password') {
+                errorMessage = 'The password provided is too weak.';
+              }
+              return AlertDialog(
+                backgroundColor: Colors.deepPurple,
+                title: const Text('Registration Failed', style: TextStyle(color: Colors.white)),
+                content: Text(errorMessage, style: const TextStyle(color: Colors.white)),
+              );
+            },
+          );
+        }
+      } else {
+        if (mounted) Navigator.pop(context);
+        NonMatchingPasswordMessage();
       }
-
-      // add user details
-      final User? user = FirebaseAuth.instance.currentUser;
-      addUserDetails(
-          user!.uid,
-          _firstNameController.text.trim(),
-          _lastNameController.text.trim(),
-          emailController.text.trim()
-      );
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      // Optionally show a generic error dialog here
     }
-    else {
-      // If passwords do not match, show error message
-      NonMatchingPasswordMessage();
-    }
-
-    // Pop the loading circle in all cases
-    Navigator.pop(context);
   }
 
   Future<void> addUserDetails(String uid, String firstName, String lastName, String email) async {
@@ -94,6 +91,8 @@ class _RegisterPageState extends State<RegisterPage> {
       'first name': firstName,
       'last name': lastName,
       'email': email,
+      'isTrainerClient': false,
+      'hasPaidSubscription': false,
     });
   }
 
@@ -271,15 +270,15 @@ class _RegisterPageState extends State<RegisterPage> {
                         imagePath: 'lib/images/google.png'
                     ),
 
-                   // SizedBox(width: 25),
+                    // SizedBox(width: 25),
 
                     // apple button
                     //SquareTile(
-                      //onTap: (){
+                    //onTap: (){
 
                     //},
-                        //imagePath: 'lib/images/apple.png'
-                   // )
+                    //imagePath: 'lib/images/apple.png'
+                    // )
                   ],
                 ),
 
@@ -295,7 +294,23 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(width: 4),
                     GestureDetector(
-                      onTap: widget.onTap,
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LoginPage(
+                              onTap: () {
+                                // optional reverse route back to Register if needed
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => RegisterPage(onTap: () {})),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
+
                       child: const Text(
                         'Login now',
                         style: TextStyle(
