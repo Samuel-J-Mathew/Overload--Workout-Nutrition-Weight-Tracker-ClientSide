@@ -6,7 +6,7 @@ import '../models/NutritionalInfo.dart';
 import '../data/hive_database.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/cupertino.dart';
-
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 class NutritionSummaryTile extends StatefulWidget {
   final DateTime selectedDate;
 
@@ -159,15 +159,15 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _macroTile(
-              icon: Icons.flash_on,
+              icon: 	MdiIcons.foodSteak,
               value: _proteinConsumedToday,
               label: "P",
-              color: green,
-              iconColor: green,
+              color: red,
+              iconColor: red,
               iconSize: iconSize,
             ),
             _macroTile(
-              icon: Icons.grain,
+              icon: MdiIcons.breadSlice,
               value: _carbsConsumedToday,
               label: "C",
               color: orange,
@@ -175,11 +175,11 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
               iconSize: iconSize,
             ),
             _macroTile(
-              icon: Icons.local_fire_department,
+              icon: Icons.opacity,
               value: _fatsConsumedToday,
               label: "F",
-              color: red,
-              iconColor: red,
+              color: green,
+              iconColor: green,
               iconSize: iconSize,
             ),
           ],

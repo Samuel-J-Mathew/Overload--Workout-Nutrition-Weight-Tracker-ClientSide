@@ -66,10 +66,6 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         _searchFocusNode.requestFocus();
       }
     });
-    _gramsController.addListener(() {
-      double input = double.tryParse(_gramsController.text) ?? 0;
-      updateNutrition(input);
-    });
   }
 
   @override
@@ -772,25 +768,6 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     _servingsController.text = '1';
     _gramsController.text = originalServingSize!.toStringAsFixed(0);
 
-    // Add listeners to sync servings and grams fields
-    _servingsController.addListener(() {
-      final servings = double.tryParse(_servingsController.text) ?? 0;
-      final newGrams = (servings * originalServingSize!).toStringAsFixed(0);
-      if (_gramsController.text != newGrams) {
-        _gramsController.text = newGrams;
-        updateNutrition(double.parse(newGrams));
-      }
-    });
-
-    _gramsController.addListener(() {
-      final grams = double.tryParse(_gramsController.text) ?? 0;
-      final newServings = (grams / originalServingSize!).toStringAsFixed(1);
-      if (_servingsController.text != newServings) {
-        _servingsController.text = newServings;
-        updateNutrition(grams);
-      }
-    });
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -833,11 +810,23 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   Row(
                     children: [
                       Expanded(
-                        child: _buildTextField('Servings', _servingsController, () => setModalState(() {})),
+                        child: _buildTextField('Servings', _servingsController, () {
+                          final servings = double.tryParse(_servingsController.text) ?? 0;
+                          final newGrams = (servings * originalServingSize!).toStringAsFixed(0);
+                          _gramsController.text = newGrams;
+                          updateNutrition(double.parse(newGrams));
+                          setModalState(() {});
+                        }),
                       ),
                       SizedBox(width: 20),
                       Expanded(
-                        child: _buildTextField('Grams', _gramsController, () => setModalState(() {})),
+                        child: _buildTextField('Grams', _gramsController, () {
+                          final grams = double.tryParse(_gramsController.text) ?? 0;
+                          final newServings = (grams / originalServingSize!).toStringAsFixed(1);
+                          _servingsController.text = newServings;
+                          updateNutrition(grams);
+                          setModalState(() {});
+                        }),
                       ),
                     ],
                   ),
@@ -868,7 +857,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   ElevatedButton(
                     onPressed: () => logFood(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF8A2BE2),
+                      backgroundColor: Color(0xFF424242),
                       minimumSize: Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
