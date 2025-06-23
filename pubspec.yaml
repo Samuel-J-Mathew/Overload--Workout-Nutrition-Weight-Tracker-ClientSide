@@ -37,7 +37,15 @@ dependencies:
   syncfusion_flutter_charts: ^20.4.54
   cloud_functions: ^4.3.1
   crypto: ^3.0.1
+  flutter_launcher_icons: ^0.13.1
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "lib/assets/overloadlogo.png"
+  adaptive_icon_background: "#000000"    # or your brand color (e.g., "#1e1e1e")
+  adaptive_icon_foreground: "lib/assets/overloadlogo.png"
 dev_dependencies:
   flutter_test:
     sdk: flutter
