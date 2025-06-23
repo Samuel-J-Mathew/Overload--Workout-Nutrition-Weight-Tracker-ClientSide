@@ -2,24 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
-        <!-- Put me in the [my_project]/ios/Runner/Info.plist file -->
-        <!-- Google Sign-in Section -->
-        <key>CFBundleURLTypes</key>
-        <array>
-            <dict>
-                <key>CFBundleTypeRole</key>
-                <string>Editor</string>
-                <key>CFBundleURLSchemes</key>
-                <array>
-                    <!-- TODO Replace this value: -->
-                    <!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
-                    <string>com.googleusercontent.apps.644555737003-l09lpah2i99d3829q3mjrnpkluj5icjv</string>
-                </array>
-            </dict>
-        </array>
-        <!-- End of the Google Sign-in Section -->
-	    <key>NSCameraUsageDescription</key>
-        <string>We need camera access to scan barcodes</string>
+		<!-- Put me in the [my_project]/ios/Runner/Info.plist file -->
+		<!-- Google Sign-in Section -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<!-- TODO Replace this value: -->
+					<!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
+					<string>com.googleusercontent.apps.644555737003-l09lpah2i99d3829q3mjrnpkluj5icjv</string>
+				</array>
+			</dict>
+		</array>
+		<!-- End of the Google Sign-in Section -->
+		<key>NSCameraUsageDescription</key>
+		<string>We need camera access to scan barcodes</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -66,10 +66,10 @@
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UIStatusBarHidden</key>
-		<key>LSApplicationQueriesSchemes</key>
-        <array>
-            <string>mailto</string>
-        </array>
+		<false/>
+		<array>
+			<string>mailto</string>
+		</array>
 		<false/>
 	</dict>
 </plist>

@@ -152,7 +152,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
         ),
 
 
-        SizedBox(height: 6,),
+        SizedBox(height: 6),
         Expanded(
           child: Container(
             color: Color.fromRGBO(20, 20, 20, 1),
