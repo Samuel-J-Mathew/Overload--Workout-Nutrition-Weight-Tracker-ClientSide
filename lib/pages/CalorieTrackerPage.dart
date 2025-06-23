@@ -796,9 +796,13 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        selectedFoodName ?? 'Selected Food',
-                        style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: Text(
+                          selectedFoodName ?? 'Selected Food',
+                          style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       IconButton(
                         icon: Icon(Icons.close, color: Colors.white),
