@@ -265,145 +265,151 @@ class _UpdatedHomeState extends State<UpdatedHome> {
         borderRadius: BorderRadius.circular(20),
       ),
       color: Color.fromRGBO(42, 42, 42, 1),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Today\'s Workout',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            Divider(color: Colors.grey[600]),
-            if (todaysSplit.muscleGroups.isEmpty)
-              Center(
-                child: Text(
-                  'No workout planned for today.',
-                  style: TextStyle(color: Colors.grey[400]),
-                ),
-              )
-            else
-              for (var muscleGroup in todaysSplit.muscleGroups) ...[
-                ListTile(
-                  title: Text(
-                    muscleGroup.muscleGroupName,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 18,
-                    ),
+      child: Container(
+        height: _workoutCardHeight,
+        child: SingleChildScrollView(
+          physics: ClampingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Today\'s Workout',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  leading: Icon(Icons.fitness_center, color: Colors.blue[400]),
-                  trailing: CircleAvatar(
-                    backgroundColor: Colors.blue[800],
-                    child: Text(
-                      '${muscleGroup.exercises.length}',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      if (expandedMuscleGroups
-                          .contains(muscleGroup.muscleGroupName)) {
-                        expandedMuscleGroups
-                            .remove(muscleGroup.muscleGroupName);
-                      } else {
-                        expandedMuscleGroups.add(muscleGroup.muscleGroupName);
-                      }
-
-                      // Calculate the new height based on which muscle groups are currently expanded
-                      int totalExpandedExercises =
-                      expandedMuscleGroups.fold(0, (sum, groupName) {
-                        final group = todaysSplit.muscleGroups
-                            .firstWhere((g) => g.muscleGroupName == groupName);
-                        // Return null if not found to prevent exceptions
-
-                        return sum + (group?.exercises.length ?? 0);
-                      });
-
-                      const double baseHeight =
-                      300; // Base height when no muscle groups are expanded
-                      const double extraHeightPerExercise =
-                      65; // Additional height per expanded exercise
-
-                      if (totalExpandedExercises > 0) {
-                        _workoutCardHeight = baseHeight +
-                            (totalExpandedExercises * extraHeightPerExercise);
-                      } else {
-                        // Revert to the initial sizing based on muscle group counts
-                        final muscleGroupCount =
-                            todaysSplit.muscleGroups.length;
-                        if (muscleGroupCount == 1) {
-                          _workoutCardHeight = 150;
-                        } else if (muscleGroupCount == 2) {
-                          _workoutCardHeight = 220;
-                        } else if (muscleGroupCount == 3) {
-                          _workoutCardHeight = 320;
-                        } else if (muscleGroupCount >= 4) {
-                          _workoutCardHeight = 420;
-                        } else {
-                          _workoutCardHeight =
-                          120; // Default for no muscle groups
-                        }
-                      }
-                    });
-                  },
                 ),
                 Divider(color: Colors.grey[600]),
-                if (expandedMuscleGroups
-                    .contains(muscleGroup.muscleGroupName)) ...[
-                  for (var exercise in muscleGroup.exercises) ...[
-                    Builder(
-                      builder: (context) {
-                        // Attempt to fetch most recent exercise details
-                        var recentExercise =
-                        Provider.of<WorkoutData>(context, listen: false)
-                            .getMostRecentExerciseDetails(exercise.name);
-                        var displaySets = recentExercise?.sets ?? exercise.sets;
-                        var displayReps = recentExercise?.reps ?? exercise.reps;
-                        var displayWeight =
-                            recentExercise?.weight ?? exercise.weight;
+                if (todaysSplit.muscleGroups.isEmpty)
+                  Center(
+                    child: Text(
+                      'No workout planned for today.',
+                      style: TextStyle(color: Colors.grey[400]),
+                    ),
+                  )
+                else
+                  for (var muscleGroup in todaysSplit.muscleGroups) ...[
+                    ListTile(
+                      title: Text(
+                        muscleGroup.muscleGroupName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                      ),
+                      leading: Icon(Icons.fitness_center, color: Colors.blue[400]),
+                      trailing: CircleAvatar(
+                        backgroundColor: Colors.blue[800],
+                        child: Text(
+                          '${muscleGroup.exercises.length}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          if (expandedMuscleGroups
+                              .contains(muscleGroup.muscleGroupName)) {
+                            expandedMuscleGroups
+                                .remove(muscleGroup.muscleGroupName);
+                          } else {
+                            expandedMuscleGroups.add(muscleGroup.muscleGroupName);
+                          }
 
-                        return Padding(
-                          padding: const EdgeInsets.only(left: 16.0),
-                          child: ListTile(
-                            leading: Icon(Icons.check_circle_outline,
-                                color: Colors.white),
-                            title: Text(
-                              exercise.name,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            subtitle: Text(
-                              '$displaySets sets x $displayReps reps at $displayWeight lbs',
-                              style: TextStyle(color: Colors.grey[400]),
-                            ),
-                            trailing: IconButton(
-                              icon: Icon(
-                                  exerciseClickStatus[exercise.name] ?? false
-                                      ? Icons.check
-                                      : Icons.add,
-                                  color: Colors.white),
-                              onPressed: () {
-                                setState(() {
-                                  exerciseClickStatus[exercise.name] =
-                                  true; // Set the status to true when clicked
-                                });
-                                workoutData.logExercise(exercise);
-                              },
-                            ),
-                          ),
-                        );
+                          // Calculate the new height based on which muscle groups are currently expanded
+                          int totalExpandedExercises =
+                          expandedMuscleGroups.fold(0, (sum, groupName) {
+                            final group = todaysSplit.muscleGroups
+                                .firstWhere((g) => g.muscleGroupName == groupName);
+                            // Return null if not found to prevent exceptions
+
+                            return sum + (group?.exercises.length ?? 0);
+                          });
+
+                          const double baseHeight =
+                          300; // Base height when no muscle groups are expanded
+                          const double extraHeightPerExercise =
+                          65; // Additional height per expanded exercise
+
+                          if (totalExpandedExercises > 0) {
+                            _workoutCardHeight = baseHeight +
+                                (totalExpandedExercises * extraHeightPerExercise);
+                          } else {
+                            // Revert to the initial sizing based on muscle group counts
+                            final muscleGroupCount =
+                                todaysSplit.muscleGroups.length;
+                            if (muscleGroupCount == 1) {
+                              _workoutCardHeight = 150;
+                            } else if (muscleGroupCount == 2) {
+                              _workoutCardHeight = 220;
+                            } else if (muscleGroupCount == 3) {
+                              _workoutCardHeight = 320;
+                            } else if (muscleGroupCount >= 4) {
+                              _workoutCardHeight = 420;
+                            } else {
+                              _workoutCardHeight =
+                              120; // Default for no muscle groups
+                            }
+                          }
+                        });
                       },
                     ),
-                    Divider(color: Colors.grey[500]),
+                    Divider(color: Colors.grey[600]),
+                    if (expandedMuscleGroups
+                        .contains(muscleGroup.muscleGroupName)) ...[
+                      for (var exercise in muscleGroup.exercises) ...[
+                        Builder(
+                          builder: (context) {
+                            // Attempt to fetch most recent exercise details
+                            var recentExercise =
+                            Provider.of<WorkoutData>(context, listen: false)
+                                .getMostRecentExerciseDetails(exercise.name);
+                            var displaySets = recentExercise?.sets ?? exercise.sets;
+                            var displayReps = recentExercise?.reps ?? exercise.reps;
+                            var displayWeight =
+                                recentExercise?.weight ?? exercise.weight;
+
+                            return Padding(
+                              padding: const EdgeInsets.only(left: 16.0),
+                              child: ListTile(
+                                leading: Icon(Icons.check_circle_outline,
+                                    color: Colors.white),
+                                title: Text(
+                                  exercise.name,
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  '$displaySets sets x $displayReps reps at $displayWeight lbs',
+                                  style: TextStyle(color: Colors.grey[400]),
+                                ),
+                                trailing: IconButton(
+                                  icon: Icon(
+                                      exerciseClickStatus[exercise.name] ?? false
+                                          ? Icons.check
+                                          : Icons.add,
+                                      color: Colors.white),
+                                  onPressed: () {
+                                    setState(() {
+                                      exerciseClickStatus[exercise.name] =
+                                      true; // Set the status to true when clicked
+                                    });
+                                    workoutData.logExercise(exercise);
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        Divider(color: Colors.grey[500]),
+                      ],
+                    ],
                   ],
-                ],
               ],
-          ],
+            ),
+          ),
         ),
       ),
     );
@@ -542,15 +548,13 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                           });
                         },
                         children: [
-                          SingleChildScrollView(
-                            child: buildWorkoutCard(
-                              'Today\'s Workout',
-                              todaysSplit == null
-                                  ? 'No workout data available.'
-                                  : todaysSplit.muscleGroups.isEmpty
-                                  ? 'No workout planned for today.'
-                                  : '',
-                            ),
+                          buildWorkoutCard(
+                            'Today\'s Workout',
+                            todaysSplit == null
+                                ? 'No workout data available.'
+                                : todaysSplit.muscleGroups.isEmpty
+                                ? 'No workout planned for today.'
+                                : '',
                           ),
                           Center(
                               child: buildCustomCard(
@@ -589,634 +593,628 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                 padding: const EdgeInsets.only(top: 10.0),
               ),
               // --- Improvement Section Start ---
-              SizedBox(
-                height: MediaQuery.of(context).size.height *
-                    0.7, // Adjust the height as needed
-                child: Container(
-                  padding: EdgeInsets.all(20),
-                  color: Color.fromRGBO(20, 20, 20, 1),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        // --- Improvement Section Start ---
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 20.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                padding: EdgeInsets.all(20),
+                color: Color.fromRGBO(20, 20, 20, 1),
+                child: Column(
+                  children: [
+                    // --- Improvement Section Start ---
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Improvement',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Row(
                             children: [
-                              Text(
-                                'Improvement',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  // Left column: Biceps (large, full height)
-                                  Expanded(
-                                    flex: 1,
-                                    child: _improvementTile(
-                                      title: mostImprovedGroup ?? "Loading...",
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                              // Left column: Biceps (large, full height)
+                              Expanded(
+                                flex: 1,
+                                child: _improvementTile(
+                                  title: mostImprovedGroup ?? "Loading...",
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Stack(
+                                        alignment: Alignment.center,
                                         children: [
-                                          Stack(
-                                            alignment: Alignment.center,
-                                            children: [
-                                              SizedBox(
-                                                width: 90,
-                                                height: 90,
-                                                child: CircularProgressIndicator(
-                                                  value: ((mostImprovedPercent ?? 0) / 100).clamp(0.0, 1.0),
-                                                  backgroundColor: Colors.grey[800],
-                                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
-                                                  strokeWidth: 8,
-                                                ),
-                                              ),
-                                              Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    "${(mostImprovedPercent ?? 0).toStringAsFixed(0)}%",
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 22,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    "Increase",
-                                                    style: TextStyle(
-                                                      color: Colors.white60,
-                                                      fontSize: 10,
-                                                      fontStyle: FontStyle.italic,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-
-                                            ],
-                                          ),
-                                          SizedBox(height: 12),
-                                          Divider(color: Colors.white70, thickness: 0.75, height: 1),
-                                          SizedBox(height: 6),
-                                          Text(
-                                            "Past Month",
-                                            style: TextStyle(
-                                              color: Colors.white60,
-                                              fontSize: 12,
-                                              fontStyle: FontStyle.italic,
+                                          SizedBox(
+                                            width: 90,
+                                            height: 90,
+                                            child: CircularProgressIndicator(
+                                              value: ((mostImprovedPercent ?? 0) / 100).clamp(0.0, 1.0),
+                                              backgroundColor: Colors.grey[800],
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
+                                              strokeWidth: 8,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                      big: true,
-                                      doubleHeight: true,
-                                    ),
-
-
-
-                                  ),
-                                  SizedBox(width: 12),
-                                  // Right column: Strength and Weight stacked
-                                  Expanded(
-                                    flex: 1,
-                                    child: Column(
-                                      children: [
-                                        _improvementTile(
-                                          title: "Overall Strength",
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min, // ← This prevents overflow
+                                          Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
-                                              SizedBox(height: 2),
-                                              SizedBox(
-                                                height: 20, // reduced from 24
-                                                child: CustomPaint(
-                                                  size: Size(60, 20),
-                                                  painter: overallStrengthChange == null
-                                                      ? null
-                                                      : overallStrengthChange! >= 0
-                                                      ? LineChartPainterUp()
-                                                      : LineChartPainterDown(),
+                                              Text(
+                                                "${(mostImprovedPercent ?? 0).toStringAsFixed(0)}%",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 22,
                                                 ),
                                               ),
-                                              SizedBox(height: 2),
-                                              Divider(
-                                                color: Colors.white70,
-                                                height: 2,
-                                                thickness: 0.75,
-                                              ),
                                               Text(
-                                                overallStrengthChange == null
-                                                    ? "Loading..."
-                                                    : "${overallStrengthChange! >= 0 ? '+' : ''}${overallStrengthChange!.toStringAsFixed(1)}% ${overallStrengthChange! >= 0 ? 'increase' : 'decrease'} in the past month",
+                                                "Increase",
                                                 style: TextStyle(
                                                   color: Colors.white60,
                                                   fontSize: 10,
                                                   fontStyle: FontStyle.italic,
                                                 ),
-                                                textAlign: TextAlign.center,
                                               ),
                                             ],
                                           ),
-                                          halfHeight: true,
+
+                                        ],
+                                      ),
+                                      SizedBox(height: 12),
+                                      Divider(color: Colors.white70, thickness: 0.75, height: 1),
+                                      SizedBox(height: 6),
+                                      Text(
+                                        "Past Month",
+                                        style: TextStyle(
+                                          color: Colors.white60,
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
                                         ),
+                                      ),
+                                    ],
+                                  ),
+                                  big: true,
+                                  doubleHeight: true,
+                                ),
 
 
 
-                                        SizedBox(height: 12),
-                                        _improvementTile(
-                                          title: "Weight (lbs)",
-                                          child: Column(
+                              ),
+                              SizedBox(width: 12),
+                              // Right column: Strength and Weight stacked
+                              Expanded(
+                                flex: 1,
+                                child: Column(
+                                  children: [
+                                    _improvementTile(
+                                      title: "Overall Strength",
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min, // ← This prevents overflow
+                                        children: [
+                                          SizedBox(height: 2),
+                                          SizedBox(
+                                            height: 20, // reduced from 24
+                                            child: CustomPaint(
+                                              size: Size(60, 20),
+                                              painter: overallStrengthChange == null
+                                                  ? null
+                                                  : overallStrengthChange! >= 0
+                                                  ? LineChartPainterUp()
+                                                  : LineChartPainterDown(),
+                                            ),
+                                          ),
+                                          SizedBox(height: 2),
+                                          Divider(
+                                            color: Colors.white70,
+                                            height: 2,
+                                            thickness: 0.75,
+                                          ),
+                                          Text(
+                                            overallStrengthChange == null
+                                                ? "Loading..."
+                                                : "${overallStrengthChange! >= 0 ? '+' : ''}${overallStrengthChange!.toStringAsFixed(1)}% ${overallStrengthChange! >= 0 ? 'increase' : 'decrease'} in the past month",
+                                            style: TextStyle(
+                                              color: Colors.white60,
+                                              fontSize: 10,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                      halfHeight: true,
+                                    ),
+
+
+
+                                    SizedBox(height: 12),
+                                    _improvementTile(
+                                      title: "Weight (lbs)",
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Divider(
+                                            color: Colors.white70,
+                                            height: 8,
+                                            thickness: 0.75,
+                                          ),
+                                          _weeklyWeightTrend == null
+                                              ? Text(
+                                            "Loading...",
+                                            style: TextStyle(
+                                              color: Colors.white60,
+                                              fontStyle: FontStyle.italic,
+                                              fontSize: 13,
+                                            ),
+                                          )
+                                              : Row(
                                             mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
-                                              Divider(
-                                                color: Colors.white70,
-                                                height: 8,
-                                                thickness: 0.75,
+                                              Icon(
+                                                _weeklyWeightTrend! < 0
+                                                    ? Icons.arrow_downward
+                                                    : Icons.arrow_upward,
+                                                color: _weeklyWeightTrend! < 0 ? Colors.blue : Colors.blue,
+                                                size: 20,
                                               ),
-                                              _weeklyWeightTrend == null
-                                                  ? Text(
-                                                "Loading...",
+                                              SizedBox(width: 4),
+                                              Text(
+                                                "${_weeklyWeightTrend! > 0 ? '+' : ''}${_weeklyWeightTrend!.toStringAsFixed(1)} lbs/week",
                                                 style: TextStyle(
-                                                  color: Colors.white60,
-                                                  fontStyle: FontStyle.italic,
-                                                  fontSize: 13,
+                                                  color: _weeklyWeightTrend! < 0
+                                                      ? Colors.white
+                                                      : Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
                                                 ),
-                                              )
-                                                  : Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(
-                                                    _weeklyWeightTrend! < 0
-                                                        ? Icons.arrow_downward
-                                                        : Icons.arrow_upward,
-                                                    color: _weeklyWeightTrend! < 0 ? Colors.blue : Colors.blue,
-                                                    size: 20,
-                                                  ),
-                                                  SizedBox(width: 4),
-                                                  Text(
-                                                    "${_weeklyWeightTrend! > 0 ? '+' : ''}${_weeklyWeightTrend!.toStringAsFixed(1)} lbs/week",
-                                                    style: TextStyle(
-                                                      color: _weeklyWeightTrend! < 0
-                                                          ? Colors.white
-                                                          : Colors.white,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 15,
-                                                    ),
-                                                  ),
-                                                ],
                                               ),
                                             ],
                                           ),
-                                          halfHeight: true,
-                                        ),
-
-                                      ],
+                                        ],
+                                      ),
+                                      halfHeight: true,
                                     ),
-                                  ),
-                                ],
+
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                        // --- Improvement Section End ---
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Metrics & Trends',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Container(
-                              height: 165,
-                              width: 185,
-                              child: Card(
-                                elevation: 4,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                color: Color.fromRGBO(31, 31, 31, 1),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 19.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(height: 10),
-                                      Text(
-                                        'Gym Logging',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Last 30 Days',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[400],
-                                        ),
-                                      ),
-                                      MyHeatMap2(),
-                                      SizedBox(height: 8),
-                                      Divider(
-                                        color: Colors.white70,
-                                        height:
-                                        1, // Set minimal height to reduce space
-                                        thickness:
-                                        .75, // Minimal visual thickness
-                                      ),
-                                      Container(
-                                        padding: EdgeInsets
-                                            .zero, // Ensures no extra padding
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment
-                                              .spaceBetween, // Ensures spacing between the text and the icon
-                                          children: [
-                                            Flexible(
-                                              // Allows the text to resize dynamically
-                                              child: RichText(
-                                                overflow: TextOverflow
-                                                    .ellipsis, // Prevents text overflow by using ellipsis
-                                                text: TextSpan(
-                                                  children: [
-                                                    TextSpan(
-                                                      text:
-                                                      '$workoutsThisWeek/7 ',
-                                                      style: TextStyle(
-                                                        fontSize: 17,
-                                                        color: Colors.grey[
-                                                        300], // Color for the numbers
-                                                      ),
-                                                    ),
-                                                    TextSpan(
-                                                      text: 'this week',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.grey[
-                                                        500], // Different color for the text
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            //SizedBox(width: 10,),
-                                            IconButton(
-                                              icon: Icon(Icons.arrow_forward_ios,
-                                                  size: 15,
-                                                  color: Colors
-                                                      .white), // Reduced icon size
-                                              onPressed: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                      const BigHeatMap()),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              height: 165,
-                              width: 185,
-                              child: Card(
-                                elevation: 4,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                color: Color.fromRGBO(31, 31, 31, 1),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 19.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(height: 10),
-                                      Text(
-                                        'Scale Weight',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Last 7 Days',
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[400]),
-                                      ),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      SizedBox(
-                                        height: 30,
-                                        width: 185,
-                                        child: WeightLogPage.buildWeightChart(
-                                            context),
-                                      ),
-                                      SizedBox(
-                                        height: 13,
-                                      ),
-                                      Divider(
-                                        color: Colors.white54,
-                                        height:
-                                        1, // Set minimal height to reduce space
-                                        thickness:
-                                        .75, // Minimal visual thickness
-                                      ),
-                                      Container(
-                                        padding: EdgeInsets
-                                            .zero, // Ensures no extra padding
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment
-                                              .spaceBetween, // Ensures spacing between the text and the icon
-                                          children: [
-                                            Flexible(
-                                              // Allows the text to resize dynamically
-                                              child: RichText(
-                                                overflow: TextOverflow
-                                                    .ellipsis, // Prevents text overflow by using ellipsis
-                                                text: TextSpan(
-                                                  children: [
-                                                    TextSpan(
-                                                      text: '${mostRecentWeight ?? 0} ',
-                                                      style: TextStyle(
-                                                        fontSize: 17,
-                                                        color: Colors.grey[
-                                                        300], // Color for the numbers
-                                                      ),
-                                                    ),
-                                                    TextSpan(
-                                                      text: 'lbs',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.grey[
-                                                        500], // Different color for the text
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            //SizedBox(width: 10,),
-                                            IconButton(
-                                              icon: Icon(Icons.arrow_forward_ios,
-                                                  size: 15,
-                                                  color: Colors
-                                                      .white), // Reduced icon size
-                                              onPressed: () {
-                                                // Use Navigator to push WeightLogPage onto the navigation stack
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          WeightTrendPage()),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Container(
-                              height: 165,
-                              width: 185,
-                              child: Card(
-                                elevation: 4,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                color: Color.fromRGBO(31, 31, 31, 1),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 19.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(height: 10),
-                                      Text(
-                                        'Step Logging',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Last 7 Days avg. ',
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[400]),
-                                      ),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      SizedBox(
-                                        height: 30,
-                                        width: 185,
-                                        child: StepCounterPage.buildMiniStepChart(
-                                            context, _stepLogs),
-                                      ),
-                                      SizedBox(
-                                        height: 13,
-                                      ),
-                                      Divider(
-                                        color: Colors.white54,
-                                        height:
-                                        1, // Set minimal height to reduce space
-                                        thickness:
-                                        .75, // Minimal visual thickness
-                                      ),
-                                      Container(
-                                        padding: EdgeInsets
-                                            .zero, // Ensures no extra padding
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment
-                                              .spaceBetween, // Ensures spacing between the text and the icon
-                                          children: [
-                                            Flexible(
-                                              // Allows the text to resize dynamically
-                                              child: RichText(
-                                                overflow: TextOverflow
-                                                    .ellipsis, // Prevents text overflow by using ellipsis
-                                                text: TextSpan(
-                                                  children: [
-                                                    TextSpan(
-                                                      text:
-                                                      '${getAverageSteps?.toStringAsFixed(0)} ',
-                                                      style: TextStyle(
-                                                        fontSize: 17,
-                                                        color: Colors.grey[
-                                                        300], // Color for the numbers
-                                                      ),
-                                                    ),
-                                                    TextSpan(
-                                                      text: 'steps',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.grey[
-                                                        500], // Different color for the text
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            //SizedBox(width: 10,),
-                                            IconButton(
-                                              icon: Icon(Icons.arrow_forward_ios,
-                                                  size: 15,
-                                                  color: Colors
-                                                      .white), // Reduced icon size
-                                              onPressed: () {
-                                                // Use Navigator to push WeightLogPage onto the navigation stack
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          StepCounterPage()),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              height: 165,
-                              width: 185,
-                              child: Card(
-                                elevation: 4,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                color: Color.fromRGBO(31, 31, 31, 1),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 19.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(height: 10),
-                                      Text(
-                                        'Check-In Entries',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Last 30 Days',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[400],
-                                        ),
-                                      ),
-                                      JournalHeatMap(),
-                                      SizedBox(height: 8),
-                                      Divider(
-                                        color: Colors.white70,
-                                        height:
-                                        1, // Set minimal height to reduce space
-                                        thickness:
-                                        .75, // Minimal visual thickness
-                                      ),
-                                      Container(
-                                        padding: EdgeInsets
-                                            .zero, // Ensures no extra padding
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment
-                                              .spaceBetween, // Ensures spacing between the text and the icon
-                                          children: [
-                                            Flexible(
-                                              // Allows the text to resize dynamically
-                                              child: RichText(
-                                                overflow: TextOverflow
-                                                    .ellipsis, // Prevents text overflow by using ellipsis
-                                                text: TextSpan(
-                                                  children: [
-                                                    TextSpan(
-                                                      text:
-                                                      '$workoutsThisWeek/7 ',
-                                                      style: TextStyle(
-                                                        fontSize: 17,
-                                                        color: Colors.grey[
-                                                        300], // Color for the numbers
-                                                      ),
-                                                    ),
-                                                    TextSpan(
-                                                      text: 'this week',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.grey[
-                                                        500], // Different color for the text
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            //SizedBox(width: 10,),
-                                            IconButton(
-                                              icon: Icon(Icons.arrow_forward_ios,
-                                                  size: 15,
-                                                  color: Colors
-                                                      .white), // Reduced icon size
-                                              onPressed: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          Jounral2()),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        ],
+                      ),
+                    ),
+                    // --- Improvement Section End ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Metrics & Trends',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            color: Colors.white,
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                    Row(
+                      children: [
+                        Container(
+                          height: 165,
+                          width: 185,
+                          child: Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            color: Color.fromRGBO(31, 31, 31, 1),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 19.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 10),
+                                  Text(
+                                    'Gym Logging',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Last 30 Days',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
+                                  MyHeatMap2(),
+                                  SizedBox(height: 8),
+                                  Divider(
+                                    color: Colors.white70,
+                                    height:
+                                    1, // Set minimal height to reduce space
+                                    thickness:
+                                    .75, // Minimal visual thickness
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets
+                                        .zero, // Ensures no extra padding
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment
+                                          .spaceBetween, // Ensures spacing between the text and the icon
+                                      children: [
+                                        Flexible(
+                                          // Allows the text to resize dynamically
+                                          child: RichText(
+                                            overflow: TextOverflow
+                                                .ellipsis, // Prevents text overflow by using ellipsis
+                                            text: TextSpan(
+                                              children: [
+                                                TextSpan(
+                                                  text:
+                                                  '$workoutsThisWeek/7 ',
+                                                  style: TextStyle(
+                                                    fontSize: 17,
+                                                    color: Colors.grey[
+                                                    300], // Color for the numbers
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text: 'this week',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[
+                                                    500], // Different color for the text
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        //SizedBox(width: 10,),
+                                        IconButton(
+                                          icon: Icon(Icons.arrow_forward_ios,
+                                              size: 15,
+                                              color: Colors
+                                                  .white), // Reduced icon size
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                  const BigHeatMap()),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          height: 165,
+                          width: 185,
+                          child: Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            color: Color.fromRGBO(31, 31, 31, 1),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 19.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 10),
+                                  Text(
+                                    'Scale Weight',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Last 7 Days',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[400]),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  SizedBox(
+                                    height: 30,
+                                    width: 185,
+                                    child: WeightLogPage.buildWeightChart(
+                                        context),
+                                  ),
+                                  SizedBox(
+                                    height: 13,
+                                  ),
+                                  Divider(
+                                    color: Colors.white54,
+                                    height:
+                                    1, // Set minimal height to reduce space
+                                    thickness:
+                                    .75, // Minimal visual thickness
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets
+                                        .zero, // Ensures no extra padding
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment
+                                          .spaceBetween, // Ensures spacing between the text and the icon
+                                      children: [
+                                        Flexible(
+                                          // Allows the text to resize dynamically
+                                          child: RichText(
+                                            overflow: TextOverflow
+                                                .ellipsis, // Prevents text overflow by using ellipsis
+                                            text: TextSpan(
+                                              children: [
+                                                TextSpan(
+                                                  text: '${mostRecentWeight ?? 0} ',
+                                                  style: TextStyle(
+                                                    fontSize: 17,
+                                                    color: Colors.grey[
+                                                    300], // Color for the numbers
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text: 'lbs',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[
+                                                    500], // Different color for the text
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        //SizedBox(width: 10,),
+                                        IconButton(
+                                          icon: Icon(Icons.arrow_forward_ios,
+                                              size: 15,
+                                              color: Colors
+                                                  .white), // Reduced icon size
+                                          onPressed: () {
+                                            // Use Navigator to push WeightLogPage onto the navigation stack
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      WeightTrendPage()),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          height: 165,
+                          width: 185,
+                          child: Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            color: Color.fromRGBO(31, 31, 31, 1),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 19.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 10),
+                                  Text(
+                                    'Step Logging',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Last 7 Days avg. ',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[400]),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  SizedBox(
+                                    height: 30,
+                                    width: 185,
+                                    child: StepCounterPage.buildMiniStepChart(
+                                        context, _stepLogs),
+                                  ),
+                                  SizedBox(
+                                    height: 13,
+                                  ),
+                                  Divider(
+                                    color: Colors.white54,
+                                    height:
+                                    1, // Set minimal height to reduce space
+                                    thickness:
+                                    .75, // Minimal visual thickness
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets
+                                        .zero, // Ensures no extra padding
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment
+                                          .spaceBetween, // Ensures spacing between the text and the icon
+                                      children: [
+                                        Flexible(
+                                          // Allows the text to resize dynamically
+                                          child: RichText(
+                                            overflow: TextOverflow
+                                                .ellipsis, // Prevents text overflow by using ellipsis
+                                            text: TextSpan(
+                                              children: [
+                                                TextSpan(
+                                                  text:
+                                                  '${getAverageSteps?.toStringAsFixed(0)} ',
+                                                  style: TextStyle(
+                                                    fontSize: 17,
+                                                    color: Colors.grey[
+                                                    300], // Color for the numbers
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text: 'steps',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[
+                                                    500], // Different color for the text
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        //SizedBox(width: 10,),
+                                        IconButton(
+                                          icon: Icon(Icons.arrow_forward_ios,
+                                              size: 15,
+                                              color: Colors
+                                                  .white), // Reduced icon size
+                                          onPressed: () {
+                                            // Use Navigator to push WeightLogPage onto the navigation stack
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      StepCounterPage()),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          height: 165,
+                          width: 185,
+                          child: Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            color: Color.fromRGBO(31, 31, 31, 1),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 19.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 10),
+                                  Text(
+                                    'Check-In Entries',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Last 30 Days',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
+                                  JournalHeatMap(),
+                                  SizedBox(height: 8),
+                                  Divider(
+                                    color: Colors.white70,
+                                    height:
+                                    1, // Set minimal height to reduce space
+                                    thickness:
+                                    .75, // Minimal visual thickness
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets
+                                        .zero, // Ensures no extra padding
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment
+                                          .spaceBetween, // Ensures spacing between the text and the icon
+                                      children: [
+                                        Flexible(
+                                          // Allows the text to resize dynamically
+                                          child: RichText(
+                                            overflow: TextOverflow
+                                                .ellipsis, // Prevents text overflow by using ellipsis
+                                            text: TextSpan(
+                                              children: [
+                                                TextSpan(
+                                                  text:
+                                                  '$workoutsThisWeek/7 ',
+                                                  style: TextStyle(
+                                                    fontSize: 17,
+                                                    color: Colors.grey[
+                                                    300], // Color for the numbers
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text: 'this week',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[
+                                                    500], // Different color for the text
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        //SizedBox(width: 10,),
+                                        IconButton(
+                                          icon: Icon(Icons.arrow_forward_ios,
+                                              size: 15,
+                                              color: Colors
+                                                  .white), // Reduced icon size
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      Jounral2()),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               // --- Improvement Section End ---
