@@ -27,6 +27,7 @@ import 'WeightLogPage.dart';
 import 'WeightTrendpage.dart';
 import 'bigHeatMap.dart';
 import 'journalPage.dart';
+import '../WebAPP/MessagesPage.dart';
 
 class UpdatedHome extends StatefulWidget {
   @override
@@ -267,148 +268,153 @@ class _UpdatedHomeState extends State<UpdatedHome> {
       color: Color.fromRGBO(42, 42, 42, 1),
       child: Container(
         height: _workoutCardHeight,
-        child: SingleChildScrollView(
-          physics: ClampingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Today\'s Workout',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Today\'s Workout',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
-                Divider(color: Colors.grey[600]),
-                if (todaysSplit.muscleGroups.isEmpty)
-                  Center(
-                    child: Text(
-                      'No workout planned for today.',
-                      style: TextStyle(color: Colors.grey[400]),
-                    ),
-                  )
-                else
-                  for (var muscleGroup in todaysSplit.muscleGroups) ...[
-                    ListTile(
-                      title: Text(
-                        muscleGroup.muscleGroupName,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 18,
-                        ),
-                      ),
-                      leading: Icon(Icons.fitness_center, color: Colors.blue[400]),
-                      trailing: CircleAvatar(
-                        backgroundColor: Colors.blue[800],
-                        child: Text(
-                          '${muscleGroup.exercises.length}',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      onTap: () {
-                        setState(() {
-                          if (expandedMuscleGroups
-                              .contains(muscleGroup.muscleGroupName)) {
-                            expandedMuscleGroups
-                                .remove(muscleGroup.muscleGroupName);
-                          } else {
-                            expandedMuscleGroups.add(muscleGroup.muscleGroupName);
-                          }
+              ),
+              Divider(color: Colors.grey[600]),
+              if (todaysSplit.muscleGroups.isEmpty)
+                Center(
+                  child: Text(
+                    'No workout planned for today.',
+                    style: TextStyle(color: Colors.grey[400]),
+                  ),
+                )
+              else
+                Expanded(
+                  child: ListView(
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    children: [
+                      for (var muscleGroup in todaysSplit.muscleGroups) ...[
+                        ListTile(
+                          title: Text(
+                            muscleGroup.muscleGroupName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                          leading: Icon(Icons.fitness_center, color: Colors.blue[400]),
+                          trailing: CircleAvatar(
+                            backgroundColor: Colors.blue[800],
+                            child: Text(
+                              '${muscleGroup.exercises.length}',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          onTap: () {
+                            setState(() {
+                              if (expandedMuscleGroups
+                                  .contains(muscleGroup.muscleGroupName)) {
+                                expandedMuscleGroups
+                                    .remove(muscleGroup.muscleGroupName);
+                              } else {
+                                expandedMuscleGroups.add(muscleGroup.muscleGroupName);
+                              }
 
-                          // Calculate the new height based on which muscle groups are currently expanded
-                          int totalExpandedExercises =
-                          expandedMuscleGroups.fold(0, (sum, groupName) {
-                            final group = todaysSplit.muscleGroups
-                                .firstWhere((g) => g.muscleGroupName == groupName);
-                            // Return null if not found to prevent exceptions
+                              // Calculate the new height based on which muscle groups are currently expanded
+                              int totalExpandedExercises =
+                              expandedMuscleGroups.fold(0, (sum, groupName) {
+                                final group = todaysSplit.muscleGroups
+                                    .firstWhere((g) => g.muscleGroupName == groupName);
+                                // Return null if not found to prevent exceptions
 
-                            return sum + (group?.exercises.length ?? 0);
-                          });
+                                return sum + (group?.exercises.length ?? 0);
+                              });
 
-                          const double baseHeight =
-                          300; // Base height when no muscle groups are expanded
-                          const double extraHeightPerExercise =
-                          65; // Additional height per expanded exercise
+                              const double baseHeight =
+                              300; // Base height when no muscle groups are expanded
+                              const double extraHeightPerExercise =
+                              65; // Additional height per expanded exercise
 
-                          if (totalExpandedExercises > 0) {
-                            _workoutCardHeight = baseHeight +
-                                (totalExpandedExercises * extraHeightPerExercise);
-                          } else {
-                            // Revert to the initial sizing based on muscle group counts
-                            final muscleGroupCount =
-                                todaysSplit.muscleGroups.length;
-                            if (muscleGroupCount == 1) {
-                              _workoutCardHeight = 150;
-                            } else if (muscleGroupCount == 2) {
-                              _workoutCardHeight = 220;
-                            } else if (muscleGroupCount == 3) {
-                              _workoutCardHeight = 320;
-                            } else if (muscleGroupCount >= 4) {
-                              _workoutCardHeight = 420;
-                            } else {
-                              _workoutCardHeight =
-                              120; // Default for no muscle groups
-                            }
-                          }
-                        });
-                      },
-                    ),
-                    Divider(color: Colors.grey[600]),
-                    if (expandedMuscleGroups
-                        .contains(muscleGroup.muscleGroupName)) ...[
-                      for (var exercise in muscleGroup.exercises) ...[
-                        Builder(
-                          builder: (context) {
-                            // Attempt to fetch most recent exercise details
-                            var recentExercise =
-                            Provider.of<WorkoutData>(context, listen: false)
-                                .getMostRecentExerciseDetails(exercise.name);
-                            var displaySets = recentExercise?.sets ?? exercise.sets;
-                            var displayReps = recentExercise?.reps ?? exercise.reps;
-                            var displayWeight =
-                                recentExercise?.weight ?? exercise.weight;
-
-                            return Padding(
-                              padding: const EdgeInsets.only(left: 16.0),
-                              child: ListTile(
-                                leading: Icon(Icons.check_circle_outline,
-                                    color: Colors.white),
-                                title: Text(
-                                  exercise.name,
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                subtitle: Text(
-                                  '$displaySets sets x $displayReps reps at $displayWeight lbs',
-                                  style: TextStyle(color: Colors.grey[400]),
-                                ),
-                                trailing: IconButton(
-                                  icon: Icon(
-                                      exerciseClickStatus[exercise.name] ?? false
-                                          ? Icons.check
-                                          : Icons.add,
-                                      color: Colors.white),
-                                  onPressed: () {
-                                    setState(() {
-                                      exerciseClickStatus[exercise.name] =
-                                      true; // Set the status to true when clicked
-                                    });
-                                    workoutData.logExercise(exercise);
-                                  },
-                                ),
-                              ),
-                            );
+                              if (totalExpandedExercises > 0) {
+                                _workoutCardHeight = baseHeight +
+                                    (totalExpandedExercises * extraHeightPerExercise);
+                              } else {
+                                // Revert to the initial sizing based on muscle group counts
+                                final muscleGroupCount =
+                                    todaysSplit.muscleGroups.length;
+                                if (muscleGroupCount == 1) {
+                                  _workoutCardHeight = 150;
+                                } else if (muscleGroupCount == 2) {
+                                  _workoutCardHeight = 220;
+                                } else if (muscleGroupCount == 3) {
+                                  _workoutCardHeight = 320;
+                                } else if (muscleGroupCount >= 4) {
+                                  _workoutCardHeight = 420;
+                                } else {
+                                  _workoutCardHeight =
+                                  120; // Default for no muscle groups
+                                }
+                              }
+                            });
                           },
                         ),
-                        Divider(color: Colors.grey[500]),
+                        Divider(color: Colors.grey[600]),
+                        if (expandedMuscleGroups
+                            .contains(muscleGroup.muscleGroupName)) ...[
+                          for (var exercise in muscleGroup.exercises) ...[
+                            Builder(
+                              builder: (context) {
+                                // Attempt to fetch most recent exercise details
+                                var recentExercise =
+                                Provider.of<WorkoutData>(context, listen: false)
+                                    .getMostRecentExerciseDetails(exercise.name);
+                                var displaySets = recentExercise?.sets ?? exercise.sets;
+                                var displayReps = recentExercise?.reps ?? exercise.reps;
+                                var displayWeight =
+                                    recentExercise?.weight ?? exercise.weight;
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 16.0),
+                                  child: ListTile(
+                                    leading: Icon(Icons.check_circle_outline,
+                                        color: Colors.white),
+                                    title: Text(
+                                      exercise.name,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    subtitle: Text(
+                                      '$displaySets sets x $displayReps reps at $displayWeight lbs',
+                                      style: TextStyle(color: Colors.grey[400]),
+                                    ),
+                                    trailing: IconButton(
+                                      icon: Icon(
+                                          exerciseClickStatus[exercise.name] ?? false
+                                              ? Icons.check
+                                              : Icons.add,
+                                          color: Colors.white),
+                                      onPressed: () {
+                                        setState(() {
+                                          exerciseClickStatus[exercise.name] =
+                                          true; // Set the status to true when clicked
+                                        });
+                                        workoutData.logExercise(exercise);
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            Divider(color: Colors.grey[500]),
+                          ],
+                        ],
                       ],
                     ],
-                  ],
-              ],
-            ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -1219,6 +1225,19 @@ class _UpdatedHomeState extends State<UpdatedHome> {
               ),
               // --- Improvement Section End ---
             ],
+          ),
+          Positioned(
+            top: 40, // Adjust the positioning based on your UI design
+            right: 66, // Move left to make space for logout
+            child: IconButton(
+              icon: Icon(Icons.message, color: Colors.white),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MessagesPage()),
+                );
+              },
+            ),
           ),
           Positioned(
             top: 40, // Adjust the positioning based on your UI design
