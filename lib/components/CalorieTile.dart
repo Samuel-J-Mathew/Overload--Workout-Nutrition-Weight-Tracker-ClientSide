@@ -69,14 +69,14 @@ class _CalorieTileState extends State<CalorieTile> {
   Widget _buildMacroProgressBar(double consumed, double goal, Color color, String label) {
     double progressValue = 0;
     if (goal > 0) {
-      progressValue = consumed / goal;
+      progressValue = min(1.0, max(0, consumed / goal));
     }
 
     return Expanded(
       child: Column(
         children: [
           Text(
-            "$label ${goal - consumed} left",
+            "$label ${max(0, (goal - consumed).round())} left",
             style: TextStyle(
               color: Colors.white,
               fontSize: 13,
@@ -106,7 +106,8 @@ class _CalorieTileState extends State<CalorieTile> {
       margin: const EdgeInsets.all(0),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-        child: SingleChildScrollView( // Wrap with SingleChildScrollView
+        child: SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -127,7 +128,12 @@ class _CalorieTileState extends State<CalorieTile> {
                   _buildNutritionData("${_dailyGoal.toStringAsFixed(0)}", "Target"),
                 ],
               ),
-              SizedBox(height:5),
+              SizedBox(height: 5),
+              Divider(
+                color: Colors.grey[700],
+                thickness: 1,
+                height: 20,
+              ),
               Row(
                 children: [
                   _buildMacroProgressBar(_proteinConsumedToday, _dailyGoalprotein, Colors.red, "P"), // Protein
@@ -149,7 +155,7 @@ class _CalorieTileState extends State<CalorieTile> {
     return Column(
       children: [
         Text(
-          value,
+          max(0, double.tryParse(value) ?? 0).toStringAsFixed(0),
           style: TextStyle(
             color: Colors.white,
             fontSize: 25,
@@ -169,7 +175,7 @@ class _CalorieTileState extends State<CalorieTile> {
 
   Widget _buildPieChart() {
     Map<String, double> dataMap = {
-      "Consumed": _caloriesConsumedToday,
+      "Consumed": max(0, _caloriesConsumedToday),
       "Remaining": max(0, _dailyGoal - _caloriesConsumedToday),
     };
     return Expanded(
