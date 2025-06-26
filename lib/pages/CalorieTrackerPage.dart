@@ -14,7 +14,8 @@ import 'FoodLogPage.dart';
 class CalorieTrackerPage extends StatefulWidget {
   final DateTime selectedDate;
   final Function? onReturn;
-  CalorieTrackerPage({required this.selectedDate,this.onReturn});
+  final VoidCallback? onLogFoodsPressed;
+  CalorieTrackerPage({required this.selectedDate, this.onReturn, this.onLogFoodsPressed});
 
   @override
   _CalorieTrackerPageState createState() => _CalorieTrackerPageState();
@@ -226,10 +227,10 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => FoodLogPage()),
-                      );
+                      if (widget.onLogFoodsPressed != null) {
+                        widget.onLogFoodsPressed!();
+                        Navigator.pop(context);
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,

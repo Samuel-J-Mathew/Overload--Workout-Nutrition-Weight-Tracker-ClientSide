@@ -15,6 +15,7 @@ import '../models/NutritionalInfo.dart';
 import 'CalorieTrackerPage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../data/DatabaseService.dart';
+import '../pages/ExerciseLogPage.dart';
 
 class FoodLogPage extends StatefulWidget {
   @override
@@ -424,7 +425,18 @@ class _FoodLogPageState extends State<FoodLogPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CalorieTrackerPage(selectedDate: _selectedDay ?? DateTime.now(), onReturn: refreshFoodLog, )),
+                      MaterialPageRoute(
+                        builder: (context) => CalorieTrackerPage(
+                          selectedDate: _selectedDay ?? DateTime.now(),
+                          onReturn: refreshFoodLog,
+                          onLogFoodsPressed: () {
+                            final state = context.findAncestorStateOfType<ExerciseLogPageState>();
+                            if (state != null) {
+                              state.selectedIndex = 2;
+                            }
+                          },
+                        ),
+                      ),
                     );  // The action you want to perform on tap
                   },
                   child: Container(
@@ -443,6 +455,12 @@ class _FoodLogPageState extends State<FoodLogPage> {
                                 builder: (context) => CalorieTrackerPage(
                                   selectedDate: _selectedDay ?? DateTime.now(),
                                   onReturn: refreshFoodLog,
+                                  onLogFoodsPressed: () {
+                                    final state = context.findAncestorStateOfType<ExerciseLogPageState>();
+                                    if (state != null) {
+                                      state.selectedIndex = 2;
+                                    }
+                                  },
                                 ),
                               ),
                             );

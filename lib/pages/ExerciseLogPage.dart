@@ -19,14 +19,14 @@ class ExerciseLogPage extends StatefulWidget {
   const ExerciseLogPage({super.key});
 
   @override
-  State<ExerciseLogPage> createState() => _ExerciseLogPageState();
+  State<ExerciseLogPage> createState() => ExerciseLogPageState();
 }
 String todayDateString = DateFormat('yyyy-MM-dd').format(DateTime.now());
-class _ExerciseLogPageState extends State<ExerciseLogPage> {
+class ExerciseLogPageState extends State<ExerciseLogPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Workout? _selectedWorkout;  // Store selected workout for display
-  int _selectedIndex = 0;
+  int selectedIndex = 0;
   String todayDateString = DateFormat('yyyy-MM-dd').format(DateTime.now());
   @override
   void initState() {
@@ -73,7 +73,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
   }
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index;
+      selectedIndex = index;
     });
   }
   List<Workout> _getEventsForDay(DateTime day) {
@@ -90,7 +90,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
     });
   }
   Widget _buildBody() {
-    switch (_selectedIndex) {
+    switch (selectedIndex) {
       case 0:
         return UpdatedHome();
       case 1:
@@ -152,7 +152,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
         ),
 
 
-        SizedBox(height: 6),
+        SizedBox(height: 6,),
         Expanded(
           child: Container(
             color: Color.fromRGBO(20, 20, 20, 1),
@@ -193,7 +193,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
           BottomNavigationBarItem(icon: Icon(Icons.apple), label: 'Food Log'),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book_sharp), label: 'Plan'),
         ],
-        currentIndex: _selectedIndex, // Highlight the selected item
+        currentIndex: selectedIndex, // Highlight the selected item
         onTap: _onItemTapped, // Call _onItemTapped when an item is tapped
         backgroundColor: Color.fromRGBO(20, 20, 20, 1),
         selectedItemColor: Colors.white,
