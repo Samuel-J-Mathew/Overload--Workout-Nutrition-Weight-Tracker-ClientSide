@@ -231,6 +231,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 25),
 
                 // or continue with
+                /*
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: Row(
@@ -257,18 +258,18 @@ class _RegisterPageState extends State<RegisterPage> {
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 5),
+                  */
+                //const SizedBox(height: 5),
 
                 // google + apple sign in buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children:  [
+               // Row(
+                 // mainAxisAlignment: MainAxisAlignment.center,
+                  //children:  [
                     // google button
-                    SquareTile(
-                        onTap: () => AuthService().signInWithGoogle(),
-                        imagePath: 'lib/images/google.png'
-                    ),
+                   // SquareTile(
+                     //   onTap: () => AuthService().signInWithGoogle(),
+                     //   imagePath: 'lib/images/google.png'
+                   // ),
 
                     // SizedBox(width: 25),
 
@@ -279,10 +280,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     //},
                     //imagePath: 'lib/images/apple.png'
                     // )
-                  ],
-                ),
+                 // ],
+               // ),
 
-                const SizedBox(height: 50),
+               // const SizedBox(height: 50),
 
                 // not a member? register now
                 Row(

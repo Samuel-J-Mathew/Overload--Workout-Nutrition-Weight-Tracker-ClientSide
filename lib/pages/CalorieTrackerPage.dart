@@ -35,6 +35,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   final TextEditingController carbsController = TextEditingController();
   final TextEditingController proteinController = TextEditingController();
   final TextEditingController fatController = TextEditingController();
+  bool _isSheetOpen = false;
 
   // FatSecret API credentials
   static const String clientId = '8a6e7daf65c041cbb904ae833f29efdb';
@@ -589,7 +590,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
 
 
 
-  void fetchNutritionDetails(Map<String, dynamic> food) {
+  void fetchNutritionDetails(Map<String, dynamic> food) async {
     if (food['is_local'] == true) {
       setState(() {
         selectedFoodName = food['food_name'];
@@ -597,16 +598,26 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         originalProtein = double.parse(food['protein']);
         originalFats = double.parse(food['fats']);
         originalCarbs = double.parse(food['carbs']);
-        // If local food doesn't have serving size info, default to 100g
         originalServingSize = food.containsKey('serving_size') ? double.parse(food['serving_size']) : 100.0;
-
-        updateNutrition(originalServingSize!);
-        showNutritionSheet();
       });
+
+      // 👇 Add spinner before showing sheet
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      await Future.delayed(Duration(milliseconds: 300));
+      Navigator.of(context).pop(); // Remove spinner
+
+      updateNutrition(originalServingSize!);
+      showNutritionSheet();
     } else {
       fetchNutritionDetailsFromApi(food['food_name']);
     }
   }
+
 
 
   void fetchNutritionDetailsFromApi(String foodName) async {
@@ -765,6 +776,9 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   }
 
   void showNutritionSheet() {
+    if (_isSheetOpen) return;
+    _isSheetOpen = true;
+
     _servingsController.text = '1';
     _gramsController.text = originalServingSize!.toStringAsFixed(0);
 
@@ -773,110 +787,119 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            final calories = double.tryParse(selectedFood?['Calories'] ?? '0') ?? 0;
-            final protein = double.tryParse(selectedFood?['Protein'] ?? '0') ?? 0;
-            final fats = double.tryParse(selectedFood?['Fats'] ?? '0') ?? 0;
-            final carbs = double.tryParse(selectedFood?['Carbs'] ?? '0') ?? 0;
-            final totalMacros = protein + fats + carbs;
+        return WillPopScope(
+          onWillPop: () async {
+            _isSheetOpen = false;
+            return true;
+          },
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setModalState) {
+              final calories = double.tryParse(selectedFood?['Calories'] ?? '0') ?? 0;
+              final protein = double.tryParse(selectedFood?['Protein'] ?? '0') ?? 0;
+              final fats = double.tryParse(selectedFood?['Fats'] ?? '0') ?? 0;
+              final carbs = double.tryParse(selectedFood?['Carbs'] ?? '0') ?? 0;
+              final totalMacros = protein + fats + carbs;
 
-            return Container(
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Color(0xFF1F1F1F),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+              return Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Color(0xFF1F1F1F),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
                 ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          selectedFoodName ?? 'Selected Food',
-                          style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            selectedFoodName ?? 'Selected Food',
+                            style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField('Servings', _servingsController, () {
+                            final servings = double.tryParse(_servingsController.text) ?? 0;
+                            final newGrams = (servings * originalServingSize!).toStringAsFixed(0);
+                            _gramsController.text = newGrams;
+                            updateNutrition(double.parse(newGrams));
+                            setModalState(() {});
+                          }),
+                        ),
+                        SizedBox(width: 20),
+                        Expanded(
+                          child: _buildTextField('Grams', _gramsController, () {
+                            final grams = double.tryParse(_gramsController.text) ?? 0;
+                            final newServings = (grams / originalServingSize!).toStringAsFixed(1);
+                            _servingsController.text = newServings;
+                            updateNutrition(grams);
+                            setModalState(() {});
+                          }),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Nutritional Information (per 100g)',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      childAspectRatio: 1.5,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      children: [
+                        _buildNutritionStatCircle('Calories', calories, 'kcal', Color(0xFFE91E63), calories / 2000),
+                        _buildNutritionStatCircle('Protein', protein, 'g', Color(0xFF3F51B5), totalMacros > 0 ? protein / totalMacros : 0),
+                        _buildNutritionStatCircle('Fats', fats, 'g', Color(0xFFFF9800), totalMacros > 0 ? fats / totalMacros : 0),
+                        _buildNutritionStatCircle('Carbs', carbs, 'g', Color(0xFF4CAF50), totalMacros > 0 ? carbs / totalMacros : 0),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () => logFood(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF424242),
+                        minimumSize: Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(Icons.close, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField('Servings', _servingsController, () {
-                          final servings = double.tryParse(_servingsController.text) ?? 0;
-                          final newGrams = (servings * originalServingSize!).toStringAsFixed(0);
-                          _gramsController.text = newGrams;
-                          updateNutrition(double.parse(newGrams));
-                          setModalState(() {});
-                        }),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: _buildTextField('Grams', _gramsController, () {
-                          final grams = double.tryParse(_gramsController.text) ?? 0;
-                          final newServings = (grams / originalServingSize!).toStringAsFixed(1);
-                          _servingsController.text = newServings;
-                          updateNutrition(grams);
-                          setModalState(() {});
-                        }),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Nutritional Information (per 100g)',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                      child: Text("Log Food", style: TextStyle(color: Colors.white, fontSize: 16)),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    childAspectRatio: 1.5,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    children: [
-                      _buildNutritionStatCircle('Calories', calories, 'kcal', Color(0xFFE91E63), calories / 2000),
-                      _buildNutritionStatCircle('Protein', protein, 'g', Color(0xFF3F51B5), totalMacros > 0 ? protein / totalMacros : 0),
-                      _buildNutritionStatCircle('Fats', fats, 'g', Color(0xFFFF9800), totalMacros > 0 ? fats / totalMacros : 0),
-                      _buildNutritionStatCircle('Carbs', carbs, 'g', Color(0xFF4CAF50), totalMacros > 0 ? carbs / totalMacros : 0),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () => logFood(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF424242),
-                      minimumSize: Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    child: Text("Log Food", style: TextStyle(color: Colors.white, fontSize: 16)),
-                  ),
-                ],
-              ),
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         );
       },
-    );
+    ).whenComplete(() {
+      _isSheetOpen = false;
+    });
   }
+
 
   Widget _buildTextField(String label, TextEditingController controller, VoidCallback onChanged) {
     return Column(
