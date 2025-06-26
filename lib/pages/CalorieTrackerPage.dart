@@ -56,6 +56,13 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       originalServingSize = 100;
   String? selectedFoodName;
 
+  // Add FocusNode and state for grams input
+  final FocusNode _gramsFocusNode = FocusNode();
+  bool _isGramsFocused = false;
+  // Add FocusNode and state for servings input
+  final FocusNode _servingsFocusNode = FocusNode();
+  bool _isServingsFocused = false;
+
   @override
   void initState() {
     super.initState();
@@ -67,6 +74,10 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         _searchFocusNode.requestFocus();
       }
     });
+    // Listen for grams focus changes
+    _gramsFocusNode.addListener(_handleGramsFocusChange);
+    // Listen for servings focus changes
+    _servingsFocusNode.addListener(_handleServingsFocusChange);
   }
 
   @override
@@ -82,8 +93,27 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     _servingsController.dispose();
     _gramsController.dispose();
     _searchFocusNode.dispose();
+    // Dispose grams focus node
+    _gramsFocusNode.removeListener(_handleGramsFocusChange);
+    _gramsFocusNode.dispose();
+    // Dispose servings focus node
+    _servingsFocusNode.removeListener(_handleServingsFocusChange);
+    _servingsFocusNode.dispose();
     super.dispose();
   }
+
+  void _handleGramsFocusChange() {
+    setState(() {
+      _isGramsFocused = _gramsFocusNode.hasFocus;
+    });
+  }
+
+  void _handleServingsFocusChange() {
+    setState(() {
+      _isServingsFocused = _servingsFocusNode.hasFocus;
+    });
+  }
+
   void requestFocus() {
     if (!_initialFocusRequested) {
       _searchFocusNode.requestFocus();
@@ -800,95 +830,103 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
               final carbs = double.tryParse(selectedFood?['Carbs'] ?? '0') ?? 0;
               final totalMacros = protein + fats + carbs;
 
-              return Container(
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Color(0xFF1F1F1F),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
+              // Use SingleChildScrollView and dynamic padding when grams or servings is focused
+              final bool isInputFocused = _isGramsFocused || _isServingsFocused;
+              return SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: isInputFocused ? MediaQuery.of(context).viewInsets.bottom : 0,
+                  top: isInputFocused ? 40 : 0,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            selectedFoodName ?? 'Selected Food',
-                            style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                child: Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF1F1F1F),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              selectedFoodName ?? 'Selected Food',
+                              style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.close, color: Colors.white),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField('Servings', _servingsController, () {
+                              final servings = double.tryParse(_servingsController.text) ?? 0;
+                              final newGrams = (servings * originalServingSize!).toStringAsFixed(0);
+                              _gramsController.text = newGrams;
+                              updateNutrition(double.parse(newGrams));
+                              setModalState(() {});
+                            }, focusNode: _servingsFocusNode),
+                          ),
+                          SizedBox(width: 20),
+                          Expanded(
+                            child: _buildTextField('Grams', _gramsController, () {
+                              final grams = double.tryParse(_gramsController.text) ?? 0;
+                              final newServings = (grams / originalServingSize!).toStringAsFixed(1);
+                              _servingsController.text = newServings;
+                              updateNutrition(grams);
+                              setModalState(() {});
+                            }, focusNode: _gramsFocusNode),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Nutritional Information (per 100g)',
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        childAspectRatio: 1.5,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        children: [
+                          _buildNutritionStatCircle('Calories', calories, 'kcal', Color(0xFFE91E63), calories / 2000),
+                          _buildNutritionStatCircle('Protein', protein, 'g', Color(0xFF3F51B5), totalMacros > 0 ? protein / totalMacros : 0),
+                          _buildNutritionStatCircle('Fats', fats, 'g', Color(0xFFFF9800), totalMacros > 0 ? fats / totalMacros : 0),
+                          _buildNutritionStatCircle('Carbs', carbs, 'g', Color(0xFF4CAF50), totalMacros > 0 ? carbs / totalMacros : 0),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () => logFood(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF424242),
+                          minimumSize: Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
                           ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.close, color: Colors.white),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField('Servings', _servingsController, () {
-                            final servings = double.tryParse(_servingsController.text) ?? 0;
-                            final newGrams = (servings * originalServingSize!).toStringAsFixed(0);
-                            _gramsController.text = newGrams;
-                            updateNutrition(double.parse(newGrams));
-                            setModalState(() {});
-                          }),
-                        ),
-                        SizedBox(width: 20),
-                        Expanded(
-                          child: _buildTextField('Grams', _gramsController, () {
-                            final grams = double.tryParse(_gramsController.text) ?? 0;
-                            final newServings = (grams / originalServingSize!).toStringAsFixed(1);
-                            _servingsController.text = newServings;
-                            updateNutrition(grams);
-                            setModalState(() {});
-                          }),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Nutritional Information (per 100g)',
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                        child: Text("Log Food", style: TextStyle(color: Colors.white, fontSize: 16)),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      childAspectRatio: 1.5,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      children: [
-                        _buildNutritionStatCircle('Calories', calories, 'kcal', Color(0xFFE91E63), calories / 2000),
-                        _buildNutritionStatCircle('Protein', protein, 'g', Color(0xFF3F51B5), totalMacros > 0 ? protein / totalMacros : 0),
-                        _buildNutritionStatCircle('Fats', fats, 'g', Color(0xFFFF9800), totalMacros > 0 ? fats / totalMacros : 0),
-                        _buildNutritionStatCircle('Carbs', carbs, 'g', Color(0xFF4CAF50), totalMacros > 0 ? carbs / totalMacros : 0),
-                      ],
-                    ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () => logFood(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF424242),
-                        minimumSize: Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      child: Text("Log Food", style: TextStyle(color: Colors.white, fontSize: 16)),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -901,7 +939,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   }
 
 
-  Widget _buildTextField(String label, TextEditingController controller, VoidCallback onChanged) {
+  Widget _buildTextField(String label, TextEditingController controller, VoidCallback onChanged, {FocusNode? focusNode}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -909,6 +947,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         SizedBox(height: 5),
         TextField(
           controller: controller,
+          focusNode: focusNode,
           style: TextStyle(color: Colors.white, fontSize: 16),
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
