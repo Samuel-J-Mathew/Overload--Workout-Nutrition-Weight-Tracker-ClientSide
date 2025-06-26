@@ -30,12 +30,6 @@ class _RegisterPageState extends State<RegisterPage> {
   String givenMessage = "";
   // sign user in method
   void signUserUp() async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
     try {
       if (passwordController.text == ConfirmpasswordController.text) {
         try {
@@ -51,11 +45,9 @@ class _RegisterPageState extends State<RegisterPage> {
             emailController.text.trim(),
           );
           if (mounted) {
-            Navigator.pop(context); // pop loading
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => PaywallScreen()));
           }
         } on FirebaseAuthException catch (e) {
-          if (mounted) Navigator.pop(context);
           // Show error dialog after closing loading
           showDialog(
             context: context,
@@ -77,11 +69,10 @@ class _RegisterPageState extends State<RegisterPage> {
           );
         }
       } else {
-        if (mounted) Navigator.pop(context);
         NonMatchingPasswordMessage();
       }
     } catch (e) {
-      if (mounted) Navigator.pop(context);
+      debugPrint('Unexpected error in signUserUp: $e');
       // Optionally show a generic error dialog here
     }
   }
@@ -262,28 +253,28 @@ class _RegisterPageState extends State<RegisterPage> {
                 //const SizedBox(height: 5),
 
                 // google + apple sign in buttons
-               // Row(
-                 // mainAxisAlignment: MainAxisAlignment.center,
-                  //children:  [
-                    // google button
-                   // SquareTile(
-                     //   onTap: () => AuthService().signInWithGoogle(),
-                     //   imagePath: 'lib/images/google.png'
-                   // ),
+                // Row(
+                // mainAxisAlignment: MainAxisAlignment.center,
+                //children:  [
+                // google button
+                // SquareTile(
+                //   onTap: () => AuthService().signInWithGoogle(),
+                //   imagePath: 'lib/images/google.png'
+                // ),
 
-                    // SizedBox(width: 25),
+                // SizedBox(width: 25),
 
-                    // apple button
-                    //SquareTile(
-                    //onTap: (){
+                // apple button
+                //SquareTile(
+                //onTap: (){
 
-                    //},
-                    //imagePath: 'lib/images/apple.png'
-                    // )
-                 // ],
-               // ),
+                //},
+                //imagePath: 'lib/images/apple.png'
+                // )
+                // ],
+                // ),
 
-               // const SizedBox(height: 50),
+                // const SizedBox(height: 50),
 
                 // not a member? register now
                 Row(
