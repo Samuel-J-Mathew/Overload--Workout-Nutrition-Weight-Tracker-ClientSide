@@ -427,17 +427,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
       color: Color.fromRGBO(42, 42, 42, 1),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment
-              .center, // Centers vertically in the available space
-          crossAxisAlignment: CrossAxisAlignment
-              .stretch, // Centers horizontally in the available space
-          children: [
-            Expanded(
-              child: CalorieTile(),
-            ),
-          ],
-        ),
+        child: CalorieTile(),
       ),
     );
   }
@@ -478,7 +468,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
           ListView(
             controller: _scrollController, // Attach the controller here.
             children: <Widget>[
-              SizedBox(height: 20),
+              SizedBox(height: 0),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
@@ -486,17 +476,38 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                     borderRadius: BorderRadius.circular(10)),
                 alignment: Alignment.centerLeft,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment
-                      .start, // Aligns children to the start of the main-axis
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      DateFormat('EEEE, MMMM d')
-                          .format(DateTime.now())
-                          .toUpperCase(), // Formats and converts date to upper case
-                      style: TextStyle(
-                        color: Colors.grey[600], // Dark grey color for the date
-                        fontSize: 14, // Smaller font size for the date
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          DateFormat('EEEE, MMMM d')
+                              .format(DateTime.now())
+                              .toUpperCase(),
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.message, color: Colors.white),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => MessagesPage()),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.logout, color: Colors.white),
+                              onPressed: signUserOut,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                     Text(
                       'My Hub',
@@ -1226,28 +1237,6 @@ class _UpdatedHomeState extends State<UpdatedHome> {
               // --- Improvement Section End ---
             ],
           ),
-          Positioned(
-            top: 40, // Adjust the positioning based on your UI design
-            right: 66, // Move left to make space for logout
-            child: IconButton(
-              icon: Icon(Icons.message, color: Colors.white),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MessagesPage()),
-                );
-              },
-            ),
-          ),
-          Positioned(
-            top: 40, // Adjust the positioning based on your UI design
-            right: 16, // Distance from the right edge
-            child: IconButton(
-              icon: Icon(Icons.logout, color: Colors.white),
-              onPressed: signUserOut,
-            ),
-          ),
-
         ],
       ),
     );
