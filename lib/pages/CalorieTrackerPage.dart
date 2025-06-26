@@ -9,6 +9,7 @@ import 'package:gymapp/data/FoodData.dart';
 import '../data/hive_database.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
+import 'FoodLogPage.dart';
 
 class CalorieTrackerPage extends StatefulWidget {
   final DateTime selectedDate;
@@ -193,27 +194,56 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         children: <Widget>[
           Padding(
             padding: EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _controller,
-              focusNode: _searchFocusNode,
-              decoration: InputDecoration(
-                labelText: 'Enter a food item',
-                labelStyle: TextStyle(color: Colors.grey[400]),
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.search, color: Colors.white),
-                  onPressed: () => fetchFoodInfo(_controller.text),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 7,
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _searchFocusNode,
+                    decoration: InputDecoration(
+                      labelText: 'Enter a food item',
+                      labelStyle: TextStyle(color: Colors.grey[400]),
+                      prefixIcon: Icon(Icons.search, color: Colors.white),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide(color: Colors.white, width: 2),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide(color: Colors.white, width: 2),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                      filled: true,
+                      fillColor: Colors.transparent,
+                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                    onChanged: (value) => fetchFoodInfo(value),
+                  ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                SizedBox(width: 12),
+                Container(
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => FoodLogPage()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 0,
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                    ),
+                    child: Text('Log Foods', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-              ),
-              style: TextStyle(color: Colors.white),
-              onChanged: (value) => fetchFoodInfo(value),
+              ],
             ),
           ),
           Expanded(
