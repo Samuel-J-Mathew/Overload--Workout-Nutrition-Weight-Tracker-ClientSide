@@ -865,9 +865,12 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
               final bool isInputFocused = _isGramsFocused || _isServingsFocused;
               return SingleChildScrollView(
                 padding: EdgeInsets.only(
-                  bottom: isInputFocused ? MediaQuery.of(context).viewInsets.bottom : 0,
-                  top: isInputFocused ? 40 : 0,
+                  bottom: isInputFocused
+                      ? MediaQuery.of(context).viewInsets.bottom + 80  // Increase this value
+                      : 40,
+                  top: 20,
                 ),
+
                 child: Container(
                   padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(

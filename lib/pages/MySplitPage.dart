@@ -13,6 +13,8 @@ import '../data/exercise_list.dart'; // Import the exercise_list.dart file\
 import 'package:collection/collection.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+
 class MySplitPage extends StatefulWidget {
   const MySplitPage({super.key});
 
@@ -246,45 +248,63 @@ class _MySplitPageState extends State<MySplitPage>  {
 
   @override
   Widget build(BuildContext context) {
+
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double tileHeight = screenHeight * 0.38; // Responsive height for both tiles
+    final double tileWidth = screenWidth * 0.95; // Responsive width for both tiles
+
     return Scaffold(
+      backgroundColor: Color.fromRGBO(20, 20, 20, 1),
       appBar: AppBar(
-        title: const Text(
-          'Strategy',
-          style: TextStyle(fontSize: 29, color: Colors.white),
+        title: const Padding(
+          padding: EdgeInsets.only(top: 10.0),
+          child: Text(
+            'Strategy',
+            style: TextStyle(fontSize: 29, color: Colors.white),
+          ),
         ),
         backgroundColor: Color.fromRGBO(20, 20, 20, 1),
+        elevation: 0,
       ),
-      body: Column(
-        children: [
-          Container(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Container(
+            width: double.infinity,
             color: Color.fromRGBO(20, 20, 20, 1),
-            height: 400,
-            child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                color: Color.fromRGBO(31, 31, 31, 1),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 19.0),
-                  child: LayoutBuilder( // Use LayoutBuilder to get the available space for centering content
-                    builder: (BuildContext context, BoxConstraints constraints) {
-                      return SingleChildScrollView(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight, // Ensure the container takes at least the full height of the viewport
-                          ),
-                          child: IntrinsicHeight( // Ensures the content can size itself properly within the available space
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center, // Center vertically
-                              crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
+            child: Column(
+              children: [
+                Center(
+                  child: Container(
+                    width: tileWidth,
+                    height: tileHeight,
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      color: Color.fromRGBO(31, 31, 31, 1),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: LayoutBuilder(
+                          builder: (BuildContext context, BoxConstraints constraints) {
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 SizedBox(height: 2),
                                 Align(
-                                  alignment: Alignment.centerLeft, // Aligns the child to the left of the available space.
-                                  child: Text("Workout Program", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+                                  alignment: Alignment.centerLeft,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      "Workout Program",
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ),
-
                                 SizedBox(height: 10),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -336,183 +356,174 @@ class _MySplitPageState extends State<MySplitPage>  {
                                   ),
                                 ),
                               ],
-                            ),
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                )
-
-            ),
-
-
-          ),
-          Container(
-
-            color: Color.fromRGBO(20, 20, 20, 1),
-            width: MediaQuery.of(context).size.width * 1, // 90% of screen width
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              color: Color.fromRGBO(31, 31, 31, 1),
-              child: Padding(
-                padding:  const EdgeInsets.symmetric(horizontal: 19.0, vertical: 18),
-                child: Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft, // Aligns the child to the left of the available space.
-                      child: Text("Food Macros", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
-                    ),
-                    SizedBox(height: 20,),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Column(
-
-                          children: [
-
-                            RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: "${(_averageCals)} ", // Step count
-                                    style: TextStyle(
-                                      color: Colors.white, // Color for the step count
-                                      fontSize: 28, // Larger font size for the step count
-                                      fontWeight: FontWeight.bold, // Optional: Make it bold
-                                    ),
-                                  ),
-                                  WidgetSpan(
-                                    child: Icon(Icons.local_fire_department, color: Colors.white, size: 18), // Fire icon with adjustable color and size
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Text(" Total Calories", style: TextStyle(color: Colors.grey, fontSize: 18)),
-                          ],
-                        ),
-                        SizedBox(width: 20,),
-                        Column(
-                          children: [
-                            RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: "${(_averageProtein)} ", // Step count
-                                    style: TextStyle(
-                                      color: Colors.white, // Color for the step count
-                                      fontSize: 24, // Larger font size for the step count
-                                      fontWeight: FontWeight.bold, // Optional: Make it bold
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: "g", // "steps" label
-                                    style: TextStyle(
-                                      color: Colors.grey, // Different color for the "steps" text
-                                      fontSize: 11, // Smaller font size for the "steps" text
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                            ),
-                            Text(" Protein", style: TextStyle(color: Colors.grey, fontSize: 18)),
-                          ],
-
-                        ),
-                        SizedBox(width: 20,),
-                        Column(
-                          children: [
-                            RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: "${(_averageCarbs)} ", // Step count
-                                    style: TextStyle(
-                                      color: Colors.white, // Color for the step count
-                                      fontSize: 24, // Larger font size for the step count
-                                      fontWeight: FontWeight.bold, // Optional: Make it bold
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: "g", // "steps" label
-                                    style: TextStyle(
-                                      color: Colors.grey, // Different color for the "steps" text
-                                      fontSize: 11, // Smaller font size for the "steps" text
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                            ),
-                            Text(" Carbs", style: TextStyle(color: Colors.grey, fontSize: 18)),
-                          ],
-
-                        ),
-                        SizedBox(width: 20,),
-                        Column(
-                          children: [
-                            RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: "${(_averageFats)} ", // Step count
-                                    style: TextStyle(
-                                      color: Colors.white, // Color for the step count
-                                      fontSize: 24, // Larger font size for the step count
-                                      fontWeight: FontWeight.bold, // Optional: Make it bold
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: "g", // "steps" label
-                                    style: TextStyle(
-                                      color: Colors.grey, // Different color for the "steps" text
-                                      fontSize: 11, // Smaller font size for the "steps" text
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                            ),
-                            Text(" Fats", style: TextStyle(color: Colors.grey, fontSize: 18)),
-                          ],
-
-                        )
-
-                      ],
-
-                    ),
-                    SizedBox(height: 10),
-                    Divider(
-                      color: Colors.grey[500],
-                      height: 1, // Set minimal height to reduce space
-                      thickness: .75, // Minimal visual thickness
-                    ),
-                    SizedBox(height: 10),
-                    ElevatedButton.icon(
-                      onPressed: () => _showEditNutritionDialog(),
-                      icon: Icon(Icons.edit, color: Colors.white,),  // Icon for editing
-                      label: Text("Edit Program"),  // Text label
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white, backgroundColor: Colors.grey[800],  // Text and icon color
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                Center(
+                  child: Container(
+                    width: tileWidth,
+                    height: tileHeight,
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      color: Color.fromRGBO(31, 31, 31, 1),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 18),
+                        child: Column(
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  "Food Macros",
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 20,),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Column(
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: "${(_averageCals)} ", // Step count
+                                            style: TextStyle(
+                                              color: Colors.white, // Color for the step count
+                                              fontSize: 28, // Larger font size for the step count
+                                              fontWeight: FontWeight.bold, // Optional: Make it bold
+                                            ),
+                                          ),
+                                          WidgetSpan(
+                                            child: Icon(Icons.local_fire_department, color: Colors.white, size: 18), // Fire icon with adjustable color and size
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(" Total Calories", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                  ],
+                                ),
+                                SizedBox(width: 20,),
+                                Column(
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: "${(_averageProtein)} ", // Step count
+                                            style: TextStyle(
+                                              color: Colors.white, // Color for the step count
+                                              fontSize: 24, // Larger font size for the step count
+                                              fontWeight: FontWeight.bold, // Optional: Make it bold
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: "g", // "steps" label
+                                            style: TextStyle(
+                                              color: Colors.grey, // Different color for the "steps" text
+                                              fontSize: 11, // Smaller font size for the "steps" text
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(" Protein", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                  ],
+                                ),
+                                SizedBox(width: 20,),
+                                Column(
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: "${(_averageCarbs)} ", // Step count
+                                            style: TextStyle(
+                                              color: Colors.white, // Color for the step count
+                                              fontSize: 24, // Larger font size for the step count
+                                              fontWeight: FontWeight.bold, // Optional: Make it bold
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: "g", // "steps" label
+                                            style: TextStyle(
+                                              color: Colors.grey, // Different color for the "steps" text
+                                              fontSize: 11, // Smaller font size for the "steps" text
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(" Carbs", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                  ],
+                                ),
+                                SizedBox(width: 20,),
+                                Column(
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: "${(_averageFats)} ", // Step count
+                                            style: TextStyle(
+                                              color: Colors.white, // Color for the step count
+                                              fontSize: 24, // Larger font size for the step count
+                                              fontWeight: FontWeight.bold, // Optional: Make it bold
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: "g", // "steps" label
+                                            style: TextStyle(
+                                              color: Colors.grey, // Different color for the "steps" text
+                                              fontSize: 11, // Smaller font size for the "steps" text
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(" Fats", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                  ],
+                                )
+                              ],
+                            ),
+                            SizedBox(height: 10),
+                            Divider(
+                              color: Colors.grey[500],
+                              height: 1, // Set minimal height to reduce space
+                              thickness: .75, // Minimal visual thickness
+                            ),
+                            SizedBox(height: 10),
+                            ElevatedButton.icon(
+                              onPressed: () => _showEditNutritionDialog(),
+                              icon: Icon(Icons.edit, color: Colors.white,),  // Icon for editing
+                              label: Text("Edit Program"),  // Text label
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.white, backgroundColor: Colors.grey[800],  // Text and icon color
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+              ],
             ),
           ),
-          Expanded(
-            child: Container(
-              color: Color.fromRGBO(20, 20, 20, 1),
-              height: 79,
-            ),
-          ),
-        ],
-
+        ),
       ),
     );
   }
