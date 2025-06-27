@@ -32,7 +32,6 @@ class _FoodLogPageState extends State<FoodLogPage> {
   double _dailyGoal = 0;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  List<FoodItemDatabase>? _selectedDayFoods;
   Set<String> _selectedFoodIds = {};
   DatabaseService? _dbService;
   String? _pendingAction; // 'copy', 'move', or null
@@ -48,9 +47,6 @@ class _FoodLogPageState extends State<FoodLogPage> {
     super.initState();
     loadNutritionalInfo();
     _selectedDay = _focusedDay;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadFoodsForSelectedDay(_selectedDay!);
-    });
   }
 
   @override
@@ -96,27 +92,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
       _selectedDay = selectedDay;
       _focusedDay = focusedDay;
     });
-    _loadFoodsForSelectedDay(selectedDay);
     calculateCalories();  // Call this here to recalculate with the new selected day
-  }
-
-  void _loadFoodsForSelectedDay(DateTime date) {
-    var foodData = Provider.of<FoodData>(context, listen: false);
-    // Filter out foods with the placeholder date (DateTime(2000, 1, 1))
-    _selectedDayFoods = foodData.getFoodForDate(date).where((food) {
-      return food.date != DateTime(2000, 1, 1); // Exclude placeholder date
-    }).toList();
-
-    if (_selectedDayFoods != null && _selectedDayFoods!.isNotEmpty) {
-      print("Foods on ${DateFormat('yyyy-MM-dd').format(date)}:");
-      for (var food in _selectedDayFoods!) {
-        print("${food.name}: ${food.calories} calories, ${food.protein}g protein, ${food.carbs}g carbs, ${food.fats}g fats");
-      }
-    } else {
-      print("No foods logged for ${DateFormat('yyyy-MM-dd').format(date)}.");
-    }
-
-    setState(() {}); // This ensures the UI updates with the new data
   }
 
   void _addFoodDialog() {
@@ -201,13 +177,12 @@ class _FoodLogPageState extends State<FoodLogPage> {
     _carbsController.clear();
     _fatsController.clear();
 
-    // Reload the food items for the selected day to update the UI
-    _loadFoodsForSelectedDay(date);
+    setState(() {}); // Just trigger a rebuild
   }
 
   void refreshFoodLog() {
-    _loadFoodsForSelectedDay(_selectedDay!);
     calculateCalories();
+    setState(() {});
   }
 
   Future<void> _handleCopyMoveAction(DateTime targetDate, {required bool isMove}) async {
@@ -218,12 +193,15 @@ class _FoodLogPageState extends State<FoodLogPage> {
   }
 
   Future<void> _copyOrMoveSelected(DateTime targetDate, {required bool isMove}) async {
-    if (_selectedDayFoods == null) return;
-    final selectedFoods = _selectedDayFoods!.where((f) => _selectedFoodIds.contains(f.id)).toList();
+    if (_selectedFoodIds.isEmpty) return;
     final foodData = Provider.of<FoodData>(context, listen: false);
+    final selectedFoods = _selectedFoodIds
+        .map((id) => foodData.getFoodById(id))
+        .where((item) => item != null)
+        .toList();
     for (var food in selectedFoods) {
       // Add to Hive
-      foodData.addFood(food.name, food.calories, food.protein, food.carbs, food.fats, targetDate);
+      foodData.addFood(food!.name, food.calories, food.protein, food.carbs, food.fats, targetDate);
       // Add to Firebase
       if (_dbService != null) {
         await _dbService!.addFoodLog({
@@ -239,7 +217,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
     if (isMove) {
       // Remove from original date in Hive and Firebase
       for (var food in selectedFoods) {
-        foodData.deleteFood(food.id);
+        foodData.deleteFood(food!.id);
         // Optionally, remove from Firebase if you store IDs
         // (Not implemented here, as your addFoodLog does not return an ID)
       }
@@ -247,12 +225,15 @@ class _FoodLogPageState extends State<FoodLogPage> {
     setState(() {
       _selectedFoodIds.clear();
     });
-    _loadFoodsForSelectedDay(_selectedDay!);
     calculateCalories();
   }
 
   @override
   Widget build(BuildContext context) {
+    final foodData = Provider.of<FoodData>(context);
+    final foods = foodData.getFoodForDate(_selectedDay ?? DateTime.now())
+        .where((food) => food.date != DateTime(2000, 1, 1))
+        .toList();
     return Scaffold(
       backgroundColor: Color.fromRGBO(31, 31, 31, 1),
       body: Column(
@@ -263,7 +244,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
             lastDay: DateTime.utc(2100, 12, 31),
             focusedDay: _focusedDay,
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            eventLoader: (day) => Provider.of<FoodData>(context, listen: false).getFoodForDate(day),
+            eventLoader: (day) => foodData.getFoodForDate(day),
             onDaySelected: _onDaySelected,
             calendarFormat: CalendarFormat.week,
             calendarStyle: CalendarStyle(
@@ -302,7 +283,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
             child: Container(
               color: Color.fromRGBO(20, 20, 20, 1),
               padding: EdgeInsets.only(left: 24, right: 24,),
-              child: _selectedDayFoods == null || _selectedDayFoods!.isEmpty
+              child: foods.isEmpty
                   ? Center(
                 child: Text(
                   'No foods logged for this day. Tap to add.',
@@ -311,7 +292,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
               )
                   : ListView(
                 padding: EdgeInsets.zero,
-                children: _buildGroupedFoodList(),
+                children: _buildGroupedFoodList(foods),
               ),
             ),
           ),
@@ -478,20 +459,14 @@ class _FoodLogPageState extends State<FoodLogPage> {
               ),
             ),
         ],
-
       ),
-
-
-
     );
   }
 
-  // Helper to group foods by hour and build the grouped list
-  List<Widget> _buildGroupedFoodList() {
-    if (_selectedDayFoods == null) return [];
+  List<Widget> _buildGroupedFoodList(List<FoodItemDatabase> foods) {
     // Group foods by hour
     Map<int, List<FoodItemDatabase>> hourGroups = {};
-    for (var food in _selectedDayFoods!) {
+    for (var food in foods) {
       int hour = food.date.hour;
       hourGroups.putIfAbsent(hour, () => []).add(food);
     }
@@ -499,10 +474,10 @@ class _FoodLogPageState extends State<FoodLogPage> {
     List<int> sortedHours = hourGroups.keys.toList()..sort();
     List<Widget> widgets = [];
     for (var hour in sortedHours) {
-      final foods = hourGroups[hour]!;
+      final foodsForHour = hourGroups[hour]!;
       // Calculate sums for this hour
       double hourCals = 0, hourProtein = 0, hourFats = 0, hourCarbs = 0;
-      for (var food in foods) {
+      for (var food in foodsForHour) {
         hourCals += double.tryParse(food.calories) ?? 0;
         hourProtein += double.tryParse(food.protein) ?? 0;
         hourFats += double.tryParse(food.fats) ?? 0;
@@ -541,7 +516,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
         ),
       );
       // Add all foods for this hour
-      for (var food in foods) {
+      for (var food in foodsForHour) {
         widgets.add(
           FoodTile(
             foodName: food.name,
@@ -553,7 +528,7 @@ class _FoodLogPageState extends State<FoodLogPage> {
             onDelete: () {
               Provider.of<FoodData>(context, listen: false).deleteFood(food.id);
               calculateCalories();
-              _loadFoodsForSelectedDay(_selectedDay!);
+              setState(() {});
             },
             isSelected: _selectedFoodIds.contains(food.id),
             onTap: () {

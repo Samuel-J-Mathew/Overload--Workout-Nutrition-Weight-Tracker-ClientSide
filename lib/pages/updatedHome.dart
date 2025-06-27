@@ -28,6 +28,7 @@ import 'WeightTrendpage.dart';
 import 'bigHeatMap.dart';
 import 'journalPage.dart';
 import '../WebAPP/MessagesPage.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UpdatedHome extends StatefulWidget {
   @override
@@ -124,6 +125,16 @@ class _UpdatedHomeState extends State<UpdatedHome> {
   }
   void signUserOut() {
     FirebaseAuth.instance.signOut();
+  }
+  void launchDeleteAccount() async {
+    final url = Uri.parse('https://overloadtracker.replit.app/delete-account');
+    try {
+      await launchUrl(url, webOnlyWindowName: '_blank');
+    } catch (e) {
+      // Optionally show a snackbar or dialog
+      print('Could not launch delete account URL: '
+          '[31m' + e.toString() + '\u001b[0m');
+    }
   }
   @override
   void initState() {
@@ -504,6 +515,23 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                             IconButton(
                               icon: Icon(Icons.logout, color: Colors.white),
                               onPressed: signUserOut,
+                            ),
+                            PopupMenuButton<String>(
+                              icon: Icon(Icons.more_vert, color: Colors.white),
+                              onSelected: (String value) {
+                                if (value == 'delete_account') {
+                                  // Open the link in a new tab
+                                  // Use url_launcher for web support
+                                  // ignore: undefined_prefixed_name
+                                  launchDeleteAccount();
+                                }
+                              },
+                              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                                PopupMenuItem<String>(
+                                  value: 'delete_account',
+                                  child: Text('Delete Account'),
+                                ),
+                              ],
                             ),
                           ],
                         ),

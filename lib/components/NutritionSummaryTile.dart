@@ -7,6 +7,9 @@ import '../data/hive_database.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:gymapp/data/FoodData.dart';
+
 class NutritionSummaryTile extends StatefulWidget {
   final DateTime selectedDate;
 
@@ -20,70 +23,22 @@ class NutritionSummaryTile extends StatefulWidget {
 }
 
 class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
-  final HiveDatabase hiveDatabase = HiveDatabase();
-  double _caloriesLeft = 0;
-  double _caloriesConsumedToday = 0;
-  double _proteinConsumedToday = 0;
-  double _carbsConsumedToday = 0;
-  double _fatsConsumedToday = 0;
-  double _dailyGoal = 0;
-  double _dailyGoalfats = 0;
-  double _dailyGoalprotein = 0;
-  double _dailyGoalcarbs = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    loadNutritionalInfo();
-  }
-
-  @override
-  void didUpdateWidget(NutritionSummaryTile oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedDate != widget.selectedDate) {
-      calculateCalories();
-      calculateMacros();
-    }
-  }
-
-  void loadNutritionalInfo() async {
-    var box = await Hive.openBox<NutritionalInfo>('nutritionBox');
-    NutritionalInfo? info = box.get('nutrition');
-    if (info != null) {
-      _dailyGoal = double.tryParse(info.calories ?? "0") ?? 0;
-      _dailyGoalprotein = double.tryParse(info.protein ?? "0") ?? 0;
-      _dailyGoalcarbs = double.tryParse(info.carbs ?? "0") ?? 0;
-      _dailyGoalfats = double.tryParse(info.fats ?? "0") ?? 0;
-      calculateCalories();
-      calculateMacros();
-    }
-  }
-
-  void calculateCalories() {
-    var foodItems = hiveDatabase.getFoodForDate(widget.selectedDate);
-    _caloriesConsumedToday = foodItems.fold(0, (sum, item) {
-      return sum + (double.tryParse(item.calories) ?? 0);
-    });
-    setState(() {
-      _caloriesLeft = (_dailyGoal - _caloriesConsumedToday).clamp(0, double.infinity);
-    });
-  }
-
-  void calculateMacros() {
-    var foodItems = hiveDatabase.getFoodForDate(widget.selectedDate);
-    _proteinConsumedToday = 0;
-    _carbsConsumedToday = 0;
-    _fatsConsumedToday = 0;
-    foodItems.forEach((item) {
-      _proteinConsumedToday += double.tryParse(item.protein) ?? 0;
-      _carbsConsumedToday += double.tryParse(item.carbs) ?? 0;
-      _fatsConsumedToday += double.tryParse(item.fats) ?? 0;
-    });
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
+    final foodData = Provider.of<FoodData>(context);
+    final hiveDatabase = HiveDatabase();
+    final box = Hive.box<NutritionalInfo>('nutritionBox');
+    final NutritionalInfo? info = box.get('nutrition');
+    final double dailyGoal = double.tryParse(info?.calories ?? "0") ?? 0;
+    final double dailyGoalProtein = double.tryParse(info?.protein ?? "0") ?? 0;
+    final double dailyGoalCarbs = double.tryParse(info?.carbs ?? "0") ?? 0;
+    final double dailyGoalFats = double.tryParse(info?.fats ?? "0") ?? 0;
+    final foodItems = foodData.getFoodForDate(widget.selectedDate);
+    final double caloriesConsumedToday = foodItems.fold(0, (sum, item) => sum + (double.tryParse(item.calories) ?? 0));
+    final double proteinConsumedToday = foodItems.fold(0, (sum, item) => sum + (double.tryParse(item.protein) ?? 0));
+    final double carbsConsumedToday = foodItems.fold(0, (sum, item) => sum + (double.tryParse(item.carbs) ?? 0));
+    final double fatsConsumedToday = foodItems.fold(0, (sum, item) => sum + (double.tryParse(item.fats) ?? 0));
+    final double caloriesLeft = (dailyGoal - caloriesConsumedToday).clamp(0, double.infinity);
     final darkTileColor = Color(0xFF121212);
     final blue = Color(0xFF1DA1F2);
     final orange = Color(0xFFFF9100);
@@ -106,7 +61,7 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   // Remaining section on the left
-                  _statTile("Remaining", _caloriesLeft, Colors.white, darkTileColor),
+                  _statTile("Remaining", caloriesLeft, Colors.white, darkTileColor),
 
                   // Pie chart in the center
                   SizedBox(
@@ -114,8 +69,8 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
                     height: 140,
                     child: PieChart(
                       dataMap: {
-                        "Consumed": _caloriesConsumedToday.clamp(0, _dailyGoal),
-                        "Remaining": (_dailyGoal - _caloriesConsumedToday).clamp(0, _dailyGoal),
+                        "Consumed": caloriesConsumedToday.clamp(0, dailyGoal),
+                        "Remaining": (dailyGoal - caloriesConsumedToday).clamp(0, dailyGoal),
                       },
                       chartType: ChartType.ring,
                       ringStrokeWidth: 16,
@@ -125,7 +80,7 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _caloriesConsumedToday.toStringAsFixed(0),
+                            caloriesConsumedToday.toStringAsFixed(0),
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -147,7 +102,7 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
                   ),
 
                   // Target section on the right
-                  _statTile("Target", _dailyGoal, Colors.white, darkTileColor),
+                  _statTile("Target", dailyGoal, Colors.white, darkTileColor),
                 ],
               ),
             ],
@@ -160,7 +115,7 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
           children: [
             _macroTile(
               icon: 	MdiIcons.foodSteak,
-              value: _proteinConsumedToday,
+              value: proteinConsumedToday,
               label: "P",
               color: red,
               iconColor: red,
@@ -168,7 +123,7 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
             ),
             _macroTile(
               icon: MdiIcons.breadSlice,
-              value: _carbsConsumedToday,
+              value: carbsConsumedToday,
               label: "C",
               color: orange,
               iconColor: orange,
@@ -176,7 +131,7 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
             ),
             _macroTile(
               icon: Icons.opacity,
-              value: _fatsConsumedToday,
+              value: fatsConsumedToday,
               label: "F",
               color: green,
               iconColor: green,

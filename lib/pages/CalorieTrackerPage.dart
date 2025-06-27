@@ -1065,6 +1065,11 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       selectedFood!['Fats'],
     );
 
+    // Call the onReturn callback before popping
+    if (widget.onReturn != null) {
+      widget.onReturn!();
+    }
+
     Navigator.pop(context);
   }
   Future<void> addFood(String userId, DateTime date, String name, String calories, String protein, String carbs, String fats) async {

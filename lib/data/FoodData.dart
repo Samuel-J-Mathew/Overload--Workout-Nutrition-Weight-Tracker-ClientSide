@@ -23,5 +23,11 @@ class FoodData with ChangeNotifier {
     notifyListeners();
   }
 
-
+  FoodItemDatabase? getFoodById(String id) {
+    try {
+      return db.getAllFoodItems().firstWhere((item) => item.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
 }
