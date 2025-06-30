@@ -65,6 +65,9 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   final FocusNode _servingsFocusNode = FocusNode();
   bool _isServingsFocused = false;
 
+  // Unit selection for grams/oz
+  String _selectedUnit = 'g';
+
   @override
   void initState() {
     super.initState();
@@ -848,6 +851,13 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
+        final inputBoxHeight = screenHeight * 0.065;
+        final inputFontSize = screenWidth * 0.045;
+        final buttonWidth = screenWidth * 0.15;
+        final buttonHeight = inputBoxHeight;
+        final buttonFontSize = screenWidth * 0.045;
         return WillPopScope(
           onWillPop: () async {
             _isSheetOpen = false;
@@ -865,19 +875,16 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
               final bool isInputFocused = _isGramsFocused || _isServingsFocused;
               return SingleChildScrollView(
                 padding: EdgeInsets.only(
-                  bottom: isInputFocused
-                      ? MediaQuery.of(context).viewInsets.bottom + 80  // Increase this value
-                      : 40,
-                  top: 20,
+                  bottom: isInputFocused ? MediaQuery.of(context).viewInsets.bottom : 0,
+                  top: isInputFocused ? 40 : 0,
                 ),
-
                 child: Container(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(screenWidth * 0.05),
                   decoration: BoxDecoration(
                     color: Color(0xFF1F1F1F),
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
+                      topLeft: Radius.circular(screenWidth * 0.05),
+                      topRight: Radius.circular(screenWidth * 0.05),
                     ),
                   ),
                   child: Column(
@@ -887,21 +894,26 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: Text(
-                              selectedFoodName ?? 'Selected Food',
-                              style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                selectedFoodName ?? 'Selected Food',
+                                style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.065, fontWeight: FontWeight.bold),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.close, color: Colors.white),
+                            icon: Icon(Icons.close, color: Colors.white, size: screenWidth * 0.07),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: screenHeight * 0.025),
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Expanded(
                             child: _buildTextField('Servings', _servingsController, () {
@@ -910,54 +922,159 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                               _gramsController.text = newGrams;
                               updateNutrition(double.parse(newGrams));
                               setModalState(() {});
-                            }, focusNode: _servingsFocusNode),
+                            },
+                              focusNode: _servingsFocusNode,
+                              height: inputBoxHeight,
+                              fontSize: inputFontSize,
+                            ),
                           ),
-                          SizedBox(width: 20),
+                          SizedBox(width: screenWidth * 0.04),
                           Expanded(
-                            child: _buildTextField('Grams', _gramsController, () {
-                              final grams = double.tryParse(_gramsController.text) ?? 0;
-                              final newServings = (grams / originalServingSize!).toStringAsFixed(1);
-                              _servingsController.text = newServings;
-                              updateNutrition(grams);
-                              setModalState(() {});
-                            }, focusNode: _gramsFocusNode),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        setModalState(() {
+                                          _selectedUnit = 'g';
+                                          double val = double.tryParse(_gramsController.text) ?? 0;
+                                          if (_selectedUnit == 'oz') {
+                                            val = val * 28.3;
+                                          }
+                                          _gramsController.text = val.toStringAsFixed(0);
+                                          updateNutrition(val);
+                                        });
+                                      },
+                                      child: Container(
+                                        width: buttonWidth,
+                                        height: buttonHeight,
+                                        decoration: BoxDecoration(
+                                          color: _selectedUnit == 'g' ? Colors.white : Color(0xFF232323),
+                                          borderRadius: BorderRadius.circular(buttonHeight * 0.5),
+                                          border: Border.all(color: Colors.grey[700]!, width: 1),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            'g',
+                                            style: TextStyle(
+                                              color: _selectedUnit == 'g' ? Colors.black : Colors.white,
+                                              fontSize: buttonFontSize,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: screenWidth * 0.02),
+                                    GestureDetector(
+                                      onTap: () {
+                                        setModalState(() {
+                                          _selectedUnit = 'oz';
+                                          double val = double.tryParse(_gramsController.text) ?? 0;
+                                          if (_selectedUnit == 'g') {
+                                            val = val / 28.3;
+                                          }
+                                          _gramsController.text = val.toStringAsFixed(1);
+                                          updateNutrition(val * 28.3);
+                                        });
+                                      },
+                                      child: Container(
+                                        width: buttonWidth,
+                                        height: buttonHeight,
+                                        decoration: BoxDecoration(
+                                          color: _selectedUnit == 'oz' ? Colors.white : Color(0xFF232323),
+                                          borderRadius: BorderRadius.circular(buttonHeight * 0.5),
+                                          border: Border.all(color: Colors.grey[700]!, width: 1),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            'oz',
+                                            style: TextStyle(
+                                              color: _selectedUnit == 'oz' ? Colors.black : Colors.white,
+                                              fontSize: buttonFontSize,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: screenHeight * 0.01),
+                                SizedBox(
+                                  height: inputBoxHeight,
+                                  child: TextField(
+                                    controller: _gramsController,
+                                    focusNode: _gramsFocusNode,
+                                    style: TextStyle(color: Colors.white, fontSize: inputFontSize),
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Color(0xFF333333),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: inputBoxHeight * 0.25),
+                                      suffixText: _selectedUnit,
+                                      suffixStyle: TextStyle(
+                                        color: Colors.grey[300],
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: inputFontSize,
+                                      ),
+                                    ),
+                                    onChanged: (value) {
+                                      double val = double.tryParse(value) ?? 0;
+                                      if (_selectedUnit == 'oz') {
+                                        updateNutrition(val * 28.3);
+                                      } else {
+                                        updateNutrition(val);
+                                      }
+                                      setModalState(() {});
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: screenHeight * 0.025),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Nutritional Information (per 100g)',
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                          style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.035),
                         ),
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: screenHeight * 0.012),
                       GridView.count(
                         crossAxisCount: 2,
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
                         childAspectRatio: 1.5,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
+                        mainAxisSpacing: screenWidth * 0.025,
+                        crossAxisSpacing: screenWidth * 0.025,
                         children: [
-                          _buildNutritionStatCircle('Calories', calories, 'kcal', Color(0xFFE91E63), calories / 2000),
-                          _buildNutritionStatCircle('Protein', protein, 'g', Color(0xFF3F51B5), totalMacros > 0 ? protein / totalMacros : 0),
-                          _buildNutritionStatCircle('Fats', fats, 'g', Color(0xFFFF9800), totalMacros > 0 ? fats / totalMacros : 0),
-                          _buildNutritionStatCircle('Carbs', carbs, 'g', Color(0xFF4CAF50), totalMacros > 0 ? carbs / totalMacros : 0),
+                          _buildNutritionStatCircle('Calories', calories, 'kcal', Color(0xFFE91E63), calories / 2000, screenWidth),
+                          _buildNutritionStatCircle('Protein', protein, 'g', Color(0xFF3F51B5), totalMacros > 0 ? protein / totalMacros : 0, screenWidth),
+                          _buildNutritionStatCircle('Fats', fats, 'g', Color(0xFFFF9800), totalMacros > 0 ? fats / totalMacros : 0, screenWidth),
+                          _buildNutritionStatCircle('Carbs', carbs, 'g', Color(0xFF4CAF50), totalMacros > 0 ? carbs / totalMacros : 0, screenWidth),
                         ],
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: screenHeight * 0.025),
                       ElevatedButton(
                         onPressed: () => logFood(),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF424242),
-                          minimumSize: Size(double.infinity, 50),
+                          minimumSize: Size(double.infinity, inputBoxHeight * 1.1),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
+                            borderRadius: BorderRadius.circular(screenWidth * 0.04),
                           ),
                         ),
-                        child: Text("Log Food", style: TextStyle(color: Colors.white, fontSize: 16)),
+                        child: Text("Log Food", style: TextStyle(color: Colors.white, fontSize: inputFontSize)),
                       ),
                     ],
                   ),
@@ -972,51 +1089,56 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
     });
   }
 
-
-  Widget _buildTextField(String label, TextEditingController controller, VoidCallback onChanged, {FocusNode? focusNode}) {
+  Widget _buildTextField(String label, TextEditingController controller, VoidCallback onChanged, {FocusNode? focusNode, double? height, double? fontSize}) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.grey, fontSize: 14)),
+        Text(label, style: TextStyle(color: Colors.grey, fontSize: fontSize ?? screenWidth * 0.035)),
         SizedBox(height: 5),
-        TextField(
-          controller: controller,
-          focusNode: focusNode,
-          style: TextStyle(color: Colors.white, fontSize: 16),
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Color(0xFF333333),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
+        SizedBox(
+          height: height ?? 48,
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            style: TextStyle(color: Colors.white, fontSize: fontSize ?? screenWidth * 0.045),
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Color(0xFF333333),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: (height ?? 48) * 0.25),
             ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            onChanged: (value) => onChanged(),
           ),
-          onChanged: (value) => onChanged(),
         ),
       ],
     );
   }
 
-  Widget _buildNutritionStatCircle(String name, double value, String unit, Color color, double progress) {
+  Widget _buildNutritionStatCircle(String name, double value, String unit, Color color, double progress, double screenWidth) {
+    final circleSize = screenWidth * 0.16;
+    final fontSize = screenWidth * 0.045;
     return Container(
-      padding: EdgeInsets.all(8),
+      padding: EdgeInsets.all(screenWidth * 0.02),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(
-            width: 60,
-            height: 60,
+            width: circleSize,
+            height: circleSize,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 SizedBox(
-                  width: 60,
-                  height: 60,
+                  width: circleSize,
+                  height: circleSize,
                   child: CircularProgressIndicator(
                     value: progress,
-                    strokeWidth: 5,
+                    strokeWidth: circleSize * 0.08,
                     backgroundColor: Colors.grey.withOpacity(0.3),
                     valueColor: AlwaysStoppedAnimation<Color>(color),
                   ),
@@ -1024,17 +1146,23 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      value.toStringAsFixed(name == 'Calories' ? 0 : 1),
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        value.toStringAsFixed(name == 'Calories' ? 0 : 1),
+                        style: TextStyle(color: Colors.white, fontSize: fontSize, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
           ),
-          SizedBox(height: 5),
-          Text('$name ($unit)', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          SizedBox(height: screenWidth * 0.01),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text('$name ($unit)', style: TextStyle(color: Colors.grey, fontSize: fontSize * 0.8)),
+          ),
         ],
       ),
     );

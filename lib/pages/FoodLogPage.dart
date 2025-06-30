@@ -234,65 +234,78 @@ class _FoodLogPageState extends State<FoodLogPage> {
     final foods = foodData.getFoodForDate(_selectedDay ?? DateTime.now())
         .where((food) => food.date != DateTime(2000, 1, 1))
         .toList();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Color.fromRGBO(31, 31, 31, 1),
       body: Column(
         children: [
-          SizedBox(height: 50),
-          TableCalendar(
-            firstDay: DateTime.utc(2000, 1, 1),
-            lastDay: DateTime.utc(2100, 12, 31),
-            focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            eventLoader: (day) => foodData.getFoodForDate(day),
-            onDaySelected: _onDaySelected,
-            calendarFormat: CalendarFormat.week,
-            calendarStyle: CalendarStyle(
-              defaultTextStyle: TextStyle(color: Colors.white),
-              weekendTextStyle: TextStyle(color: Colors.white),
-              todayTextStyle: TextStyle(color: Colors.white),
-              selectedTextStyle: TextStyle(color: Colors.white),
-              todayDecoration: BoxDecoration(
-                color: Colors.black,
-                shape: BoxShape.circle,
-              ),
-              selectedDecoration: BoxDecoration(
-                color: Colors.blue[900],
-                shape: BoxShape.circle,
-              ),
-              markerDecoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-            ),
-            headerStyle: HeaderStyle(
-              titleTextStyle: TextStyle(color: Colors.white),
-              formatButtonTextStyle: TextStyle(color: Colors.white),
-              leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
-              rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
-            ),
-            daysOfWeekStyle: DaysOfWeekStyle(
-              weekdayStyle: TextStyle(color: Colors.white),
-              weekendStyle: TextStyle(color: Colors.white),
-            ),
-          ),
-          SizedBox(height: 6,),
-          NutritionSummaryTile(selectedDate: _selectedDay ?? DateTime.now()),
-          SizedBox(height: 6,),
           Expanded(
-            child: Container(
-              color: Color.fromRGBO(20, 20, 20, 1),
-              padding: EdgeInsets.only(left: 24, right: 24,),
-              child: foods.isEmpty
-                  ? Center(
-                child: Text(
-                  'No foods logged for this day. Tap to add.',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              )
-                  : ListView(
-                padding: EdgeInsets.zero,
-                children: _buildGroupedFoodList(foods),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  SizedBox(height: screenHeight * 0.06),
+                  TableCalendar(
+                    firstDay: DateTime.utc(2000, 1, 1),
+                    lastDay: DateTime.utc(2100, 12, 31),
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    eventLoader: (day) => foodData.getFoodForDate(day),
+                    onDaySelected: _onDaySelected,
+                    calendarFormat: CalendarFormat.week,
+                    calendarStyle: CalendarStyle(
+                      defaultTextStyle: TextStyle(color: Colors.white),
+                      weekendTextStyle: TextStyle(color: Colors.white),
+                      todayTextStyle: TextStyle(color: Colors.white),
+                      selectedTextStyle: TextStyle(color: Colors.white),
+                      todayDecoration: BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                      ),
+                      selectedDecoration: BoxDecoration(
+                        color: Colors.blue[900],
+                        shape: BoxShape.circle,
+                      ),
+                      markerDecoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    headerStyle: HeaderStyle(
+                      titleTextStyle: TextStyle(color: Colors.white),
+                      formatButtonTextStyle: TextStyle(color: Colors.white),
+                      leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
+                      rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
+                    ),
+                    daysOfWeekStyle: DaysOfWeekStyle(
+                      weekdayStyle: TextStyle(color: Colors.white),
+                      weekendStyle: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  SizedBox(height: screenHeight * 0.01),
+                  NutritionSummaryTile(selectedDate: _selectedDay ?? DateTime.now()),
+                  SizedBox(height: screenHeight * 0.01),
+                  Container(
+                    color: Color.fromRGBO(20, 20, 20, 1),
+                    padding: EdgeInsets.only(left: screenWidth * 0.06, right: screenWidth * 0.06),
+                    child: foods.isEmpty
+                        ? Container(
+                      height: screenHeight * 0.22,
+                      child: Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'No foods logged for this day. Tap to add.',
+                            style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.045),
+                          ),
+                        ),
+                      ),
+                    )
+                        : Column(
+                      children: _buildGroupedFoodList(foods, context),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -463,7 +476,8 @@ class _FoodLogPageState extends State<FoodLogPage> {
     );
   }
 
-  List<Widget> _buildGroupedFoodList(List<FoodItemDatabase> foods) {
+  List<Widget> _buildGroupedFoodList(List<FoodItemDatabase> foods, BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     // Group foods by hour
     Map<int, List<FoodItemDatabase>> hourGroups = {};
     for (var food in foods) {
@@ -487,27 +501,30 @@ class _FoodLogPageState extends State<FoodLogPage> {
       final hourLabel = TimeOfDay(hour: hour, minute: 0).format(context);
       widgets.add(
         Padding(
-          padding: const EdgeInsets.only(top: 20, bottom: 4),
+          padding: EdgeInsets.only(top: screenWidth * 0.05, bottom: screenWidth * 0.01),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 60,
-                child: Text(
-                  hourLabel,
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                  textAlign: TextAlign.left,
+                width: screenWidth * 0.15,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    hourLabel,
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: screenWidth * 0.03),
+                    textAlign: TextAlign.left,
+                  ),
                 ),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: screenWidth * 0.02),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _macroSummary(hourCals.toInt(), Icons.local_fire_department, ''),
-                    _macroSummary(hourProtein.toInt(), MdiIcons.alphaPCircle, ''),
-                    _macroSummary(hourFats.toInt(), MdiIcons.alphaFCircle, ''),
-                    _macroSummary(hourCarbs.toInt(), MdiIcons.alphaCCircle, ''),
+                    _macroSummary(hourCals.toInt(), Icons.local_fire_department, '', context),
+                    _macroSummary(hourProtein.toInt(), MdiIcons.alphaPCircle, '', context),
+                    _macroSummary(hourFats.toInt(), MdiIcons.alphaFCircle, '', context),
+                    _macroSummary(hourCarbs.toInt(), MdiIcons.alphaCCircle, '', context),
                   ],
                 ),
               ),
@@ -547,21 +564,25 @@ class _FoodLogPageState extends State<FoodLogPage> {
     return widgets;
   }
 
-  Widget _macroSummary(int value, IconData icon, String label) {
-    return Row(
-      children: [
-        Text(
-          value.toString(),
-          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(width: 2),
-        Icon(icon, color: Colors.white, size: 16),
-        SizedBox(width: 2),
-        Text(
-          label,
-          style: TextStyle(color: Colors.grey[400], fontSize: 14),
-        ),
-      ],
+  Widget _macroSummary(int value, IconData icon, String label, BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        children: [
+          Text(
+            value.toString(),
+            style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(width: screenWidth * 0.005),
+          Icon(icon, color: Colors.white, size: screenWidth * 0.04),
+          SizedBox(width: screenWidth * 0.005),
+          Text(
+            label,
+            style: TextStyle(color: Colors.grey[400], fontSize: screenWidth * 0.03),
+          ),
+        ],
+      ),
     );
   }
 }

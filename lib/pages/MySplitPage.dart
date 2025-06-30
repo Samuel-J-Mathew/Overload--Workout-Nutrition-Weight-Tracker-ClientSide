@@ -62,6 +62,12 @@ class _MySplitPageState extends State<MySplitPage>  {
   Map<String, TextEditingController> _repsControllers = {};
   Map<String, TextEditingController> _weightControllers = {};
 
+  // Add scroll controller and focus nodes for modal sheet
+  final ScrollController _modalScrollController = ScrollController();
+  final Map<String, FocusNode> _setsFocusNodes = {};
+  final Map<String, FocusNode> _repsFocusNodes = {};
+  final Map<String, FocusNode> _weightFocusNodes = {};
+
   @override
   void initState() {
     super.initState();
@@ -306,10 +312,17 @@ class _MySplitPageState extends State<MySplitPage>  {
                                   ),
                                 ),
                                 SizedBox(height: 10),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: daysOfWeek.map((day) => buildDaySplit(day)).toList(),
+                                SizedBox(
+                                  height: tileHeight * 0.5,
+                                  width: double.infinity,
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: daysOfWeek.map((day) => buildDaySplit(day)).toList(),
+                                    ),
+                                  ),
                                 ),
                                 SizedBox(height: 20),
                                 Divider(
@@ -393,109 +406,141 @@ class _MySplitPageState extends State<MySplitPage>  {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Column(
-                                  children: [
-                                    RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: "${(_averageCals)} ", // Step count
-                                            style: TextStyle(
-                                              color: Colors.white, // Color for the step count
-                                              fontSize: 28, // Larger font size for the step count
-                                              fontWeight: FontWeight.bold, // Optional: Make it bold
-                                            ),
+                                Flexible(
+                                  child: Column(
+                                    children: [
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: RichText(
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: "${(_averageCals)} ", // Step count
+                                                style: TextStyle(
+                                                  color: Colors.white, // Color for the step count
+                                                  fontSize: 28, // Larger font size for the step count
+                                                  fontWeight: FontWeight.bold, // Optional: Make it bold
+                                                ),
+                                              ),
+                                              WidgetSpan(
+                                                child: Icon(Icons.local_fire_department, color: Colors.white, size: 18), // Fire icon with adjustable color and size
+                                              ),
+                                            ],
                                           ),
-                                          WidgetSpan(
-                                            child: Icon(Icons.local_fire_department, color: Colors.white, size: 18), // Fire icon with adjustable color and size
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                    Text(" Total Calories", style: TextStyle(color: Colors.grey, fontSize: 18)),
-                                  ],
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(" Total Calories", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                SizedBox(width: 20,),
-                                Column(
-                                  children: [
-                                    RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: "${(_averageProtein)} ", // Step count
-                                            style: TextStyle(
-                                              color: Colors.white, // Color for the step count
-                                              fontSize: 24, // Larger font size for the step count
-                                              fontWeight: FontWeight.bold, // Optional: Make it bold
-                                            ),
+                                SizedBox(width: 10,),
+                                Flexible(
+                                  child: Column(
+                                    children: [
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: RichText(
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: "${(_averageProtein)} ", // Step count
+                                                style: TextStyle(
+                                                  color: Colors.white, // Color for the step count
+                                                  fontSize: 24, // Larger font size for the step count
+                                                  fontWeight: FontWeight.bold, // Optional: Make it bold
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: "g", // "steps" label
+                                                style: TextStyle(
+                                                  color: Colors.grey, // Different color for the "steps" text
+                                                  fontSize: 11, // Smaller font size for the "steps" text
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          TextSpan(
-                                            text: "g", // "steps" label
-                                            style: TextStyle(
-                                              color: Colors.grey, // Different color for the "steps" text
-                                              fontSize: 11, // Smaller font size for the "steps" text
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                    Text(" Protein", style: TextStyle(color: Colors.grey, fontSize: 18)),
-                                  ],
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(" Protein", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                SizedBox(width: 20,),
-                                Column(
-                                  children: [
-                                    RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: "${(_averageCarbs)} ", // Step count
-                                            style: TextStyle(
-                                              color: Colors.white, // Color for the step count
-                                              fontSize: 24, // Larger font size for the step count
-                                              fontWeight: FontWeight.bold, // Optional: Make it bold
-                                            ),
+                                SizedBox(width: 10,),
+                                Flexible(
+                                  child: Column(
+                                    children: [
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: RichText(
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: "${(_averageCarbs)} ", // Step count
+                                                style: TextStyle(
+                                                  color: Colors.white, // Color for the step count
+                                                  fontSize: 24, // Larger font size for the step count
+                                                  fontWeight: FontWeight.bold, // Optional: Make it bold
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: "g", // "steps" label
+                                                style: TextStyle(
+                                                  color: Colors.grey, // Different color for the "steps" text
+                                                  fontSize: 11, // Smaller font size for the "steps" text
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          TextSpan(
-                                            text: "g", // "steps" label
-                                            style: TextStyle(
-                                              color: Colors.grey, // Different color for the "steps" text
-                                              fontSize: 11, // Smaller font size for the "steps" text
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                    Text(" Carbs", style: TextStyle(color: Colors.grey, fontSize: 18)),
-                                  ],
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(" Carbs", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                SizedBox(width: 20,),
-                                Column(
-                                  children: [
-                                    RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: "${(_averageFats)} ", // Step count
-                                            style: TextStyle(
-                                              color: Colors.white, // Color for the step count
-                                              fontSize: 24, // Larger font size for the step count
-                                              fontWeight: FontWeight.bold, // Optional: Make it bold
-                                            ),
+                                SizedBox(width: 10,),
+                                Flexible(
+                                  child: Column(
+                                    children: [
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: RichText(
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: "${(_averageFats)} ", // Step count
+                                                style: TextStyle(
+                                                  color: Colors.white, // Color for the step count
+                                                  fontSize: 24, // Larger font size for the step count
+                                                  fontWeight: FontWeight.bold, // Optional: Make it bold
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: "g", // "steps" label
+                                                style: TextStyle(
+                                                  color: Colors.grey, // Different color for the "steps" text
+                                                  fontSize: 11, // Smaller font size for the "steps" text
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          TextSpan(
-                                            text: "g", // "steps" label
-                                            style: TextStyle(
-                                              color: Colors.grey, // Different color for the "steps" text
-                                              fontSize: 11, // Smaller font size for the "steps" text
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                    Text(" Fats", style: TextStyle(color: Colors.grey, fontSize: 18)),
-                                  ],
-                                )
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(" Fats", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                             SizedBox(height: 10),
@@ -573,99 +618,95 @@ class _MySplitPageState extends State<MySplitPage>  {
                     borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
                   ),
                   child: SafeArea(
-                    child: Column(
-                      children: [
-                        // Handle bar
-                        Container(
-                          height: 5,
-                          width: 50,
-                          margin: EdgeInsets.only(top: 12, bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[700],
-                            borderRadius: BorderRadius.circular(10),
+                    child: SingleChildScrollView(
+                      controller: _modalScrollController,
+                      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                      child: Column(
+                        children: [
+                          // Handle bar
+                          Container(
+                            height: 5,
+                            width: 50,
+                            margin: EdgeInsets.only(top: 12, bottom: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[700],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-
-                        // Header
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Edit Workout Split",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () => Navigator.pop(context),
-                                icon: Icon(Icons.close, color: Colors.white, size: 24),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(height: 20),
-
-                        // Day selector
-                        Container(
-                          margin: EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              'M', 'T', 'W', 'T', 'F', 'S', 'S'
-                            ].asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final dayAbbr = entry.value;
-                              final day = daysOfWeek[index];
-                              final isSelected = selectedDay == day;
-
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedDay = day;
-                                    selectedMuscleGroups = daySplitData[day]?.keys.toList() ?? [];
-                                  });
-                                },
-                                child: AnimatedContainer(
-                                  duration: Duration(milliseconds: 200),
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: isSelected ? Colors.blue : Colors.grey[800],
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: isSelected ? [
-                                      BoxShadow(
-                                        color: Colors.blue.withOpacity(0.3),
-                                        blurRadius: 6,
-                                        offset: Offset(0, 2),
-                                      )
-                                    ] : null,
+                          // Header
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Edit Workout Split",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  child: Center(
-                                    child: Text(
-                                      dayAbbr,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                        fontSize: 16,
+                                ),
+                                IconButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  icon: Icon(Icons.close, color: Colors.white, size: 24),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          // Day selector
+                          Container(
+                            margin: EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                'M', 'T', 'W', 'T', 'F', 'S', 'S'
+                              ].asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final dayAbbr = entry.value;
+                                final day = daysOfWeek[index];
+                                final isSelected = selectedDay == day;
+                                return GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      selectedDay = day;
+                                      selectedMuscleGroups = daySplitData[day]?.keys.toList() ?? [];
+                                    });
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: Duration(milliseconds: 200),
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? Colors.blue : Colors.grey[800],
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: isSelected ? [
+                                        BoxShadow(
+                                          color: Colors.blue.withOpacity(0.3),
+                                          blurRadius: 6,
+                                          offset: Offset(0, 2),
+                                        )
+                                      ] : null,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        dayAbbr,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                          fontSize: 16,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }).toList(),
+                                );
+                              }).toList(),
+                            ),
                           ),
-                        ),
-
-                        SizedBox(height: 20),
-
-                        // Muscle groups section
-                        Expanded(
-                          child: Column(
+                          SizedBox(height: 20),
+                          // Muscle groups section (no Expanded)
+                          Column(
                             children: [
                               // Muscle group selector
                               Container(
@@ -753,9 +794,7 @@ class _MySplitPageState extends State<MySplitPage>  {
                                   ],
                                 ),
                               ),
-
                               SizedBox(height: 20),
-
                               // Muscle group tabs and content
                               if (selectedMuscleGroups.isNotEmpty) ...[
                                 // Tab indicators
@@ -766,7 +805,6 @@ class _MySplitPageState extends State<MySplitPage>  {
                                       final index = entry.key;
                                       final muscleGroup = entry.value;
                                       final isSelected = index == _currentMuscleGroupIndex;
-
                                       return Expanded(
                                         child: GestureDetector(
                                           onTap: () {
@@ -804,11 +842,10 @@ class _MySplitPageState extends State<MySplitPage>  {
                                     }).toList(),
                                   ),
                                 ),
-
                                 SizedBox(height: 16),
-
                                 // Swipeable muscle group content
-                                Expanded(
+                                SizedBox(
+                                  height: 400, // Fixed height for the PageView
                                   child: PageView.builder(
                                     controller: _muscleGroupPageController,
                                     onPageChanged: (index) {
@@ -825,7 +862,8 @@ class _MySplitPageState extends State<MySplitPage>  {
                                 ),
                               ] else ...[
                                 // Empty state
-                                Expanded(
+                                Container(
+                                  height: 200,
                                   child: Center(
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.center,
@@ -858,41 +896,40 @@ class _MySplitPageState extends State<MySplitPage>  {
                               ],
                             ],
                           ),
-                        ),
-
-                        // Save button
-                        Container(
-                          padding: EdgeInsets.all(20),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    _saveAllSplits();
-                                    saveWorkoutSplitToFirestore();
-                                    Navigator.pop(context);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,
-                                    foregroundColor: Colors.white,
-                                    padding: EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                          // Save button
+                          Container(
+                            padding: EdgeInsets.all(20),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      _saveAllSplits();
+                                      saveWorkoutSplitToFirestore();
+                                      Navigator.pop(context);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                      foregroundColor: Colors.white,
+                                      padding: EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
                                     ),
-                                  ),
-                                  child: Text(
-                                    'Save Split',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                    child: Text(
+                                      'Save Split',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -1104,7 +1141,29 @@ class _MySplitPageState extends State<MySplitPage>  {
     _setsControllers[muscleGroup] ??= TextEditingController();
     _repsControllers[muscleGroup] ??= TextEditingController();
     _weightControllers[muscleGroup] ??= TextEditingController();
-
+    // Add focus nodes and attach listeners
+    _setsFocusNodes[muscleGroup] ??= FocusNode();
+    _repsFocusNodes[muscleGroup] ??= FocusNode();
+    _weightFocusNodes[muscleGroup] ??= FocusNode();
+    void scrollToBottomOnFocus(FocusNode node) {
+      if (node.hasFocus) {
+        Future.delayed(Duration(milliseconds: 300), () {
+          if (_modalScrollController.hasClients) {
+            _modalScrollController.animateTo(
+              _modalScrollController.position.maxScrollExtent,
+              duration: Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      }
+    }
+    _setsFocusNodes[muscleGroup]!.removeListener(() {}); // Remove any previous
+    _repsFocusNodes[muscleGroup]!.removeListener(() {});
+    _weightFocusNodes[muscleGroup]!.removeListener(() {});
+    _setsFocusNodes[muscleGroup]!.addListener(() => scrollToBottomOnFocus(_setsFocusNodes[muscleGroup]!));
+    _repsFocusNodes[muscleGroup]!.addListener(() => scrollToBottomOnFocus(_repsFocusNodes[muscleGroup]!));
+    _weightFocusNodes[muscleGroup]!.addListener(() => scrollToBottomOnFocus(_weightFocusNodes[muscleGroup]!));
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[850],
@@ -1218,6 +1277,7 @@ class _MySplitPageState extends State<MySplitPage>  {
                   child: _buildModernTextField(
                     'Sets',
                     _setsControllers[muscleGroup]!,
+                    focusNode: _setsFocusNodes[muscleGroup]!,
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -1226,6 +1286,7 @@ class _MySplitPageState extends State<MySplitPage>  {
                   child: _buildModernTextField(
                     'Reps',
                     _repsControllers[muscleGroup]!,
+                    focusNode: _repsFocusNodes[muscleGroup]!,
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -1234,6 +1295,7 @@ class _MySplitPageState extends State<MySplitPage>  {
                   child: _buildModernTextField(
                     'Weight',
                     _weightControllers[muscleGroup]!,
+                    focusNode: _weightFocusNodes[muscleGroup]!,
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -1299,10 +1361,12 @@ class _MySplitPageState extends State<MySplitPage>  {
 
   Widget _buildModernTextField(String label, TextEditingController controller, {
     TextInputType? keyboardType,
+    FocusNode? focusNode,
   }) {
     return Container(
       child: TextField(
         controller: controller,
+        focusNode: focusNode,
         keyboardType: keyboardType,
         autofocus: false,
         enableInteractiveSelection: true,
@@ -1363,6 +1427,10 @@ class _MySplitPageState extends State<MySplitPage>  {
     _setsControllers.values.forEach((controller) => controller.dispose());
     _repsControllers.values.forEach((controller) => controller.dispose());
     _weightControllers.values.forEach((controller) => controller.dispose());
+    _setsFocusNodes.values.forEach((node) => node.dispose());
+    _repsFocusNodes.values.forEach((node) => node.dispose());
+    _weightFocusNodes.values.forEach((node) => node.dispose());
+    _modalScrollController.dispose();
     _muscleGroupPageController.dispose();
     super.dispose();
   }

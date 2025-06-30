@@ -44,7 +44,11 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
     final orange = Color(0xFFFF9100);
     final green = Color(0xFF00C853);
     final red = Color(0xFFFF5252);
-    final iconSize = 22.0;
+    final iconSize = MediaQuery.of(context).size.width * 0.055;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final statTileWidth = screenWidth * 0.22;
+    final macroTileWidth = screenWidth * 0.22;
+    final pieChartSize = screenWidth * 0.36;
     return Column(
       children: [
         // Pie chart in its own tile
@@ -53,45 +57,50 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
             color: darkTileColor,
             borderRadius: BorderRadius.circular(18),
           ),
-          padding: EdgeInsets.symmetric(vertical: 18, horizontal: 0),
-          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+          padding: EdgeInsets.symmetric(vertical: screenWidth * 0.045, horizontal: 0),
+          margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.02, vertical: 0),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   // Remaining section on the left
-                  _statTile("Remaining", caloriesLeft, Colors.white, darkTileColor),
-
+                  _statTile("Remaining", caloriesLeft, Colors.white, darkTileColor, statTileWidth, context),
                   // Pie chart in the center
                   SizedBox(
-                    width: 140,
-                    height: 140,
+                    width: pieChartSize,
+                    height: pieChartSize,
                     child: PieChart(
                       dataMap: {
                         "Consumed": caloriesConsumedToday.clamp(0, dailyGoal),
                         "Remaining": (dailyGoal - caloriesConsumedToday).clamp(0, dailyGoal),
                       },
                       chartType: ChartType.ring,
-                      ringStrokeWidth: 16,
+                      ringStrokeWidth: pieChartSize * 0.12,
                       colorList: [blue, Colors.grey[900]!],
-                      chartRadius: 120,
+                      chartRadius: pieChartSize,
                       centerWidget: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            caloriesConsumedToday.toStringAsFixed(0),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 32,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              caloriesConsumedToday.toStringAsFixed(0),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: pieChartSize * 0.23,
+                              ),
                             ),
                           ),
-                          Text(
-                            "consumed",
-                            style: TextStyle(
-                              color: Colors.grey[400],
-                              fontSize: 16,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "consumed",
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: pieChartSize * 0.10,
+                              ),
                             ),
                           ),
                         ],
@@ -100,26 +109,27 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
                       chartValuesOptions: ChartValuesOptions(showChartValues: false),
                     ),
                   ),
-
                   // Target section on the right
-                  _statTile("Target", dailyGoal, Colors.white, darkTileColor),
+                  _statTile("Target", dailyGoal, Colors.white, darkTileColor, statTileWidth, context),
                 ],
               ),
             ],
           ),
         ),
-        SizedBox(height: 18),
+        SizedBox(height: screenWidth * 0.045),
         // Macro tiles row
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _macroTile(
-              icon: 	MdiIcons.foodSteak,
+              icon: MdiIcons.foodSteak,
               value: proteinConsumedToday,
               label: "P",
               color: red,
               iconColor: red,
               iconSize: iconSize,
+              width: macroTileWidth,
+              context: context,
             ),
             _macroTile(
               icon: MdiIcons.breadSlice,
@@ -128,6 +138,8 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
               color: orange,
               iconColor: orange,
               iconSize: iconSize,
+              width: macroTileWidth,
+              context: context,
             ),
             _macroTile(
               icon: Icons.opacity,
@@ -136,6 +148,8 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
               color: green,
               iconColor: green,
               iconSize: iconSize,
+              width: macroTileWidth,
+              context: context,
             ),
           ],
         ),
@@ -143,30 +157,37 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
     );
   }
 
-  Widget _statTile(String label, double value, Color valueColor, Color bgColor) {
+  Widget _statTile(String label, double value, Color valueColor, Color bgColor, double width, BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Container(
-      width: 90,
-      padding: EdgeInsets.symmetric(vertical: 12),
+      width: width,
+      padding: EdgeInsets.symmetric(vertical: screenWidth * 0.03),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 14,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontSize: screenWidth * 0.035,
+              ),
             ),
           ),
-          SizedBox(height: 4),
-          Text(
-            value.toStringAsFixed(0),
-            style: TextStyle(
-              color: valueColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
+          SizedBox(height: screenWidth * 0.01),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value.toStringAsFixed(0),
+              style: TextStyle(
+                color: valueColor,
+                fontWeight: FontWeight.bold,
+                fontSize: screenWidth * 0.05,
+              ),
             ),
           ),
         ],
@@ -181,10 +202,13 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
     required Color color,
     required Color iconColor,
     required double iconSize,
+    required double width,
+    required BuildContext context,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Container(
-      width: 90,
-      padding: EdgeInsets.symmetric(vertical: 14),
+      width: width,
+      padding: EdgeInsets.symmetric(vertical: screenWidth * 0.035),
       decoration: BoxDecoration(
         color: Color(0xFF121212),
         borderRadius: BorderRadius.circular(14),
@@ -193,22 +217,28 @@ class _NutritionSummaryTileState extends State<NutritionSummaryTile> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: iconColor, size: iconSize),
-          SizedBox(height: 6),
-          Text(
-            value.toStringAsFixed(0),
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+          SizedBox(height: screenWidth * 0.015),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value.toStringAsFixed(0),
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: screenWidth * 0.045,
+              ),
             ),
           ),
-          SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+          SizedBox(height: screenWidth * 0.005),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontSize: screenWidth * 0.035,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

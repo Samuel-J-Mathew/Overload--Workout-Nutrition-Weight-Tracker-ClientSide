@@ -66,7 +66,7 @@ class _CalorieTileState extends State<CalorieTile> {
 
     setState(() {});
   }
-  Widget _buildMacroProgressBar(double consumed, double goal, Color color, String label) {
+  Widget _buildMacroProgressBar(double consumed, double goal, Color color, String label, double barHeight, double fontSize) {
     double progressValue = 0;
     if (goal > 0) {
       progressValue = min(1.0, max(0, consumed / goal));
@@ -75,22 +75,25 @@ class _CalorieTileState extends State<CalorieTile> {
     return Expanded(
       child: Column(
         children: [
-          Text(
-            "$label ${max(0, (goal - consumed).round())} left",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              "$label ${max(0, (goal - consumed).round())} left",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-          SizedBox(height: 4), // Add some space between the label and the progress bar
+          SizedBox(height: barHeight * 0.25),
           LinearProgressIndicator(
             value: progressValue,
             backgroundColor: Colors.grey[500],
             valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 8, // Specify the height of the progress bar if needed
+            minHeight: barHeight, // Responsive height
           ),
-          SizedBox(height: 10), // Space after the bar, before the next element
+          SizedBox(height: barHeight * 0.7),
         ],
       ),
     );
@@ -99,48 +102,56 @@ class _CalorieTileState extends State<CalorieTile> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final pieChartRadius = screenWidth * 0.22;
+    final macroBarHeight = screenWidth * 0.04;
+    final macroBarFontSize = screenWidth * 0.035;
+    final macroBarSpacing = screenWidth * 0.025;
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(screenWidth * 0.04)),
       color: Color.fromRGBO(42, 42, 42, 1),
       elevation: 4,
       margin: const EdgeInsets.all(0),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        padding: EdgeInsets.symmetric(vertical: screenWidth * 0.03, horizontal: screenWidth * 0.03),
         child: SingleChildScrollView(
           physics: NeverScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Daily Nutrition",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  "Daily Nutrition",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.06,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              SizedBox(height: 5),
+              SizedBox(height: screenWidth * 0.012),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNutritionData("${_caloriesLeft.toStringAsFixed(0)}", "Remaining"),
-                  _buildPieChart(),
-                  _buildNutritionData("${_dailyGoal.toStringAsFixed(0)}", "Target"),
+                  _buildNutritionData("${_caloriesLeft.toStringAsFixed(0)}", "Remaining", screenWidth),
+                  _buildPieChart(screenWidth, pieChartRadius),
+                  _buildNutritionData("${_dailyGoal.toStringAsFixed(0)}", "Target", screenWidth),
                 ],
               ),
-              SizedBox(height: 5),
+              SizedBox(height: screenWidth * 0.012),
               Divider(
                 color: Colors.grey[700],
                 thickness: 1,
-                height: 20,
+                height: screenWidth * 0.05,
               ),
               Row(
                 children: [
-                  _buildMacroProgressBar(_proteinConsumedToday, _dailyGoalprotein, Colors.red, "P"), // Protein
-                  SizedBox(width: 10), // Spacing between bars
-                  _buildMacroProgressBar(_carbsConsumedToday, _dailyGoalcarbs, Colors.green, "C"), // Carbs
-                  SizedBox(width: 10), // Spacing between bars
-                  _buildMacroProgressBar(_fatsConsumedToday, _dailyGoalfats, Colors.blue, "F"), // Fats
+                  _buildMacroProgressBar(_proteinConsumedToday, _dailyGoalprotein, Colors.red, "P", macroBarHeight, macroBarFontSize),
+                  SizedBox(width: macroBarSpacing),
+                  _buildMacroProgressBar(_carbsConsumedToday, _dailyGoalcarbs, Colors.green, "C", macroBarHeight, macroBarFontSize),
+                  SizedBox(width: macroBarSpacing),
+                  _buildMacroProgressBar(_fatsConsumedToday, _dailyGoalfats, Colors.blue, "F", macroBarHeight, macroBarFontSize),
                 ],
               ),
             ],
@@ -151,29 +162,35 @@ class _CalorieTileState extends State<CalorieTile> {
   }
 
 
-  Widget _buildNutritionData(String value, String label) {
+  Widget _buildNutritionData(String value, String label, double screenWidth) {
     return Column(
       children: [
-        Text(
-          max(0, double.tryParse(value) ?? 0).toStringAsFixed(0),
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            max(0, double.tryParse(value) ?? 0).toStringAsFixed(0),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: screenWidth * 0.07,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 12,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: screenWidth * 0.032,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildPieChart() {
+  Widget _buildPieChart(double screenWidth, double pieChartRadius) {
     Map<String, double> dataMap = {
       "Consumed": max(0, _caloriesConsumedToday),
       "Remaining": max(0, _dailyGoal - _caloriesConsumedToday),
@@ -182,29 +199,35 @@ class _CalorieTileState extends State<CalorieTile> {
       child: PieChart(
         dataMap: dataMap,
         animationDuration: Duration(milliseconds: 800),
-        chartLegendSpacing: 32,
-        chartRadius: MediaQuery.of(context).size.width / 3.5,
+        chartLegendSpacing: screenWidth * 0.08,
+        chartRadius: pieChartRadius,
         colorList: [Colors.blue, Colors.blueGrey[200]!],
         initialAngleInDegree: 0,
         chartType: ChartType.ring,
-        ringStrokeWidth: 12,
-        centerText: "", // Clear this to use a custom widget
+        ringStrokeWidth: pieChartRadius * 0.18,
+        centerText: "",
         centerWidget: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              "${_caloriesConsumedToday.toStringAsFixed(0)}",
-              style: TextStyle(
-                fontSize: 38, // Larger font size for calories
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                "${_caloriesConsumedToday.toStringAsFixed(0)}",
+                style: TextStyle(
+                  fontSize: pieChartRadius * 0.25,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
-            Text(
-              "Consumed",
-              style: TextStyle(
-                fontSize: 12, // Smaller font size for "Consumed"
-                color: Colors.grey,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                "Consumed",
+                style: TextStyle(
+                  fontSize: pieChartRadius * 0.11,
+                  color: Colors.grey,
+                ),
               ),
             ),
           ],

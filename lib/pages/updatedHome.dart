@@ -664,7 +664,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                               Expanded(
                                 flex: 1,
                                 child: _improvementTile(
-                                  title: mostImprovedGroup ?? "Loading...",
+                                  title: mostImprovedGroup ?? "Log Exercises to see improvement...",
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -689,7 +689,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                                 style: TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 22,
+                                                  fontSize: 18,
                                                 ),
                                               ),
                                               Text(
@@ -736,11 +736,11 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min, // ← This prevents overflow
                                         children: [
-                                          SizedBox(height: 2),
+                                          SizedBox(height: 1),
                                           SizedBox(
-                                            height: 20, // reduced from 24
+                                            height: 18, // reduced from 20
                                             child: CustomPaint(
-                                              size: Size(60, 20),
+                                              size: Size(60, 18),
                                               painter: overallStrengthChange == null
                                                   ? null
                                                   : overallStrengthChange! >= 0
@@ -748,19 +748,19 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                                   : LineChartPainterDown(),
                                             ),
                                           ),
-                                          SizedBox(height: 2),
+                                          SizedBox(height: 1),
                                           Divider(
                                             color: Colors.white70,
-                                            height: 2,
+                                            height: 1,
                                             thickness: 0.75,
                                           ),
                                           Text(
                                             overallStrengthChange == null
-                                                ? "Loading..."
+                                                ? "Log Exercises to see strength change..."
                                                 : "${overallStrengthChange! >= 0 ? '+' : ''}${overallStrengthChange!.toStringAsFixed(1)}% ${overallStrengthChange! >= 0 ? 'increase' : 'decrease'} in the past month",
                                             style: TextStyle(
                                               color: Colors.white60,
-                                              fontSize: 10,
+                                              fontSize: 9,
                                               fontStyle: FontStyle.italic,
                                             ),
                                             textAlign: TextAlign.center,
@@ -785,7 +785,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                           ),
                                           _weeklyWeightTrend == null
                                               ? Text(
-                                            "Loading...",
+                                            "Log Weight to see trend...",
                                             style: TextStyle(
                                               color: Colors.white60,
                                               fontStyle: FontStyle.italic,
@@ -842,417 +842,367 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                         ),
                       ],
                     ),
+                    SizedBox(height: 16),
+                    // First row of tiles
                     Row(
                       children: [
-                        Container(
-                          height: 165,
-                          width: 185,
-                          child: Card(
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            color: Color.fromRGBO(31, 31, 31, 1),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 19.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 10),
-                                  Text(
-                                    'Gym Logging',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                        Expanded(
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.23,
+                            margin: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.02),
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.04),
+                              ),
+                              color: Color.fromRGBO(31, 31, 31, 1),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.045),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.013),
+                                    Text(
+                                      'Gym Logging',
+                                      style: TextStyle(
+                                        fontSize: MediaQuery.of(context).size.width * 0.045,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    'Last 30 Days',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[400],
+                                    Text(
+                                      'Last 30 Days',
+                                      style: TextStyle(
+                                          fontSize: MediaQuery.of(context).size.width * 0.03,
+                                          color: Colors.grey[400]),
                                     ),
-                                  ),
-                                  MyHeatMap2(),
-                                  SizedBox(height: 8),
-                                  Divider(
-                                    color: Colors.white70,
-                                    height:
-                                    1, // Set minimal height to reduce space
-                                    thickness:
-                                    .75, // Minimal visual thickness
-                                  ),
-                                  Container(
-                                    padding: EdgeInsets
-                                        .zero, // Ensures no extra padding
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment
-                                          .spaceBetween, // Ensures spacing between the text and the icon
-                                      children: [
-                                        Flexible(
-                                          // Allows the text to resize dynamically
-                                          child: RichText(
-                                            overflow: TextOverflow
-                                                .ellipsis, // Prevents text overflow by using ellipsis
-                                            text: TextSpan(
-                                              children: [
-                                                TextSpan(
-                                                  text:
-                                                  '$workoutsThisWeek/7 ',
-                                                  style: TextStyle(
-                                                    fontSize: 17,
-                                                    color: Colors.grey[
-                                                    300], // Color for the numbers
+                                    MyHeatMap2(),
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                                    Divider(
+                                      color: Colors.white70,
+                                      height: 1,
+                                      thickness: 0.75,
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.zero,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Flexible(
+                                            child: RichText(
+                                              overflow: TextOverflow.ellipsis,
+                                              text: TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: '$workoutsThisWeek/7 ',
+                                                    style: TextStyle(
+                                                      fontSize: MediaQuery.of(context).size.width * 0.042,
+                                                      color: Colors.grey[300],
+                                                    ),
                                                   ),
-                                                ),
-                                                TextSpan(
-                                                  text: 'this week',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey[
-                                                    500], // Different color for the text
+                                                  TextSpan(
+                                                    text: 'this week',
+                                                    style: TextStyle(
+                                                      fontSize: MediaQuery.of(context).size.width * 0.03,
+                                                      color: Colors.grey[500],
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        //SizedBox(width: 10,),
-                                        IconButton(
-                                          icon: Icon(Icons.arrow_forward_ios,
-                                              size: 15,
-                                              color: Colors
-                                                  .white), // Reduced icon size
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                  const BigHeatMap()),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
+                                          IconButton(
+                                            icon: Icon(Icons.arrow_forward_ios,
+                                                size: MediaQuery.of(context).size.width * 0.038,
+                                                color: Colors.white),
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                    const BigHeatMap()),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                        Container(
-                          height: 165,
-                          width: 185,
-                          child: Card(
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            color: Color.fromRGBO(31, 31, 31, 1),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 19.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 10),
-                                  Text(
-                                    'Scale Weight',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                        Expanded(
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.23,
+                            margin: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.02),
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.04),
+                              ),
+                              color: Color.fromRGBO(31, 31, 31, 1),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.045),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.013),
+                                    Text(
+                                      'Scale Weight',
+                                      style: TextStyle(
+                                        fontSize: MediaQuery.of(context).size.width * 0.045,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    'Last 7 Days',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[400]),
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  SizedBox(
-                                    height: 30,
-                                    width: 185,
-                                    child: WeightLogPage.buildWeightChart(
-                                        context),
-                                  ),
-                                  SizedBox(
-                                    height: 13,
-                                  ),
-                                  Divider(
-                                    color: Colors.white54,
-                                    height:
-                                    1, // Set minimal height to reduce space
-                                    thickness:
-                                    .75, // Minimal visual thickness
-                                  ),
-                                  Container(
-                                    padding: EdgeInsets
-                                        .zero, // Ensures no extra padding
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment
-                                          .spaceBetween, // Ensures spacing between the text and the icon
-                                      children: [
-                                        Flexible(
-                                          // Allows the text to resize dynamically
-                                          child: RichText(
-                                            overflow: TextOverflow
-                                                .ellipsis, // Prevents text overflow by using ellipsis
-                                            text: TextSpan(
-                                              children: [
-                                                TextSpan(
-                                                  text: '${mostRecentWeight ?? 0} ',
-                                                  style: TextStyle(
-                                                    fontSize: 17,
-                                                    color: Colors.grey[
-                                                    300], // Color for the numbers
+                                    Text(
+                                      'Last 7 Days',
+                                      style: TextStyle(
+                                          fontSize: MediaQuery.of(context).size.width * 0.03,
+                                          color: Colors.grey[400]),
+                                    ),
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.013),
+                                    SizedBox(
+                                      height: MediaQuery.of(context).size.height * 0.04,
+                                      child: WeightLogPage.buildWeightChart(context),
+                                    ),
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.017),
+                                    Divider(
+                                      color: Colors.white54,
+                                      height: 1,
+                                      thickness: 0.75,
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.zero,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Flexible(
+                                            child: RichText(
+                                              overflow: TextOverflow.ellipsis,
+                                              text: TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: '${mostRecentWeight ?? 0} ',
+                                                    style: TextStyle(
+                                                      fontSize: MediaQuery.of(context).size.width * 0.042,
+                                                      color: Colors.grey[300],
+                                                    ),
                                                   ),
-                                                ),
-                                                TextSpan(
-                                                  text: 'lbs',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey[
-                                                    500], // Different color for the text
+                                                  TextSpan(
+                                                    text: 'lbs',
+                                                    style: TextStyle(
+                                                      fontSize: MediaQuery.of(context).size.width * 0.03,
+                                                      color: Colors.grey[500],
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        //SizedBox(width: 10,),
-                                        IconButton(
-                                          icon: Icon(Icons.arrow_forward_ios,
-                                              size: 15,
-                                              color: Colors
-                                                  .white), // Reduced icon size
-                                          onPressed: () {
-                                            // Use Navigator to push WeightLogPage onto the navigation stack
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      WeightTrendPage()),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
+                                          IconButton(
+                                            icon: Icon(Icons.arrow_forward_ios,
+                                                size: MediaQuery.of(context).size.width * 0.038,
+                                                color: Colors.white),
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        WeightTrendPage()),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ],
                     ),
+                    SizedBox(height: 16),
+                    // Second row of tiles
                     Row(
                       children: [
-                        Container(
-                          height: 165,
-                          width: 185,
-                          child: Card(
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            color: Color.fromRGBO(31, 31, 31, 1),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 19.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 10),
-                                  Text(
-                                    'Step Logging',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                        Expanded(
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.23,
+                            margin: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.02),
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.04),
+                              ),
+                              color: Color.fromRGBO(31, 31, 31, 1),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.045),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.013),
+                                    Text(
+                                      'Step Logging',
+                                      style: TextStyle(
+                                        fontSize: MediaQuery.of(context).size.width * 0.045,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    'Last 7 Days avg. ',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[400]),
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  SizedBox(
-                                    height: 30,
-                                    width: 185,
-                                    child: StepCounterPage.buildMiniStepChart(
-                                        context, _stepLogs),
-                                  ),
-                                  SizedBox(
-                                    height: 13,
-                                  ),
-                                  Divider(
-                                    color: Colors.white54,
-                                    height:
-                                    1, // Set minimal height to reduce space
-                                    thickness:
-                                    .75, // Minimal visual thickness
-                                  ),
-                                  Container(
-                                    padding: EdgeInsets
-                                        .zero, // Ensures no extra padding
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment
-                                          .spaceBetween, // Ensures spacing between the text and the icon
-                                      children: [
-                                        Flexible(
-                                          // Allows the text to resize dynamically
-                                          child: RichText(
-                                            overflow: TextOverflow
-                                                .ellipsis, // Prevents text overflow by using ellipsis
-                                            text: TextSpan(
-                                              children: [
-                                                TextSpan(
-                                                  text:
-                                                  '${getAverageSteps?.toStringAsFixed(0)} ',
-                                                  style: TextStyle(
-                                                    fontSize: 17,
-                                                    color: Colors.grey[
-                                                    300], // Color for the numbers
+                                    Text(
+                                      'Last 7 Days avg. ',
+                                      style: TextStyle(
+                                          fontSize: MediaQuery.of(context).size.width * 0.03,
+                                          color: Colors.grey[400]),
+                                    ),
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.013),
+                                    SizedBox(
+                                      height: MediaQuery.of(context).size.height * 0.04,
+                                      child: StepCounterPage.buildMiniStepChart(context, _stepLogs),
+                                    ),
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.017),
+                                    Divider(
+                                      color: Colors.white54,
+                                      height: 1,
+                                      thickness: 0.75,
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.zero,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Flexible(
+                                            child: RichText(
+                                              overflow: TextOverflow.ellipsis,
+                                              text: TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: '${getAverageSteps?.toStringAsFixed(0)} ',
+                                                    style: TextStyle(
+                                                      fontSize: MediaQuery.of(context).size.width * 0.042,
+                                                      color: Colors.grey[300],
+                                                    ),
                                                   ),
-                                                ),
-                                                TextSpan(
-                                                  text: 'steps',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey[
-                                                    500], // Different color for the text
+                                                  TextSpan(
+                                                    text: 'steps',
+                                                    style: TextStyle(
+                                                      fontSize: MediaQuery.of(context).size.width * 0.03,
+                                                      color: Colors.grey[500],
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        //SizedBox(width: 10,),
-                                        IconButton(
-                                          icon: Icon(Icons.arrow_forward_ios,
-                                              size: 15,
-                                              color: Colors
-                                                  .white), // Reduced icon size
-                                          onPressed: () {
-                                            // Use Navigator to push WeightLogPage onto the navigation stack
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      StepCounterPage()),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
+                                          IconButton(
+                                            icon: Icon(Icons.arrow_forward_ios,
+                                                size: MediaQuery.of(context).size.width * 0.038,
+                                                color: Colors.white),
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        StepCounterPage()),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                        Container(
-                          height: 165,
-                          width: 185,
-                          child: Card(
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            color: Color.fromRGBO(31, 31, 31, 1),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 19.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 10),
-                                  Text(
-                                    'Check-In Entries',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                        Expanded(
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.23,
+                            margin: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.02),
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.04),
+                              ),
+                              color: Color.fromRGBO(31, 31, 31, 1),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.045),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.013),
+                                    Text(
+                                      'Check-In Entries',
+                                      style: TextStyle(
+                                        fontSize: MediaQuery.of(context).size.width * 0.045,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    'Last 30 Days',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[400],
+                                    Text(
+                                      'Last 30 Days',
+                                      style: TextStyle(
+                                        fontSize: MediaQuery.of(context).size.width * 0.03,
+                                        color: Colors.grey[400],
+                                      ),
                                     ),
-                                  ),
-                                  JournalHeatMap(),
-                                  SizedBox(height: 8),
-                                  Divider(
-                                    color: Colors.white70,
-                                    height:
-                                    1, // Set minimal height to reduce space
-                                    thickness:
-                                    .75, // Minimal visual thickness
-                                  ),
-                                  Container(
-                                    padding: EdgeInsets
-                                        .zero, // Ensures no extra padding
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment
-                                          .spaceBetween, // Ensures spacing between the text and the icon
-                                      children: [
-                                        Flexible(
-                                          // Allows the text to resize dynamically
-                                          child: RichText(
-                                            overflow: TextOverflow
-                                                .ellipsis, // Prevents text overflow by using ellipsis
-                                            text: TextSpan(
-                                              children: [
-                                                TextSpan(
-                                                  text:
-                                                  '$workoutsThisWeek/7 ',
-                                                  style: TextStyle(
-                                                    fontSize: 17,
-                                                    color: Colors.grey[
-                                                    300], // Color for the numbers
+                                    JournalHeatMap(),
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                                    Divider(
+                                      color: Colors.white70,
+                                      height: 1,
+                                      thickness: 0.75,
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.zero,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Flexible(
+                                            child: RichText(
+                                              overflow: TextOverflow.ellipsis,
+                                              text: TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: '$workoutsThisWeek/7 ',
+                                                    style: TextStyle(
+                                                      fontSize: MediaQuery.of(context).size.width * 0.042,
+                                                      color: Colors.grey[300],
+                                                    ),
                                                   ),
-                                                ),
-                                                TextSpan(
-                                                  text: 'this week',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey[
-                                                    500], // Different color for the text
+                                                  TextSpan(
+                                                    text: 'this week',
+                                                    style: TextStyle(
+                                                      fontSize: MediaQuery.of(context).size.width * 0.03,
+                                                      color: Colors.grey[500],
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        //SizedBox(width: 10,),
-                                        IconButton(
-                                          icon: Icon(Icons.arrow_forward_ios,
-                                              size: 15,
-                                              color: Colors
-                                                  .white), // Reduced icon size
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      Jounral2()),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
+                                          IconButton(
+                                            icon: Icon(Icons.arrow_forward_ios,
+                                                size: MediaQuery.of(context).size.width * 0.038,
+                                                color: Colors.white),
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        Jounral2()),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -1278,28 +1228,33 @@ class _UpdatedHomeState extends State<UpdatedHome> {
   }
 
   Widget _improvementTile({required String title, required Widget child, bool big = false, bool doubleHeight = false, bool halfHeight = false}) {
-    double height = 90;
-    if (big) height = 120;
-    if (doubleHeight) height = 192;
-    if (halfHeight) height = 90;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    double height = screenHeight * 0.13; // Default height
+    if (big) height = screenHeight * 0.18;
+    if (doubleHeight) height = screenHeight * 0.29;
+    if (halfHeight) height = screenHeight * 0.13;
     return Container(
       width: double.infinity,
       height: height,
       decoration: BoxDecoration(
         color: Color(0xFF232323),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(screenWidth * 0.04),
       ),
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(screenWidth * 0.03),
       margin: big || doubleHeight ? EdgeInsets.only(bottom: 0) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: screenWidth * 0.038,
+              ),
             ),
           ),
           Spacer(),
