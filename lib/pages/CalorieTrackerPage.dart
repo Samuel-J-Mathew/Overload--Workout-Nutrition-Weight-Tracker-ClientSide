@@ -10,7 +10,7 @@ import '../data/hive_database.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'FoodLogPage.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 class CalorieTrackerPage extends StatefulWidget {
   final DateTime selectedDate;
   final Function? onReturn;
@@ -28,7 +28,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   final TextEditingController _servingsController = TextEditingController();
   final TextEditingController _gramsController = TextEditingController();
   final HiveDatabase hiveDatabase = HiveDatabase();
-  final FocusNode _searchFocusNode = FocusNode();  // Added FocusNode here
+  final FocusNode _searchFocusNode = FocusNode(); // Added FocusNode here
   bool _initialFocusRequested = false;
   // Controllers for the "Add Food" form
   final TextEditingController foodNameController = TextEditingController();
@@ -38,7 +38,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   final TextEditingController proteinController = TextEditingController();
   final TextEditingController fatController = TextEditingController();
   bool _isSheetOpen = false;
-
+  String? servingDescription;
   // FatSecret API credentials
   static const String clientId = '8a6e7daf65c041cbb904ae833f29efdb';
   static const String clientSecret = '584603b00aae4e0fb34fe4bc39389cd8';
@@ -665,7 +665,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
         originalServingSize = food.containsKey('serving_size') ? double.parse(food['serving_size']) : 100.0;
       });
 
-      // 👇 Add spinner before showing sheet
+      // ?? Add spinner before showing sheet
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -769,42 +769,37 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                   // Handle both single serving (object) and multiple servings (array)
                   Map<String, dynamic> serving;
                   if (servingData is List) {
-                    // Multiple servings - prefer 100g serving or use first one
                     List<Map<String, dynamic>> servingList = List<Map<String, dynamic>>.from(servingData);
+
+                    // Use default serving if available
                     serving = servingList.firstWhere(
-                          (s) => s['metric_serving_amount'] == '100.000' || s['metric_serving_amount'] == 100.0,
+                          (s) => s['is_default'] == '1' || s['is_default'] == 1,
                       orElse: () => servingList.first,
                     );
-                    print('Selected serving from multiple: $serving');
                   } else {
-                    // Single serving
                     serving = Map<String, dynamic>.from(servingData);
-                    print('Single serving: $serving');
                   }
 
+
                   setState(() {
-                    // Extract nutrition values per 100g (convert strings to numbers)
                     var calories = double.tryParse(serving['calories'].toString()) ?? 0.0;
                     var protein = double.tryParse(serving['protein'].toString()) ?? 0.0;
                     var fat = double.tryParse(serving['fat'].toString()) ?? 0.0;
                     var carbs = double.tryParse(serving['carbohydrate'].toString()) ?? 0.0;
                     var servingSize = double.tryParse(serving['metric_serving_amount'].toString()) ?? 100.0;
 
-                    print('Raw nutrition values - Calories: $calories, Protein: $protein, Fat: $fat, Carbs: $carbs, Serving Size: $servingSize');
+                    servingDescription = serving['serving_description']?.toString();
 
-                    // Convert to per 100g values
-                    double factor = 100 / servingSize;
-                    originalCalories = (calories * factor);
-                    originalProtein = (protein * factor);
-                    originalFats = (fat * factor);
-                    originalCarbs = (carbs * factor);
-                    originalServingSize = 100; // Default to 100g
+                    originalCalories = calories;
+                    originalProtein = protein;
+                    originalFats = fat;
+                    originalCarbs = carbs;
+                    originalServingSize = servingSize;
 
-                    print('Converted to per 100g - Calories: $originalCalories, Protein: $originalProtein, Fat: $originalFats, Carbs: $originalCarbs');
-
-                    updateNutrition(originalServingSize!);
+                    updateNutrition(servingSize);
                     showNutritionSheet();
                   });
+
                   return;
                 }
               }
@@ -916,18 +911,25 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Expanded(
-                            child: _buildTextField('Servings', _servingsController, () {
-                              final servings = double.tryParse(_servingsController.text) ?? 0;
-                              final newGrams = (servings * originalServingSize!).toStringAsFixed(0);
-                              _gramsController.text = newGrams;
-                              updateNutrition(double.parse(newGrams));
-                              setModalState(() {});
-                            },
+                            child: _buildTextField(
+                              servingDescription != null
+                                  ? 'Servings ($servingDescription = ${originalServingSize?.toStringAsFixed(0)}g)'
+                                  : 'Servings',
+
+                              _servingsController,
+                                  () {
+                                final servings = double.tryParse(_servingsController.text) ?? 0;
+                                final newGrams = (servings * originalServingSize!).toStringAsFixed(0);
+                                _gramsController.text = newGrams;
+                                updateNutrition(double.parse(newGrams));
+                                setModalState(() {});
+                              },
                               focusNode: _servingsFocusNode,
                               height: inputBoxHeight,
                               fontSize: inputFontSize,
                             ),
                           ),
+
                           SizedBox(width: screenWidth * 0.04),
                           Expanded(
                             child: Column(
@@ -1063,6 +1065,27 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                           _buildNutritionStatCircle('Fats', fats, 'g', Color(0xFFFF9800), totalMacros > 0 ? fats / totalMacros : 0, screenWidth),
                           _buildNutritionStatCircle('Carbs', carbs, 'g', Color(0xFF4CAF50), totalMacros > 0 ? carbs / totalMacros : 0, screenWidth),
                         ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Center( // <-- changed from Align to Center
+                          child: GestureDetector(
+                            onTap: () async {
+                              final url = Uri.parse('https://www.nal.usda.gov/fnic/dri-calculator/');
+                              if (await canLaunchUrl(url)) {
+                                await launchUrl(url, mode: LaunchMode.externalApplication);
+                              }
+                            },
+                            child: Text(
+                              'Based on USDA Dietary Guidelines',
+                              style: TextStyle(
+                                color: Colors.grey[300],
+                                fontSize: screenWidth * 0.035,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                       SizedBox(height: screenHeight * 0.025),
                       ElevatedButton(

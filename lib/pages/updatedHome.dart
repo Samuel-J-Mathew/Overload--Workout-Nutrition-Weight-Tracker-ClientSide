@@ -734,7 +734,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                     _improvementTile(
                                       title: "Overall Strength",
                                       child: Column(
-                                        mainAxisSize: MainAxisSize.min, // ← This prevents overflow
+                                        mainAxisSize: MainAxisSize.min, // ? This prevents overflow
                                         children: [
                                           SizedBox(height: 1),
                                           SizedBox(

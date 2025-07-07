@@ -318,83 +318,157 @@ class _FoodLogPageState extends State<FoodLogPage> {
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
                   children: [
-                    Text(
-                      '${_selectedFoodIds.length} foods selected',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    // Foods selected text
+                    Expanded(
+                      flex: 2,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '${_selectedFoodIds.length} foods selected',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: screenWidth * 0.04, // Responsive font size
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ),
                     Spacer(),
                     if (_pendingAction == null) ...[
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() { _pendingAction = 'copy'; });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[900],
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      // Copy Button
+                      Expanded(
+                        flex: 1,
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() { _pendingAction = 'copy'; });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[900],
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              minimumSize: Size(0, 40), // min width 0, height 40
+                              padding: EdgeInsets.symmetric(horizontal: 0),
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text('Copy', style: TextStyle(fontSize: screenWidth * 0.04)),
+                            ),
+                          ),
                         ),
-                        child: Text('Copy'),
                       ),
-                      SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() { _pendingAction = 'move'; });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[900],
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      SizedBox(width: 8),
+                      // Move Button
+                      Expanded(
+                        flex: 1,
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() { _pendingAction = 'move'; });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[900],
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              minimumSize: Size(0, 40),
+                              padding: EdgeInsets.symmetric(horizontal: 0),
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text('Move', style: TextStyle(fontSize: screenWidth * 0.04)),
+                            ),
+                          ),
                         ),
-                        child: Text('Move'),
                       ),
                     ] else ...[
-                      ElevatedButton(
-                        onPressed: () async {
-                          await _handleCopyMoveAction(DateTime.now(), isMove: _pendingAction == 'move');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[900],
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: Text('To Now'),
-                      ),
-                      SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () async {
-                          final now = DateTime.now();
-                          final today = DateTime(now.year, now.month, now.day);
-                          await _handleCopyMoveAction(today, isMove: _pendingAction == 'move');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[900],
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: Text('To Today'),
-                      ),
-                      SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () async {
-                          DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2100),
-                            builder: (context, child) {
-                              return Theme(
-                                data: ThemeData.dark(),
-                                child: child!,
-                              );
+                      // To Now Button
+                      Expanded(
+                        flex: 1,
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await _handleCopyMoveAction(DateTime.now(), isMove: _pendingAction == 'move');
                             },
-                          );
-                          if (picked != null) {
-                            await _handleCopyMoveAction(picked, isMove: _pendingAction == 'move');
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[900],
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[900],
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              minimumSize: Size(0, 40),
+                              padding: EdgeInsets.symmetric(horizontal: 0),
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text('To Now', style: TextStyle(fontSize: screenWidth * 0.04)),
+                            ),
+                          ),
                         ),
-                        child: Text('To Date'),
                       ),
-                      SizedBox(width: 10),
+                      SizedBox(width: 8),
+                      // To Today Button
+                      Expanded(
+                        flex: 1,
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final now = DateTime.now();
+                              final today = DateTime(now.year, now.month, now.day);
+                              await _handleCopyMoveAction(today, isMove: _pendingAction == 'move');
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[900],
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              minimumSize: Size(0, 40),
+                              padding: EdgeInsets.symmetric(horizontal: 0),
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text('To Today', style: TextStyle(fontSize: screenWidth * 0.04)),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      // To Date Button
+                      Expanded(
+                        flex: 1,
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime(2100),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: ThemeData.dark(),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null) {
+                                await _handleCopyMoveAction(picked, isMove: _pendingAction == 'move');
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[900],
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              minimumSize: Size(0, 40),
+                              padding: EdgeInsets.symmetric(horizontal: 0),
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text('To Date', style: TextStyle(fontSize: screenWidth * 0.04)),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      // Cancel Icon
                       IconButton(
                         icon: Icon(Icons.close, color: Colors.white),
                         onPressed: () {

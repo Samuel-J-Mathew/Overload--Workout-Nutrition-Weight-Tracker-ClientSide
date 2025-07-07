@@ -179,11 +179,10 @@ class _LoginPageState extends State<LoginPage> {
                   text: "Sign In",
                   onTap: signUserIn,
                 ),
-
+                /*
                 const SizedBox(height: 50),
 
                 // or continue with
-                /*
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: Row(
@@ -210,9 +209,9 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                 ),
-*/
-            //    const SizedBox(height: 50),
-/*
+
+                const SizedBox(height: 50),
+
                 // google + apple sign in buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -227,15 +226,15 @@ class _LoginPageState extends State<LoginPage> {
 
                     // apple button
                     //SquareTile(
-                    //onTap: (){
+                      //onTap: (){
 
-                    // },
-                    // imagePath: 'lib/images/apple.png'
-                    // )
+                     // },
+                       // imagePath: 'lib/images/apple.png'
+                   // )
                   ],
                 ),
-*/
-
+            */
+                const SizedBox(height: 50),
 
                 // not a member? register now
                 Row(

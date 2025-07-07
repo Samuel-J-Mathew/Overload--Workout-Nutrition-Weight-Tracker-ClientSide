@@ -49,7 +49,8 @@ class _MySplitPageState extends State<MySplitPage>  {
     'Biceps',
     'Shoulders',
     'Triceps',
-    'Abs'
+    'Abs',
+    'Rest Day'
   ];
 
   Map<String, Map<String, List<ExerciseDetail>>> daySplitData = {};
@@ -283,7 +284,9 @@ class _MySplitPageState extends State<MySplitPage>  {
                 Center(
                   child: Container(
                     width: tileWidth,
-                    height: tileHeight,
+                    // Remove fixed height to allow dynamic sizing
+                    // height: tileHeight, // <-- Remove this line
+                    margin: const EdgeInsets.only(bottom: 20), // Add margin for separation
                     child: Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
@@ -295,6 +298,7 @@ class _MySplitPageState extends State<MySplitPage>  {
                         child: LayoutBuilder(
                           builder: (BuildContext context, BoxConstraints constraints) {
                             return Column(
+                              mainAxisSize: MainAxisSize.min, // Let the tile size to its content
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
@@ -313,7 +317,7 @@ class _MySplitPageState extends State<MySplitPage>  {
                                 ),
                                 SizedBox(height: 10),
                                 SizedBox(
-                                  height: tileHeight * 0.5,
+                                  height: tileHeight * 0.5, // This can remain for the horizontal scroll, or you can use a fixed height if needed
                                   width: double.infinity,
                                   child: SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
@@ -328,11 +332,9 @@ class _MySplitPageState extends State<MySplitPage>  {
                                 Divider(
                                   color: Colors.grey[500],
                                   height: 1,
-                                  // Set minimal height to reduce space
-                                  thickness: .75, // Minimal visual thickness
+                                  thickness: .75,
                                 ),
                                 SizedBox(height: 10),
-                                // Horizontal Key for muscle groups
                                 SingleChildScrollView(
                                   scrollDirection: Axis.horizontal,
                                   child: Row(
@@ -344,7 +346,7 @@ class _MySplitPageState extends State<MySplitPage>  {
                                               width: 20,
                                               height: 20,
                                               decoration: BoxDecoration(
-                                                color: Colors.primaries[i % Colors.primaries.length], // Color for the muscle group
+                                                color: Colors.primaries[i % Colors.primaries.length],
                                                 shape: BoxShape.circle,
                                               ),
                                             ),
@@ -353,7 +355,7 @@ class _MySplitPageState extends State<MySplitPage>  {
                                               allMuscleGroups[i],
                                               style: TextStyle(color: Colors.white, fontSize: 14),
                                             ),
-                                            SizedBox(width: 16), // Space between each key item
+                                            SizedBox(width: 16),
                                           ],
                                         ),
                                     ],
@@ -362,10 +364,10 @@ class _MySplitPageState extends State<MySplitPage>  {
                                 SizedBox(height:5),
                                 ElevatedButton.icon(
                                   onPressed: () => _showEditSplitDialog(context),
-                                  icon: Icon(Icons.edit, color: Colors.white,),  // Icon for editing
-                                  label: Text("Edit Split"),  // Text label
+                                  icon: Icon(Icons.edit, color: Colors.white,),
+                                  label: Text("Edit Split"),
                                   style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white, backgroundColor: Colors.grey[800],  // Text and icon color
+                                    foregroundColor: Colors.white, backgroundColor: Colors.grey[800],
                                   ),
                                 ),
                               ],
@@ -1110,7 +1112,7 @@ class _MySplitPageState extends State<MySplitPage>  {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              '${exercise.sets} sets × ${exercise.reps} reps @ ${exercise.weight} lbs',
+                              '${exercise.sets} sets ◊ ${exercise.reps} reps @ ${exercise.weight} lbs',
                               style: TextStyle(
                                 color: Colors.grey[400],
                                 fontSize: 14,
@@ -1265,6 +1267,11 @@ class _MySplitPageState extends State<MySplitPage>  {
               ),
               itemAsString: (item) => item.name,
               compareFn: (a, b) => a.name == b.name && a.muscleGroup == b.muscleGroup,
+              filterFn: (SingleExercise item, String filter) {
+                final query = filter.toLowerCase();
+                return item.name.toLowerCase().contains(query) ||
+                    item.muscleGroup.toLowerCase().contains(query);
+              },
             ),
           ),
 

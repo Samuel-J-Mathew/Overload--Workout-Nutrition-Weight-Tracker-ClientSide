@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'paywall_screen.dart';
+import 'onboarding_flow.dart';
 
 import '../components/my_button.dart';
 import '../components/my_textfield.dart';
@@ -45,7 +46,8 @@ class _RegisterPageState extends State<RegisterPage> {
             emailController.text.trim(),
           );
           if (mounted) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => PaywallScreen()));
+            //Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => PaywallScreen()));
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlow()));
           }
         } on FirebaseAuthException catch (e) {
           // Show error dialog after closing loading

@@ -29,6 +29,7 @@ dependencies:
   collection: ^1.17.0
   pie_chart: ^5.1.0
   material_design_icons_flutter: ^6.0.7096
+  google_fonts: ^3.0.1
   barcode_scan2: ^4.2.0
   firebase_core: ^2.4.1
   cloud_firestore: ^4.3.1

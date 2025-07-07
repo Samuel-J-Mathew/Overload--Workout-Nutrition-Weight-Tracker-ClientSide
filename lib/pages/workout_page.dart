@@ -66,6 +66,11 @@ class _MyWidgetState extends State<WorkoutPage>{
                 itemAsString: (SingleExercise? item) => item?.name ?? '',
                 compareFn: (item1, item2) => item1.name == item2.name && item1.muscleGroup == item2.muscleGroup, // Comparison function
                 selectedItem: SingleExercise(name: "Select an Exercise", muscleGroup: ""),
+                filterFn: (SingleExercise item, String filter) {
+                  final query = filter.toLowerCase();
+                  return item.name.toLowerCase().contains(query) ||
+                      item.muscleGroup.toLowerCase().contains(query);
+                },
               ),
               //sets
               TextField(
@@ -138,7 +143,7 @@ class _MyWidgetState extends State<WorkoutPage>{
       sets,
       musclegroup,);
 
-   final User? user = FirebaseAuth.instance.currentUser;
+    final User? user = FirebaseAuth.instance.currentUser;
     DateTime workoutDate = DateFormat('yyyy-MM-dd').parse(widget.workoutId);
     addExercise(
         user!.uid,
