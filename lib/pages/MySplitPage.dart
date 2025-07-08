@@ -9,7 +9,7 @@ import '../data/WorkoutSplit.dart';
 import '../data/hive_database.dart';
 import '../models/NutritionalInfo.dart';
 import '../models/SingleExercise.dart';
-import '../data/exercise_list.dart'; // Import the exercise_list.dart file\
+import '../data/exercise_list.dart';
 import 'package:collection/collection.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -260,6 +260,11 @@ class _MySplitPageState extends State<MySplitPage>  {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double tileHeight = screenHeight * 0.38; // Responsive height for both tiles
     final double tileWidth = screenWidth * 0.95; // Responsive width for both tiles
+    int globalMaxTotalSets = weeklySplits.map((split) {
+      return split.muscleGroups
+          .map((mg) => mg.exercises.fold(0, (a, e) => a + e.sets))
+          .fold(0, (a, b) => a + b);
+    }).fold(0, (a, b) => a > b ? a : b);
 
     return Scaffold(
       backgroundColor: Color.fromRGBO(20, 20, 20, 1),
@@ -324,7 +329,8 @@ class _MySplitPageState extends State<MySplitPage>  {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: daysOfWeek.map((day) => buildDaySplit(day)).toList(),
+                                      children: daysOfWeek.map((day) => buildDaySplit(day, globalMaxTotalSets)).toList(),
+
                                     ),
                                   ),
                                 ),
@@ -943,7 +949,7 @@ class _MySplitPageState extends State<MySplitPage>  {
     );
   }
 
-  Widget buildDaySplit(String day) {
+  Widget buildDaySplit(String day, int globalMaxTotalSets) {
     WorkoutSplit? split = weeklySplits.firstWhereOrNull((s) => s.day == day);
     List<int> muscleWorkloads = List.generate(allMuscleGroups.length, (index) => 0); // Initialize with zeros
 
@@ -962,7 +968,10 @@ class _MySplitPageState extends State<MySplitPage>  {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 0), // Control horizontal spacing here if needed
-          child: WeeklySplitTile(muscleWorkloads: muscleWorkloads),
+          child: WeeklySplitTile(
+            muscleWorkloads: muscleWorkloads,
+            globalMaxTotalSets: globalMaxTotalSets,
+          ),
         ),
         SizedBox(height: 4),
         Text(dayLabel, style: TextStyle(color: Colors.white, fontSize: 12)) // Display day label beneath each tile

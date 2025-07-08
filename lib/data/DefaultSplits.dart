@@ -1,40 +1,210 @@
-import '../models/SingleExercise.dart';
-import '../data/exercise_list.dart';
+import 'WorkoutSplit.dart';
 
 class DefaultSplits {
-  static Map<String, List<SingleExercise>> getDefaultSplit(String splitName) {
-    switch (splitName.toLowerCase()) {
-      case 'ppl':
-        return {
-          'Push': exerciseList.where((e) => ['Chest', 'Shoulders', 'Triceps'].contains(e.muscleGroup)).toList(),
-          'Pull': exerciseList.where((e) => ['Back', 'Biceps'].contains(e.muscleGroup)).toList(),
-          'Legs': exerciseList.where((e) => ['Legs'].contains(e.muscleGroup)).toList(),
-        };
-      case 'arnold split':
-        return {
-          'Chest/Back': exerciseList.where((e) => ['Chest', 'Back'].contains(e.muscleGroup)).toList(),
-          'Shoulders/Arms': exerciseList.where((e) => ['Shoulders', 'Biceps', 'Triceps'].contains(e.muscleGroup)).toList(),
-          'Legs': exerciseList.where((e) => ['Legs'].contains(e.muscleGroup)).toList(),
-        };
-      case 'full body':
-        return {
-          'Full Body': exerciseList,
-        };
-      case 'bro split':
-        return {
-          'Chest': exerciseList.where((e) => e.muscleGroup == 'Chest').toList(),
-          'Back': exerciseList.where((e) => e.muscleGroup == 'Back').toList(),
-          'Legs': exerciseList.where((e) => e.muscleGroup == 'Legs').toList(),
-          'Shoulders': exerciseList.where((e) => e.muscleGroup == 'Shoulders').toList(),
-          'Arms': exerciseList.where((e) => ['Biceps', 'Triceps'].contains(e.muscleGroup)).toList(),
-        };
-      case 'upper lower':
-        return {
-          'Upper': exerciseList.where((e) => ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps'].contains(e.muscleGroup)).toList(),
-          'Lower': exerciseList.where((e) => e.muscleGroup == 'Legs').toList(),
-        };
-      default:
-        return {};
-    }
+  static List<WorkoutSplit> ppl() {
+    return [
+      WorkoutSplit(
+        day: 'Monday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Chest', exercises: [
+            ExerciseDetail(name: 'Incline Smith Bench', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Pec Deck', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Shoulders', exercises: [
+            ExerciseDetail(name: 'Machine Shoulder Press', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Cable Lateral Raise', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Triceps', exercises: [
+            ExerciseDetail(name: 'Cable Pushdowns', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Tricep overhead extension', sets: 3, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+      WorkoutSplit(
+        day: 'Tuesday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Back', exercises: [
+            ExerciseDetail(name: 'Lat Pulldowns', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Seated Rows', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Biceps', exercises: [
+            ExerciseDetail(name: 'DB Preacher Curls', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Cable Bayesian Curl', sets: 3, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+      WorkoutSplit(
+        day: 'Wednesday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Legs', exercises: [
+            ExerciseDetail(name: 'Hack Squats', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Leg Curls', sets: 2, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Leg Extensions', sets: 2, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Abs', exercises: [
+            ExerciseDetail(name: 'Leg Raises', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Cable Crunches', sets: 3, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+    ];
+  }
+
+  static List<WorkoutSplit> arnold() {
+    return [
+      WorkoutSplit(
+        day: 'Monday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Chest', exercises: [
+            ExerciseDetail(name: 'Incline Smith Bench', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Pec Deck', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Back', exercises: [
+            ExerciseDetail(name: 'Lat Pulldowns', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Seated Rows', sets: 3, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+      WorkoutSplit(
+        day: 'Tuesday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Shoulders', exercises: [
+            ExerciseDetail(name: 'Machine Shoulder Press', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Cable Lateral Raise', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Biceps', exercises: [
+            ExerciseDetail(name: 'DB Preacher Curls', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Cable Bayesian Curl', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Triceps', exercises: [
+            ExerciseDetail(name: 'Cable Pushdowns', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Tricep overhead extension', sets: 3, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+      WorkoutSplit(
+        day: 'Wednesday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Legs', exercises: [
+            ExerciseDetail(name: 'Hack Squats', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Leg Curls', sets: 2, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Leg Extensions', sets: 2, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+    ];
+  }
+
+  static List<WorkoutSplit> fullBody() {
+    return [
+      WorkoutSplit(
+        day: 'Monday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Chest', exercises: [
+            ExerciseDetail(name: 'Incline Smith Bench', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Pec Deck', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Back', exercises: [
+            ExerciseDetail(name: 'Lat Pulldowns', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Seated Rows', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Legs', exercises: [
+            ExerciseDetail(name: 'Hack Squats', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Leg Curls', sets: 2, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Leg Extensions', sets: 2, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+      WorkoutSplit(
+        day: 'Wednesday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Shoulders', exercises: [
+            ExerciseDetail(name: 'Machine Shoulder Press', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Cable Lateral Raise', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Biceps', exercises: [
+            ExerciseDetail(name: 'DB Preacher Curls', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Cable Bayesian Curl', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Triceps', exercises: [
+            ExerciseDetail(name: 'Cable Pushdowns', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Tricep overhead extension', sets: 3, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+      WorkoutSplit(
+        day: 'Friday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Chest', exercises: [
+            ExerciseDetail(name: 'Incline Smith Bench', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Pec Deck', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Back', exercises: [
+            ExerciseDetail(name: 'Lat Pulldowns', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Seated Rows', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Legs', exercises: [
+            ExerciseDetail(name: 'Hack Squats', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Leg Curls', sets: 2, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Leg Extensions', sets: 2, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+    ];
+  }
+
+  static List<WorkoutSplit> broSplit() {
+    return [
+      WorkoutSplit(
+        day: 'Monday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Chest', exercises: [
+            ExerciseDetail(name: 'Incline Smith Bench', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Pec Deck', sets: 3, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+      WorkoutSplit(
+        day: 'Tuesday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Back', exercises: [
+            ExerciseDetail(name: 'Lat Pulldowns', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Seated Rows', sets: 3, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+      WorkoutSplit(
+        day: 'Wednesday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Shoulders', exercises: [
+            ExerciseDetail(name: 'Machine Shoulder Press', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Cable Lateral Raise', sets: 3, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+      WorkoutSplit(
+        day: 'Thursday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Biceps', exercises: [
+            ExerciseDetail(name: 'DB Preacher Curls', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Cable Bayesian Curl', sets: 3, reps: 6, weight: 0),
+          ]),
+          MuscleGroupSplit(muscleGroupName: 'Triceps', exercises: [
+            ExerciseDetail(name: 'Cable Pushdowns', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Tricep overhead extension', sets: 3, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+      WorkoutSplit(
+        day: 'Friday',
+        muscleGroups: [
+          MuscleGroupSplit(muscleGroupName: 'Legs', exercises: [
+            ExerciseDetail(name: 'Hack Squats', sets: 3, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Leg Curls', sets: 2, reps: 6, weight: 0),
+            ExerciseDetail(name: 'Leg Extensions', sets: 2, reps: 6, weight: 0),
+          ]),
+        ],
+      ),
+    ];
   }
 }

@@ -3,11 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../components/my_button.dart';
 import '../components/my_textfield.dart';
+import '../data/WorkoutSplit.dart';
 import 'ExerciseLogPage.dart';
 import 'package:provider/provider.dart';
 import 'package:hive/hive.dart';
 import '../data/NutritionProvider.dart'; // or adjust path if needed
 import '../models/NutritionalInfo.dart';
+import '../data/DefaultSplits.dart';
+import '../data/hive_database.dart';
 class OnboardingFlow extends StatefulWidget {
   const OnboardingFlow({Key? key}) : super(key: key);
 
@@ -154,6 +157,63 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         );
       }
     }
+    if (workoutSplit != null) {
+      List<WorkoutSplit> defaultSplits = [];
+
+      switch (workoutSplit) {
+        case 'PPL':
+          defaultSplits = DefaultSplits.ppl() as List<WorkoutSplit>;
+          break;
+        case 'Arnold Split':
+          defaultSplits = DefaultSplits.arnold() as List<WorkoutSplit>;
+          break;
+        case 'Full Body':
+          defaultSplits = DefaultSplits.fullBody() as List<WorkoutSplit>;
+          break;
+        case 'Bro Split':
+          defaultSplits = DefaultSplits.broSplit() as List<WorkoutSplit>;
+          break;
+        default:
+          defaultSplits = []; // Or handle custom
+      }
+
+      if (defaultSplits.isNotEmpty) {
+        // ✅ Save to Hive
+        final db = HiveDatabase();
+        db.saveWorkoutSplits(defaultSplits);
+
+        // ✅ Save to Firestore
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final workoutProgram = defaultSplits.map((split) {
+            return {
+              "day": split.day,
+              "muscleGroups": split.muscleGroups.map((mg) {
+                return {
+                  "muscleGroupName": mg.muscleGroupName,
+                  "exercises": mg.exercises.map((exercise) {
+                    return {
+                      "name": exercise.name,
+                      "sets": exercise.sets,
+                      "reps": exercise.reps,
+                      "weight": exercise.weight
+                    };
+                  }).toList()
+                };
+              }).toList()
+            };
+          }).toList();
+
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('split')
+              .doc('workoutProgram')
+              .set({"splits": workoutProgram});
+        }
+      }
+    }
+
   }
 
 

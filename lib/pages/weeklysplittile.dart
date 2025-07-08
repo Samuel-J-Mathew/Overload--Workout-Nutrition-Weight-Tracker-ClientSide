@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 
 class WeeklySplitTile extends StatelessWidget {
   final List<int> muscleWorkloads;
+  final int globalMaxTotalSets;
 
-  const WeeklySplitTile({Key? key, required this.muscleWorkloads}) : super(key: key);
+  const WeeklySplitTile({
+    Key? key,
+    required this.muscleWorkloads,
+    required this.globalMaxTotalSets,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Row(
-
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         buildStackedBoxesWithCircle(muscleWorkloads)
@@ -17,33 +21,29 @@ class WeeklySplitTile extends StatelessWidget {
   }
 
   Widget buildStackedBoxesWithCircle(List<int> sets) {
-    double maxBoxHeight = 100; // Max height for the largest set count
-    double heightPerSet = maxBoxHeight / 10; // Calculate height per set
+    double maxAllowedHeight = 100; // max visual height
+    int totalSets = sets.fold(0, (a, b) => a + b);
+
+    double scalingFactor = globalMaxTotalSets > 0
+        ? (maxAllowedHeight / globalMaxTotalSets)
+        : 1;
+
     List<Widget> boxes = [];
-    double totalHeight = 0;
-
-    // Calculate total height for all muscle groups to set the constraints box
-    for (int i = 0; i < sets.length; i++) {
-      totalHeight += sets[i] * heightPerSet;
-    }
-
-    double bottomPosition = 0; // Start positioning from the bottom of the stack
-    int totalSets = 0; // Calculate total sets for the day
+    double bottomPosition = 0;
 
     for (int i = 0; i < sets.length; i++) {
-      double boxHeight = sets[i] * heightPerSet;
-      totalSets += sets[i]; // Sum of sets for the total sets indicator
-      if (boxHeight > 0) { // Only add boxes for non-zero sets
+      double boxHeight = sets[i] * scalingFactor;
+      if (boxHeight > 0) {
         boxes.add(
           Positioned(
-            bottom: bottomPosition, // Position at the current bottom
+            bottom: bottomPosition,
             child: Container(
-              width: 40, // Fixed width for each box
-              height: boxHeight, // Variable height based on the sets
-              color: Colors.primaries[i % Colors.primaries.length], // Cycle through predefined colors
+              width: 40,
+              height: boxHeight,
+              color: Colors.primaries[i % Colors.primaries.length],
               alignment: Alignment.center,
               child: Text(
-                '${sets[i]} S', // Display number of sets
+                '${sets[i]} S',
                 style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
@@ -53,7 +53,7 @@ class WeeklySplitTile extends StatelessWidget {
             ),
           ),
         );
-        bottomPosition += boxHeight; // Move the position for the next box
+        bottomPosition += boxHeight;
       }
     }
 
@@ -69,14 +69,14 @@ class WeeklySplitTile extends StatelessWidget {
           ),
           alignment: Alignment.center,
           child: Text(
-            '$totalSets S', // Display total sets on top
+            '$totalSets S',
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12),
           ),
         ),
         SizedBox(height: 5),
         Container(
-          width: 50, // Adjust width if needed
-          height: totalHeight, // Total height of all boxes
+          width: 50,
+          height: maxAllowedHeight,
           child: Stack(
             alignment: Alignment.bottomCenter,
             children: boxes,
