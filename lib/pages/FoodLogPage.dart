@@ -286,8 +286,12 @@ class _FoodLogPageState extends State<FoodLogPage> {
                   NutritionSummaryTile(selectedDate: _selectedDay ?? DateTime.now()),
                   SizedBox(height: screenHeight * 0.01),
                   Container(
+                    width: double.infinity,
+                    constraints: BoxConstraints(
+                      minHeight: screenHeight * 0.3,  // adjust this if needed
+                    ),
                     color: Color.fromRGBO(20, 20, 20, 1),
-                    padding: EdgeInsets.only(left: screenWidth * 0.06, right: screenWidth * 0.06),
+                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.06, vertical: 8),
                     child: foods.isEmpty
                         ? Container(
                       height: screenHeight * 0.22,
@@ -296,15 +300,20 @@ class _FoodLogPageState extends State<FoodLogPage> {
                           fit: BoxFit.scaleDown,
                           child: Text(
                             'No foods logged for this day. Tap to add.',
-                            style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.045),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screenWidth * 0.045,
+                            ),
                           ),
                         ),
                       ),
                     )
                         : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: _buildGroupedFoodList(foods, context),
                     ),
                   ),
+
                 ],
               ),
             ),
@@ -482,68 +491,78 @@ class _FoodLogPageState extends State<FoodLogPage> {
               ),
             )
           else
-            Container(
-              constraints: BoxConstraints(
-                maxHeight: 55, // Maximum height
-              ),
-              color: Color.fromRGBO(25, 25, 25, 1),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CalorieTrackerPage(
-                          selectedDate: _selectedDay ?? DateTime.now(),
-                          onReturn: refreshFoodLog,
-                          onLogFoodsPressed: () {
-                            final state = context.findAncestorStateOfType<ExerciseLogPageState>();
-                            if (state != null) {
-                              state.selectedIndex = 2;
-                            }
-                          },
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Divider(
+                  color: Colors.grey[500],  // you can adjust the color
+                  thickness: 1,
+                  height: 1,
+                ),
+                Container(
+                  constraints: BoxConstraints(
+                    maxHeight: 55, // Maximum height
+                  ),
+                  color: Color.fromRGBO(25, 25, 25, 1),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CalorieTrackerPage(
+                              selectedDate: _selectedDay ?? DateTime.now(),
+                              onReturn: refreshFoodLog,
+                              onLogFoodsPressed: () {
+                                final state = context.findAncestorStateOfType<ExerciseLogPageState>();
+                                if (state != null) {
+                                  state.selectedIndex = 2;
+                                }
+                              },
+                            ),
+                          ),
+                        );  // The action you want to perform on tap
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Color.fromRGBO(40, 40, 40, 1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.search, color: Colors.white),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CalorieTrackerPage(
+                                      selectedDate: _selectedDay ?? DateTime.now(),
+                                      onReturn: refreshFoodLog,
+                                      onLogFoodsPressed: () {
+                                        final state = context.findAncestorStateOfType<ExerciseLogPageState>();
+                                        if (state != null) {
+                                          state.selectedIndex = 2;
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            SizedBox(width: 9),
+                            Text(
+                              'Search for a food',
+                              style: TextStyle(color: Colors.grey[500]),
+                            ),
+                          ],
                         ),
                       ),
-                    );  // The action you want to perform on tap
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Color.fromRGBO(40, 40, 40, 1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.search, color: Colors.white),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CalorieTrackerPage(
-                                  selectedDate: _selectedDay ?? DateTime.now(),
-                                  onReturn: refreshFoodLog,
-                                  onLogFoodsPressed: () {
-                                    final state = context.findAncestorStateOfType<ExerciseLogPageState>();
-                                    if (state != null) {
-                                      state.selectedIndex = 2;
-                                    }
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        SizedBox(width: 9),
-                        Text(
-                          'Search for a food',
-                          style: TextStyle(color: Colors.grey[500]),
-                        ),
-                      ],
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
         ],
       ),

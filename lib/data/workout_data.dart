@@ -1,4 +1,6 @@
 //import 'package:fl_chart/fl_chart.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:gymapp/data/hive_database.dart';
 import 'package:intl/intl.dart';
@@ -62,6 +64,7 @@ class WorkoutData extends ChangeNotifier{
         }
       }
     }
+
 
     // Check if most recent exercise exists and if the number of reps is 9 or more
     //progressive overload
@@ -140,47 +143,62 @@ class WorkoutData extends ChangeNotifier{
     return count;
   }
 
-  void logExercise(split.ExerciseDetail exerciseDetail) {
+  Future<void> logExercise(ExerciseDetail exercise, String muscleGroup) async {
     DateTime now = DateTime.now();
     DateTime today = DateTime(now.year, now.month, now.day);
 
-    print('Logging Exercise: ${exerciseDetail.name} on $today');  // Debugging the input
-
     Workout todaysWorkout = workoutList.firstWhere(
-            (workout) => workout.date.year == today.year && workout.date.month == today.month && workout.date.day == today.day,
-        orElse: () {
-          print('No existing workout found for today. Creating a new one.');  // When creating a new workout
-          var newWorkout = Workout(
-            name: "Workout for ${DateFormat('yyyy-MM-dd').format(today)}",
-            date: today,
-            exercises: [],
-          );
-          workoutList.add(newWorkout);
-          return newWorkout;
-        }
+          (workout) =>
+      workout.date.year == today.year &&
+          workout.date.month == today.month &&
+          workout.date.day == today.day,
+      orElse: () {
+        var newWorkout = Workout(
+          name: "Workout for ${DateFormat('yyyy-MM-dd').format(today)}",
+          date: today,
+          exercises: [],
+        );
+        workoutList.add(newWorkout);
+        return newWorkout;
+      },
     );
 
     Exercise newExercise = Exercise(
-      name: exerciseDetail.name,
-      weight: exerciseDetail.weight.toString(),
-      reps: exerciseDetail.reps.toString(),
-      sets: exerciseDetail.sets.toString(),
-      musclegroup: "General",  // Update this as needed
+      name: exercise.name,
+      weight: exercise.weight.toString(),
+      reps: exercise.reps.toString(),
+      sets: exercise.sets.toString(),
+      musclegroup: muscleGroup,
     );
-
-    print('Adding new exercise: ${newExercise.name}, Weight: ${newExercise.weight}, Sets: ${newExercise.sets}, Reps: ${newExercise.reps}');  // Details about the exercise
 
     todaysWorkout.exercises.add(newExercise);
 
-    // Output the current state of today's workout
-    print('Today\'s Workout now has ${todaysWorkout.exercises.length} exercises.');
-
     notifyListeners();
-    db.saveToDatebase(workoutList);  // Ensure this saves to Hive
+    db.saveToDatebase(workoutList);
 
-    print('Workout saved to database. Total workouts: ${workoutList.length}');  // Confirmation of save
-    printStoredWorkouts();
+    // Firestore write
+    final user = FirebaseAuth.instance.currentUser;
+    final workoutDocId = DateFormat('yyyyMMdd').format(today);
+
+    final workoutDocRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .collection('workouts')
+        .doc(workoutDocId);
+
+    await workoutDocRef.set({
+      'date': workoutDocId
+    }, SetOptions(merge: true));
+
+    await workoutDocRef.collection('exercises').add({
+      'name': exercise.name,
+      'sets': exercise.sets,
+      'reps': exercise.reps,
+      'weight': exercise.weight
+    });
   }
+
+
 
   void printStoredWorkouts() {
     var storedWorkouts = db.readFromDatabase();  // Assuming this returns a List<Workout>
@@ -368,6 +386,7 @@ class WorkoutData extends ChangeNotifier{
     }
   }
 
+
   // return relevant workout object, given a workout name
   Workout getRelevantWorkout(String workoutName){
     Workout relevantWorkout =
@@ -421,4 +440,64 @@ class WorkoutData extends ChangeNotifier{
     }
     return count;
   }
+
+  void updateExercise(String workoutId, int index, String sets, String reps, String weight) {
+    Workout workout = getWorkoutById(workoutId);
+
+    if (workout.exercises.isNotEmpty && index < workout.exercises.length) {
+      Exercise exercise = workout.exercises[index];
+      exercise.sets = sets;
+      exercise.reps = reps;
+      exercise.weight = weight;
+
+      db.saveToDatebase(workoutList);
+      notifyListeners();
+    }
+  }
+  Future<void> updateExerciseAndSync(
+      String workoutId,
+      int index,
+      String sets,
+      String reps,
+      String weight,
+      ) async {
+    Workout workout = getWorkoutById(workoutId);
+
+    if (workout.exercises.isNotEmpty && index < workout.exercises.length) {
+      Exercise exercise = workout.exercises[index];
+      exercise.sets = sets;
+      exercise.reps = reps;
+      exercise.weight = weight;
+
+      db.saveToDatebase(workoutList);
+      notifyListeners();
+
+      // Firestore sync
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) return;
+
+      final workoutDate = DateFormat('yyyy-MM-dd').parse(workoutId);
+      final formattedDate = DateFormat('yyyyMMdd').format(workoutDate);
+
+      final exerciseCollection = FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('workouts')
+          .doc(formattedDate)
+          .collection('exercises');
+
+      final snapshot = await exerciseCollection.get();
+
+      if (snapshot.docs.length > index) {
+        final docId = snapshot.docs[index].id;
+        await exerciseCollection.doc(docId).update({
+          'sets': sets,
+          'reps': reps,
+          'weight': weight,
+        });
+      }
+    }
+  }
+
+
 }

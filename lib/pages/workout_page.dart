@@ -304,6 +304,7 @@ class _MyWidgetState extends State<WorkoutPage>{
                           sets: exercise.sets,
                           isCompleted: exercise.isCompleted,
                           onDelete: () => _deleteExercise(index - 1, value),
+                          onEdit: () => _editExercise(index - 1, value),
                         );
                       }
                     },
@@ -356,7 +357,129 @@ class _MyWidgetState extends State<WorkoutPage>{
   }
 
   // Delete exercise
-  void _deleteExercise(int index, WorkoutData workoutData) {
-    workoutData.deleteExercise(widget.workoutId, index);  // Delete using workoutId
+  void _deleteExercise(int index, WorkoutData workoutData) async {
+    final workout = workoutData.getWorkoutById(widget.workoutId);
+    final exercise = workout.exercises[index];
+
+    // Delete from local state
+    workoutData.deleteExercise(widget.workoutId, index);
+
+    // Delete from Firestore
+    final User? user = FirebaseAuth.instance.currentUser;
+    DateTime workoutDate = DateFormat('yyyy-MM-dd').parse(widget.workoutId);
+    String formattedDate = DateFormat('yyyyMMdd').format(workoutDate);
+
+    var exerciseCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .collection('workouts')
+        .doc(formattedDate)
+        .collection('exercises');
+
+    var snapshot = await exerciseCollection
+        .where('name', isEqualTo: exercise.name)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      await exerciseCollection.doc(snapshot.docs.first.id).delete();
+    }
   }
+
+  Future<void> _updateExerciseInFirestore(
+      String workoutId,
+      String exerciseName,
+      String sets,
+      String reps,
+      String weight,
+      ) async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    DateTime workoutDate = DateFormat('yyyy-MM-dd').parse(workoutId);
+    String formattedDate = DateFormat('yyyyMMdd').format(workoutDate);
+
+    var exerciseCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .collection('workouts')
+        .doc(formattedDate)
+        .collection('exercises');
+
+    var snapshot = await exerciseCollection
+        .where('name', isEqualTo: exerciseName)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      var docId = snapshot.docs.first.id;
+      await exerciseCollection.doc(docId).update({
+        'sets': sets,
+        'reps': reps,
+        'weight': weight,
+      });
+    }
+  }
+
+
+  void _editExercise(int index, WorkoutData workoutData) {
+    var workout = workoutData.getWorkoutById(widget.workoutId);
+    var exercise = workout.exercises[index];
+
+    TextEditingController setsController = TextEditingController(text: exercise.sets);
+    TextEditingController repsController = TextEditingController(text: exercise.reps);
+    TextEditingController weightController = TextEditingController(text: exercise.weight);
+
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Edit ${exercise.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: setsController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Sets'),
+              ),
+              TextField(
+                controller: repsController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Reps'),
+              ),
+              TextField(
+                controller: weightController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Weight'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                workoutData.updateExercise(
+                  widget.workoutId,
+                  index,
+                  setsController.text,
+                  repsController.text,
+                  weightController.text,
+                );
+                _updateExerciseInFirestore(
+                  widget.workoutId,
+                  exercise.name,
+                  setsController.text,
+                  repsController.text,
+                  weightController.text,
+                );
+
+                Navigator.pop(context);
+              },
+              child: Text('Save'),
+            ),
+          ],
+        )
+    );
+  }
+
 }

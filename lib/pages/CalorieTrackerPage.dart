@@ -336,7 +336,9 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
           showNutritionSheet();
         });
       } else {
-        showErrorDialog2("Product not found", "The product does not exist in the database.");
+        setState(() {
+          _tabController.index = 2; // Switch to Add Food tab
+        });
       }
     } else {
       showErrorDialog2("Error", "Failed to retrieve data.");

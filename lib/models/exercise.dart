@@ -1,8 +1,8 @@
 class Exercise{
   final String name;
-  final String weight;
-  final String reps;
-  final String sets;
+   String weight;
+   String reps;
+   String sets;
   final String musclegroup;
   bool isCompleted;
 

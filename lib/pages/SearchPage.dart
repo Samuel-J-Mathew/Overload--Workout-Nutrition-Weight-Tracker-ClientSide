@@ -8,6 +8,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
 import '../models/SingleExercise.dart';
+import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../components/ExerciseLogSummaryTile.dart';
 
@@ -116,6 +117,58 @@ class _SearchPageState extends State<SearchPage> {
       ),
     );
   }
+  void _editExercise(int index, Exercise exercise) {
+    setsController.text = exercise.sets;
+    repsController.text = exercise.reps;
+    weightController.text = exercise.weight;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit ${exercise.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: setsController,
+              decoration: InputDecoration(labelText: 'Sets'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: repsController,
+              decoration: InputDecoration(labelText: 'Reps'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: weightController,
+              decoration: InputDecoration(labelText: 'Weight'),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Provider.of<WorkoutData>(context, listen: false).updateExercise(
+                widget.workoutId,
+                index,
+                setsController.text,
+                repsController.text,
+                weightController.text,
+              );
+              Navigator.pop(context);
+              clear();
+            },
+            child: Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void save() {
     Provider.of<WorkoutData>(context, listen: false).addExercise(
@@ -153,6 +206,7 @@ class _SearchPageState extends State<SearchPage> {
             sets: exercise.sets,
             isCompleted: exercise.isCompleted,
             onDelete: () => Provider.of<WorkoutData>(context, listen: false).deleteExercise(widget.workoutId, index),
+            onEdit: () => _editExercise(index, exercise),
           );
         },
       );

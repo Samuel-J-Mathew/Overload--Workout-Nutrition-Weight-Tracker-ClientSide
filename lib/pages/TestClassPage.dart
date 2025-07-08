@@ -223,7 +223,7 @@ class _TestClassPageState extends State<TestClassPage> {
                                             setState(() {
                                               click = false;
                                             });
-                                            workoutData.logExercise(exercise);
+                                            workoutData.logExercise(exercise, muscleGroup.muscleGroupName);
                                             setState(() {});
                                           } : null,
                                         ),

@@ -411,7 +411,7 @@ class _UpdatedHomeState extends State<UpdatedHome> {
                                           exerciseClickStatus[exercise.name] =
                                           true; // Set the status to true when clicked
                                         });
-                                        workoutData.logExercise(exercise);
+                                        workoutData.logExercise(exercise, muscleGroup.muscleGroupName);
                                       },
                                     ),
                                   ),

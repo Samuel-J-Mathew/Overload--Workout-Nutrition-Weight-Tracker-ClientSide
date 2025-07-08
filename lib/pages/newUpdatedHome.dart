@@ -209,7 +209,7 @@ class _NewUpdatedHomeState extends State<NewUpdatedHome> {
                                         setState(() {
                                           click = false;
                                         });
-                                        workoutData.logExercise(exercise);
+                                        workoutData.logExercise(exercise, muscleGroup.muscleGroupName);
                                         setState(() {});
                                       } : null,
                                     ),
