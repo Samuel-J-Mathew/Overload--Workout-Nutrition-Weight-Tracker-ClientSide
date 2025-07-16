@@ -369,8 +369,13 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
   Widget _buildAddFoodTab() {
     return Container(
       color: Colors.grey[900],
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16.0,
+          right: 16.0,
+          top: 16.0,
+        ),
         child: Column(
           children: [
             TextField(
@@ -393,6 +398,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
                 color: Colors.white, // White text when typing
               ),
             ),
+            SizedBox(height: 16),
             TextField(
               controller: servingWeightController,
               decoration: InputDecoration(
@@ -414,6 +420,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
               ),
               keyboardType: TextInputType.number,
             ),
+            SizedBox(height: 16),
             TextField(
               controller: caloriesController,
               decoration: InputDecoration(
@@ -435,6 +442,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
               ),
               keyboardType: TextInputType.number,
             ),
+            SizedBox(height: 16),
             TextField(
               controller: carbsController,
               decoration: InputDecoration(
@@ -456,6 +464,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
               ),
               keyboardType: TextInputType.number,
             ),
+            SizedBox(height: 16),
             TextField(
               controller: proteinController,
               decoration: InputDecoration(
@@ -477,6 +486,7 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
               ),
               keyboardType: TextInputType.number,
             ),
+            SizedBox(height: 16),
             TextField(
               controller: fatController,
               decoration: InputDecoration(
@@ -498,16 +508,27 @@ class _CalorieTrackerPageState extends State<CalorieTrackerPage>
               ),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 32),
             ElevatedButton(
               onPressed: addFoodToDatabase,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                minimumSize: Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               child: Text(
                 "Add to Database",
                 style: TextStyle(
-                  color: Colors.black, // Set text color to black
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
+            SizedBox(height: 20), // Extra padding at bottom for safety
           ],
         ),
       ),

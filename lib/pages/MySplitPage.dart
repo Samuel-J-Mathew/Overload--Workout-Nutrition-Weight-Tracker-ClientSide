@@ -69,6 +69,14 @@ class _MySplitPageState extends State<MySplitPage>  {
   final Map<String, FocusNode> _repsFocusNodes = {};
   final Map<String, FocusNode> _weightFocusNodes = {};
 
+  // --- Weight Goal State ---
+  int? goalWeight;
+  double? goalRate;
+  int? maintenanceCalories;
+  int? calculatedCalories;
+  String? projectedEndDate;
+  double? currentWeight;
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +100,7 @@ class _MySplitPageState extends State<MySplitPage>  {
     loadWorkoutSplitsFromFirestore();
     loadMacrosFromFirestore();
     _muscleGroupPageController = PageController();
+    _loadWeightGoalData();
   }
   void saveWorkoutSplitToFirestore() {
     User? user = _auth.currentUser;
@@ -263,7 +272,7 @@ class _MySplitPageState extends State<MySplitPage>  {
     int globalMaxTotalSets = weeklySplits.map((split) {
       return split.muscleGroups
           .map((mg) => mg.exercises.fold(0, (a, e) => a + e.sets))
-          .fold(0, (a, b) => a + b);
+          .fold(0, (a, b) => a > b ? a : b);
     }).fold(0, (a, b) => a > b ? a : b);
 
     return Scaffold(
@@ -387,16 +396,19 @@ class _MySplitPageState extends State<MySplitPage>  {
                 Center(
                   child: Container(
                     width: tileWidth,
-                    height: tileHeight,
                     child: Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
                       ),
                       color: Color.fromRGBO(31, 31, 31, 1),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 18),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.03,
+                          vertical: screenHeight * 0.02,
+                        ),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Align(
                               alignment: Alignment.centerLeft,
@@ -404,13 +416,17 @@ class _MySplitPageState extends State<MySplitPage>  {
                                 fit: BoxFit.scaleDown,
                                 child: Text(
                                   "Food Macros",
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: screenWidth * 0.05,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
-                            SizedBox(height: 20,),
+                            SizedBox(height: screenHeight * 0.025),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -423,15 +439,15 @@ class _MySplitPageState extends State<MySplitPage>  {
                                           text: TextSpan(
                                             children: [
                                               TextSpan(
-                                                text: "${(_averageCals)} ", // Step count
+                                                text: "${(_averageCals)} ",
                                                 style: TextStyle(
-                                                  color: Colors.white, // Color for the step count
-                                                  fontSize: 28, // Larger font size for the step count
-                                                  fontWeight: FontWeight.bold, // Optional: Make it bold
+                                                  color: Colors.white,
+                                                  fontSize: screenWidth * 0.07,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
                                               ),
                                               WidgetSpan(
-                                                child: Icon(Icons.local_fire_department, color: Colors.white, size: 18), // Fire icon with adjustable color and size
+                                                child: Icon(Icons.local_fire_department, color: Colors.white, size: screenWidth * 0.045),
                                               ),
                                             ],
                                           ),
@@ -439,12 +455,15 @@ class _MySplitPageState extends State<MySplitPage>  {
                                       ),
                                       FittedBox(
                                         fit: BoxFit.scaleDown,
-                                        child: Text(" Total Calories", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                        child: Text(
+                                          " Total Calories",
+                                          style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.045),
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                SizedBox(width: 10,),
+                                SizedBox(width: screenWidth * 0.025),
                                 Flexible(
                                   child: Column(
                                     children: [
@@ -454,18 +473,18 @@ class _MySplitPageState extends State<MySplitPage>  {
                                           text: TextSpan(
                                             children: [
                                               TextSpan(
-                                                text: "${(_averageProtein)} ", // Step count
+                                                text: "${(_averageProtein)} ",
                                                 style: TextStyle(
-                                                  color: Colors.white, // Color for the step count
-                                                  fontSize: 24, // Larger font size for the step count
-                                                  fontWeight: FontWeight.bold, // Optional: Make it bold
+                                                  color: Colors.white,
+                                                  fontSize: screenWidth * 0.06,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
                                               ),
                                               TextSpan(
-                                                text: "g", // "steps" label
+                                                text: "g",
                                                 style: TextStyle(
-                                                  color: Colors.grey, // Different color for the "steps" text
-                                                  fontSize: 11, // Smaller font size for the "steps" text
+                                                  color: Colors.grey,
+                                                  fontSize: screenWidth * 0.028,
                                                 ),
                                               ),
                                             ],
@@ -474,12 +493,15 @@ class _MySplitPageState extends State<MySplitPage>  {
                                       ),
                                       FittedBox(
                                         fit: BoxFit.scaleDown,
-                                        child: Text(" Protein", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                        child: Text(
+                                          " Protein",
+                                          style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.045),
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                SizedBox(width: 10,),
+                                SizedBox(width: screenWidth * 0.025),
                                 Flexible(
                                   child: Column(
                                     children: [
@@ -489,18 +511,18 @@ class _MySplitPageState extends State<MySplitPage>  {
                                           text: TextSpan(
                                             children: [
                                               TextSpan(
-                                                text: "${(_averageCarbs)} ", // Step count
+                                                text: "${(_averageCarbs)} ",
                                                 style: TextStyle(
-                                                  color: Colors.white, // Color for the step count
-                                                  fontSize: 24, // Larger font size for the step count
-                                                  fontWeight: FontWeight.bold, // Optional: Make it bold
+                                                  color: Colors.white,
+                                                  fontSize: screenWidth * 0.06,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
                                               ),
                                               TextSpan(
-                                                text: "g", // "steps" label
+                                                text: "g",
                                                 style: TextStyle(
-                                                  color: Colors.grey, // Different color for the "steps" text
-                                                  fontSize: 11, // Smaller font size for the "steps" text
+                                                  color: Colors.grey,
+                                                  fontSize: screenWidth * 0.028,
                                                 ),
                                               ),
                                             ],
@@ -509,12 +531,15 @@ class _MySplitPageState extends State<MySplitPage>  {
                                       ),
                                       FittedBox(
                                         fit: BoxFit.scaleDown,
-                                        child: Text(" Carbs", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                        child: Text(
+                                          " Carbs",
+                                          style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.045),
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                SizedBox(width: 10,),
+                                SizedBox(width: screenWidth * 0.025),
                                 Flexible(
                                   child: Column(
                                     children: [
@@ -524,18 +549,18 @@ class _MySplitPageState extends State<MySplitPage>  {
                                           text: TextSpan(
                                             children: [
                                               TextSpan(
-                                                text: "${(_averageFats)} ", // Step count
+                                                text: "${(_averageFats)} ",
                                                 style: TextStyle(
-                                                  color: Colors.white, // Color for the step count
-                                                  fontSize: 24, // Larger font size for the step count
-                                                  fontWeight: FontWeight.bold, // Optional: Make it bold
+                                                  color: Colors.white,
+                                                  fontSize: screenWidth * 0.06,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
                                               ),
                                               TextSpan(
-                                                text: "g", // "steps" label
+                                                text: "g",
                                                 style: TextStyle(
-                                                  color: Colors.grey, // Different color for the "steps" text
-                                                  fontSize: 11, // Smaller font size for the "steps" text
+                                                  color: Colors.grey,
+                                                  fontSize: screenWidth * 0.028,
                                                 ),
                                               ),
                                             ],
@@ -544,26 +569,176 @@ class _MySplitPageState extends State<MySplitPage>  {
                                       ),
                                       FittedBox(
                                         fit: BoxFit.scaleDown,
-                                        child: Text(" Fats", style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                        child: Text(
+                                          " Fats",
+                                          style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.045),
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 10),
+                            SizedBox(height: screenHeight * 0.012),
                             Divider(
                               color: Colors.grey[500],
-                              height: 1, // Set minimal height to reduce space
-                              thickness: .75, // Minimal visual thickness
+                              height: 1,
+                              thickness: .75,
                             ),
-                            SizedBox(height: 10),
+                            SizedBox(height: screenHeight * 0.012),
                             ElevatedButton.icon(
                               onPressed: () => _showEditNutritionDialog(),
-                              icon: Icon(Icons.edit, color: Colors.white,),  // Icon for editing
-                              label: Text("Edit Program"),  // Text label
+                              icon: Icon(Icons.edit, color: Colors.white, size: screenWidth * 0.045),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  "Edit Program",
+                                  style: TextStyle(fontSize: screenWidth * 0.04),
+                                ),
+                              ),
                               style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white, backgroundColor: Colors.grey[800],  // Text and icon color
+                                foregroundColor: Colors.white,
+                                backgroundColor: Colors.grey[800],
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: screenWidth * 0.04,
+                                  vertical: screenHeight * 0.012,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(screenWidth * 0.02),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                // --- Weight Goal Tile ---
+                Center(
+                  child: Container(
+                    width: tileWidth,
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      ),
+                      color: Color.fromRGBO(31, 31, 31, 1),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.03,
+                          vertical: screenHeight * 0.02,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  "Weight Goal",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: screenWidth * 0.05,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.025),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          "Goal Weight",
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: screenWidth * 0.04,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(height: screenHeight * 0.005),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          goalWeight != null ? "${goalWeight} lbs" : "-- lbs",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: screenWidth * 0.055,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: screenWidth * 0.04),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          "Goal Rate",
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: screenWidth * 0.04,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(height: screenHeight * 0.005),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          goalRate != null ? "${goalRate!.toStringAsFixed(2)} lbs/week" : "-- lbs/week",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: screenWidth * 0.055,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.025),
+                            Divider(color: Colors.grey[500], height: 1, thickness: .75),
+                            SizedBox(height: screenHeight * 0.012),
+                            Center(
+                              child: ElevatedButton.icon(
+                                onPressed: () => _showEditGoalDialog(),
+                                icon: Icon(Icons.edit, color: Colors.white, size: screenWidth * 0.045),
+                                label: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    "Edit Goal",
+                                    style: TextStyle(fontSize: screenWidth * 0.04),
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.grey[800],
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: screenWidth * 0.04,
+                                    vertical: screenHeight * 0.012,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(screenWidth * 0.02),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -1449,5 +1624,353 @@ class _MySplitPageState extends State<MySplitPage>  {
     _modalScrollController.dispose();
     _muscleGroupPageController.dispose();
     super.dispose();
+  }
+
+  void _loadWeightGoalData() async {
+    User? user = _auth.currentUser;
+    if (user == null) return;
+    final userDoc = await _firestore.collection('users').doc(user.uid).get();
+    final data = userDoc.data() ?? {};
+
+    int? loadedMaintenanceCalories;
+    int? loadedGoalWeight;
+    double? loadedGoalRate;
+    double? loadedCurrentWeight;
+
+    // Parse maintenanceCalories
+    var mc = data['maintenanceCalories'];
+    if (mc is int) {
+      loadedMaintenanceCalories = mc;
+    } else if (mc is String) {
+      loadedMaintenanceCalories = int.tryParse(mc);
+    }
+
+    // Parse goalWeight
+    var gw = data['goalWeight'];
+    if (gw is int) {
+      loadedGoalWeight = gw;
+    } else if (gw is String) {
+      loadedGoalWeight = int.tryParse(gw);
+    }
+
+    // Parse goalRate
+    var gr = data['goalRate'];
+    if (gr is double) {
+      loadedGoalRate = gr;
+    } else if (gr is int) {
+      loadedGoalRate = gr.toDouble();
+    } else if (gr is String) {
+      loadedGoalRate = double.tryParse(gr);
+    }
+
+    // Fetch current weight from Firestore weightLogs (most recent)
+    double? firestoreWeight;
+    try {
+      final logsSnap = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('weightLogs')
+          .orderBy('date', descending: true)
+          .limit(1)
+          .get();
+      if (logsSnap.docs.isNotEmpty) {
+        final log = logsSnap.docs.first.data();
+        if (log['weight'] is num) firestoreWeight = (log['weight'] as num).toDouble();
+        else if (log['weight'] is String) firestoreWeight = double.tryParse(log['weight']);
+      }
+    } catch (_) {}
+    // Fallback to weightPounds field
+    if (firestoreWeight == null) {
+      var wp = data['weightPounds'];
+      if (wp is int) firestoreWeight = wp.toDouble();
+      else if (wp is String) firestoreWeight = double.tryParse(wp);
+    }
+
+    setState(() {
+      maintenanceCalories = loadedMaintenanceCalories;
+      goalWeight = loadedGoalWeight ?? firestoreWeight?.round();
+      goalRate = loadedGoalRate ?? -1.0;
+      currentWeight = firestoreWeight;
+    });
+    _recalculateGoalFields();
+  }
+
+  void _saveWeightGoalData(int newGoalWeight, double newGoalRate) async {
+    User? user = _auth.currentUser;
+    if (user == null) return;
+
+    // Calculate the new calorie budget
+    int? newCalorieBudget;
+    if (maintenanceCalories != null) {
+      newCalorieBudget = (maintenanceCalories! + (newGoalRate * 500)).round();
+    }
+
+    // Update goal weight and rate
+    await _firestore.collection('users').doc(user.uid).set({
+      'goalWeight': newGoalWeight,
+      'goalRate': newGoalRate,
+    }, SetOptions(merge: true));
+
+    // Update macros in Firebase if calorie budget was calculated
+    if (newCalorieBudget != null) {
+      await _firestore.collection('users').doc(user.uid).collection('macros').doc('dailyMacros').set({
+        'calories': newCalorieBudget.toString(),
+        'protein': _averageProtein,
+        'carbs': _averageCarbs,
+        'fats': _averageFats,
+      }, SetOptions(merge: true));
+
+      // Update local state
+      setState(() {
+        _averageCals = newCalorieBudget.toString();
+        goalWeight = newGoalWeight;
+        goalRate = newGoalRate;
+      });
+    } else {
+      setState(() {
+        goalWeight = newGoalWeight;
+        goalRate = newGoalRate;
+      });
+    }
+
+    _recalculateGoalFields();
+  }
+
+  void _recalculateGoalFields({int? customGoalWeight, double? customGoalRate}) {
+    final int? mCals = maintenanceCalories;
+    final double? cWeight = currentWeight;
+    final int? tWeight = customGoalWeight ?? goalWeight;
+    final double? gRate = customGoalRate ?? goalRate;
+    if (mCals == null || gRate == null || cWeight == null || tWeight == null) return;
+    // Fix calculation: calories = maintenanceCalories + (goalRate * 500)
+    calculatedCalories = (mCals + (gRate * 500)).round();
+    // Projected end date
+    double weightDifference = tWeight - cWeight;
+    if (gRate.abs() > 0.01) {
+      double weeksNeeded = weightDifference / gRate;
+      if (weeksNeeded.isFinite && weeksNeeded.abs() < 1000) {
+        final endDate = DateTime.now().add(Duration(days: (weeksNeeded * 7).round()));
+        projectedEndDate = DateFormat('MMM d, yyyy').format(endDate);
+      } else {
+        projectedEndDate = '-';
+      }
+    } else {
+      projectedEndDate = '-';
+    }
+  }
+
+  void _showEditGoalDialog() {
+    int tempGoalWeight = goalWeight ?? currentWeight?.round() ?? 150;
+    double tempGoalRate = goalRate ?? -1.0;
+    _recalculateGoalFields(customGoalWeight: tempGoalWeight, customGoalRate: tempGoalRate);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            void updateFields() {
+              setModalState(() {
+                _recalculateGoalFields(customGoalWeight: tempGoalWeight, customGoalRate: tempGoalRate);
+              });
+            }
+
+            // Calculate initial values for display
+            int? tempCalculatedCalories;
+            String? tempProjectedEndDate;
+
+            void calculateTempValues() {
+              final int? mCals = maintenanceCalories;
+              final double? cWeight = currentWeight;
+              if (mCals == null || tempGoalRate == null || cWeight == null || tempGoalWeight == null) return;
+
+              tempCalculatedCalories = (mCals + (tempGoalRate * 500)).round();
+
+              double weightDifference = tempGoalWeight - cWeight;
+              if (tempGoalRate.abs() > 0.01) {
+                double weeksNeeded = weightDifference / tempGoalRate;
+                if (weeksNeeded.isFinite && weeksNeeded.abs() < 1000) {
+                  final endDate = DateTime.now().add(Duration(days: (weeksNeeded * 7).round()));
+                  tempProjectedEndDate = DateFormat('MMM d, yyyy').format(endDate);
+                } else {
+                  tempProjectedEndDate = '-';
+                }
+              } else {
+                tempProjectedEndDate = '-';
+              }
+            }
+
+            // Initialize temp values
+            calculateTempValues();
+            String rateLabel;
+            double absRate = tempGoalRate.abs();
+            if (absRate <= 0.4) {
+              rateLabel = 'Slower';
+            } else if (absRate <= 2.3) {
+              rateLabel = 'Standard';
+            } else {
+              rateLabel = 'Faster (use caution)';
+            }
+            bool tooLowCalories = maintenanceCalories != null && calculatedCalories != null && (maintenanceCalories! - calculatedCalories!) > 1000;
+            return Container(
+              decoration: BoxDecoration(
+                color: Color.fromRGBO(31, 31, 31, 1),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+              ),
+              padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(context).viewInsets.bottom + 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Edit Goal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Color.fromRGBO(20, 20, 20, 1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${tempCalculatedCalories ?? '--'} kcal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
+                              SizedBox(height: 2),
+                              Text('initial daily budget', style: TextStyle(color: Colors.grey[400], fontSize: 14)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Color.fromRGBO(20, 20, 20, 1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(tempProjectedEndDate ?? '--', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
+                              SizedBox(height: 2),
+                              Text('projected end date', style: TextStyle(color: Colors.grey[400], fontSize: 14)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+                  Text('What is your target weight?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                  SizedBox(height: 8),
+                  Center(
+                    child: Text('${tempGoalWeight} lbs', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
+                  ),
+                  Slider(
+                    value: tempGoalWeight.toDouble(),
+                    min: (currentWeight ?? 150) - 50,
+                    max: (currentWeight ?? 150) + 50,
+                    divisions: 100,
+                    label: tempGoalWeight.toString(),
+                    onChanged: (v) {
+                      setModalState(() {
+                        tempGoalWeight = v.round();
+                        calculateTempValues();
+                      });
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  Text('What is your target goal rate?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                  SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: rateLabel == 'Faster (use caution)' ? Colors.red[700] : Colors.green[700],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(rateLabel, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Center(
+                    child: Text('${tempGoalRate.toStringAsFixed(2)} lbs/week', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
+                  ),
+                  Slider(
+                    value: tempGoalRate,
+                    min: -3.0,
+                    max: 3.0,
+                    divisions: 60,
+                    label: tempGoalRate.toStringAsFixed(2),
+                    onChanged: (v) {
+                      setModalState(() {
+                        tempGoalRate = double.parse(v.toStringAsFixed(2));
+                        calculateTempValues();
+                      });
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  if (tooLowCalories)
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red[900],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.yellow, size: 24),
+                          SizedBox(width: 8),
+                          Expanded(child: Text('Calorie target is more than 1000 kcal below maintenance. This is not recommended.', style: TextStyle(color: Colors.white))),
+                        ],
+                      ),
+                    ),
+                  SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: tooLowCalories ? null : () {
+                            _saveWeightGoalData(tempGoalWeight, tempGoalRate);
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: tooLowCalories ? Colors.grey[700] : Colors.blue,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text('Save', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }
